@@ -1,0 +1,92 @@
+/* InterviewIQ Production UI Tokens */
+:root {
+  /* Color Tokens - Cool, Neutral, Professional Modern (Apple/Vercel Aesthetic) */
+  --bg-base        : #F8F9FA;   /* clean ultra-light off-white */
+  --bg-surface     : #FFFFFF;   /* bright white cards and surfaces */
+  --bg-hover       : #F0F2F5;   /* cool neutral hover */
+  --border         : #E4E7EB;   /* sharp neutral border */
+  --text-primary   : #111827;   /* crisp dark slate for text */
+  --text-secondary : #4B5563;   /* balanced medium gray */
+  --text-muted     : #9CA3AF;   /* soft gray for hints */
+  --accent         : #000000;   /* pure black for premium contrast */
+  --accent-warm    : #D1D5DB;   /* soft silver accent (replaces warm champagne) */
+  --info           : #3B82F6;   /* cleaner true blue for info items */
+
+  /* Spacing Scale */
+  --space-micro    : 4px;
+  --space-tight    : 8px;
+  --space-internal : 12px;
+  --space-default  : 16px;
+  --space-section  : 24px;
+  --space-large    : 32px;
+  --space-xlarge   : 48px;
+
+  /* Border Radius */
+  --radius-tag     : 6px;
+  --radius-small   : 10px;
+  --radius-default : 16px;
+  --radius-large   : 28px;
+  --radius-full    : 50%;
+  --radius-pill    : 100px;
+
+  /* Typography */
+  --font-main      : 'Inter', 'DM Sans', system-ui, sans-serif;
+  --line-height    : 1.7;
+
+  /* Font Sizes */
+  --size-h1        : 32px;
+  --size-h2        : 24px;
+  --size-h3        : 18px;
+  --size-body      : 16px;
+  --size-small     : 13px;
+  --size-micro     : 11px;
+
+  /* Font Weights */
+  --weight-normal  : 400;
+  --weight-medium  : 500;
+
+  /* Shadows - Flat UI Rule No Shadows */
+  --shadow-none    : none;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-page: 200ms ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: var(--size-body);
+  line-height: var(--line-height);
+  font-weight: var(--weight-normal);
+}
+
+h1, h2, h3 {
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--info);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}

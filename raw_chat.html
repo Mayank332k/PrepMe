@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Curator AI - Interview with Sage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e8e9e1",
+                        "secondary": "#675b66",
+                        "surface-tint": "#595d78",
+                        "tertiary-dim": "#644e49",
+                        "secondary-fixed": "#eedeeb",
+                        "on-surface-variant": "#5d6059",
+                        "primary": "#595d78",
+                        "on-background": "#31332e",
+                        "surface-container-low": "#f5f4ee",
+                        "error-container": "#fe8b70",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-dim": "#5b505a",
+                        "surface-bright": "#fbf9f5",
+                        "surface-dim": "#d9dbd2",
+                        "on-primary-fixed": "#3a3e58",
+                        "inverse-on-surface": "#9e9d99",
+                        "surface-variant": "#e2e3db",
+                        "on-error-container": "#742410",
+                        "inverse-surface": "#0e0e0c",
+                        "surface-container": "#efeee8",
+                        "on-secondary-container": "#5a4e59",
+                        "on-secondary-fixed": "#473c46",
+                        "tertiary-fixed": "#f5d6d0",
+                        "on-primary-fixed-variant": "#565a75",
+                        "secondary-fixed-dim": "#e0d0dd",
+                        "on-tertiary-fixed-variant": "#69534e",
+                        "secondary-container": "#eedeeb",
+                        "on-surface": "#31332e",
+                        "primary-container": "#dee0ff",
+                        "on-primary": "#f9f6ff",
+                        "tertiary-container": "#f5d6d0",
+                        "on-error": "#fff7f6",
+                        "primary-dim": "#4d516c",
+                        "tertiary": "#705a55",
+                        "on-secondary": "#fff7fa",
+                        "surface-container-highest": "#e2e3db",
+                        "on-tertiary-container": "#5f4945",
+                        "outline": "#797b75",
+                        "on-tertiary": "#fff7f6",
+                        "on-secondary-fixed-variant": "#645863",
+                        "primary-fixed-dim": "#cfd2f3",
+                        "surface": "#fbf9f5",
+                        "error": "#9e422c",
+                        "inverse-primary": "#d5d8f9",
+                        "on-tertiary-fixed": "#4b3733",
+                        "primary-fixed": "#dee0ff",
+                        "background": "#fbf9f5",
+                        "error-dim": "#5c1202",
+                        "tertiary-fixed-dim": "#e6c8c2",
+                        "on-primary-container": "#4c506b",
+                        "outline-variant": "#b1b3ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #e2e3db;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden flex h-screen">
+<!-- SideNavBar (Authority: JSON & Design System) -->
+<aside class="hidden md:flex flex-col h-full p-6 space-y-8 bg-[#f5f4ee] dark:bg-stone-900 h-screen w-72 rounded-r-[3rem] shadow-[40px_0_60px_-15px_rgba(49,51,46,0.06)] z-20">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-[#31332e] dark:text-stone-100 tracking-tight">Curator AI</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-semibold">Premium Analysis</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Upload -->
+<a class="flex items-center gap-4 px-4 py-3 text-[#5d6059] dark:text-stone-400 hover:text-[#31332e] font-['Inter'] text-sm font-medium uppercase tracking-widest hover:bg-[#ebe9e0] dark:hover:bg-stone-800 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span>Upload</span>
+</a>
+<!-- Interview (ACTIVE) -->
+<a class="flex items-center gap-4 px-4 py-3 bg-[#ffffff] dark:bg-stone-800 text-[#31332e] dark:text-white rounded-full shadow-sm font-['Inter'] text-sm font-medium uppercase tracking-widest transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span>Interview</span>
+</a>
+<!-- Reports -->
+<a class="flex items-center gap-4 px-4 py-3 text-[#5d6059] dark:text-stone-400 hover:text-[#31332e] font-['Inter'] text-sm font-medium uppercase tracking-widest hover:bg-[#ebe9e0] dark:hover:bg-stone-800 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+<!-- History -->
+<a class="flex items-center gap-4 px-4 py-3 text-[#5d6059] dark:text-stone-400 hover:text-[#31332e] font-['Inter'] text-sm font-medium uppercase tracking-widest hover:bg-[#ebe9e0] dark:hover:bg-stone-800 transition-colors rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span>History</span>
+</a>
+</nav>
+<div class="mt-auto">
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-dim text-on-primary rounded-full font-semibold shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>New Analysis</span>
+</button>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="flex-1 flex flex-col relative overflow-hidden bg-background">
+<!-- Top Navigation Area -->
+<header class="flex justify-between items-center w-full px-8 py-6 z-10">
+<div class="flex items-center gap-4">
+<div class="md:hidden w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</div>
+<div>
+<h2 class="text-headline-md font-medium text-on-surface">Interview Session</h2>
+<p class="text-sm text-on-surface-variant">Round 1: Core Competencies</p>
+</div>
+</div>
+<button class="bg-secondary-container text-on-secondary-container px-6 py-2.5 rounded-full font-semibold text-sm hover:scale-[1.02] transition-transform flex items-center gap-2">
+<span>End Session</span>
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+</button>
+</header>
+<!-- Chat Canvas -->
+<section class="flex-1 overflow-y-auto chat-container px-8 pb-32 space-y-8 max-w-5xl mx-auto w-full mt-4">
+<!-- Sage Greeting -->
+<div class="flex items-start gap-6 max-w-3xl">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-lg ring-4 ring-surface-container-low">
+<img alt="Sage" class="w-full h-full object-cover" data-alt="minimalist and elegant illustration of a professional AI assistant avatar with soft purple and blue color palette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbu3r-B5u0PhiDWTql3ZRsniMoBdU3ikWPb_rugayhCdKJEIS6FMG5p-1cSwvS6lPhpyXMkgAd71QjS4siLsQWw6R6T4-sv9TF9p_VAuewWPAOJH0yh3qddFsHUFGlN18EyNXWWtGz_PfsYqgJvDCi4Rn5vFc7OQztfLER4cjO3fuNZ8NAIdfP0NWLBOdolZD8gpxV3jT1SRdmvwJr4yoHHVo_kzqHpy0j_6QyS61xhseapzd9SSwvwzz2w-X-7FUBvF-3oGfS_BI3"/>
+</div>
+<div class="space-y-1">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-2">Sage</span>
+<div class="bg-surface-container-lowest p-6 rounded-lg rounded-tl-none shadow-sm text-on-surface-variant leading-relaxed">
+                        Hello! I'm Sage, your AI curator for this session. I've thoroughly reviewed your background in product design. To start, could you describe a time when you had to balance aggressive business goals with user-centric design principles?
+                    </div>
+</div>
+</div>
+<!-- User Response -->
+<div class="flex items-start gap-6 max-w-3xl ml-auto flex-row-reverse">
+<div class="w-12 h-12 rounded-full bg-surface-dim flex items-center justify-center flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</div>
+<div class="space-y-1 text-right">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mr-2">You</span>
+<div class="bg-primary text-on-primary p-6 rounded-lg rounded-tr-none shadow-md leading-relaxed text-left">
+                        At my previous role, we were launching a new checkout flow. Stakeholders wanted to include multiple cross-sell prompts, but I advocated for a streamlined 3-step process. I conducted a quick A/B test that proved the "minimalist" approach increased conversion by 12%, ultimately meeting both revenue and user experience goals.
+                    </div>
+</div>
+</div>
+<!-- Sage Follow-up -->
+<div class="flex items-start gap-6 max-w-3xl">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-lg ring-4 ring-surface-container-low">
+<img alt="Sage" class="w-full h-full object-cover" data-alt="stylized illustrated avatar of an AI career advisor named Sage with soft professional features" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDA2gS3HdmVVi6IkZ6RIau7hEQH1eRsBwyQsJ3fj4vjqsDznX8Kcc1ulv9lDoP4_dB939iva5cljaNJVsioiuzgXE2895B9ATGqoZv8rVHmbDqhY2QON-gEcCL6kGfcxDmxZ3DhQRREW9V2FjSi0ExgadBLtg4xjqoBXNsZr5xl8CPVJ3G-6oh0ACgEbslCD-y64fxDwt66aq6mRdH8rehhTCDCZ3vxrtB3NSHzqYVn_DJbJlD4pJrBNXhe2IZy4btxl0UbR7NY1Em2"/>
+</div>
+<div class="space-y-1">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-2">Sage</span>
+<div class="bg-surface-container-lowest p-6 rounded-lg rounded-tl-none shadow-sm text-on-surface-variant leading-relaxed">
+                        That 12% increase is a strong metric. How did you manage the stakeholder expectations during the testing phase? Were there specific data points beyond conversion that you used to gain their trust?
+                    </div>
+</div>
+</div>
+<!-- Sage Typing (Contextual State) -->
+<div class="flex items-start gap-6 max-w-3xl">
+<div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-lg ring-4 ring-surface-container-low opacity-50">
+<img alt="Sage" class="w-full h-full object-cover" data-alt="professional AI assistant avatar placeholder" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkXID1zB7a2TpkLgusYrQVYZ1AlZ6ys3LYGC2rFOLNUl5drkFHhQOQST4mCdTjSyvynhb6XQzQZkHCea-VMKPSX7QWt49nyovyUMQZjBDzqq_5hFQdum5n-oFW6U9UvDFURQKGzbWaAOIYNWEs1x5pct-4C9JNVhoKJBwXvjWcrA7_4glUxCAOk6ytdbEeYCFDsm6j11MnGo-DFhNE_io42cnilISNo0RePm5V_rUO-l-hGZ9Yzwm-Q6OJvLgiMceRoLOIRPbX9AX3"/>
+</div>
+<div class="bg-surface-container-low px-4 py-3 rounded-full flex gap-1 items-center">
+<div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce"></div>
+<div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+<div class="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+</div>
+</div>
+</section>
+<!-- Input Area (Fixed at bottom) -->
+<div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-background via-background to-transparent pointer-events-none">
+<div class="max-w-4xl mx-auto w-full glass-panel p-4 rounded-xl shadow-2xl pointer-events-auto ring-1 ring-on-surface/5">
+<div class="flex items-center gap-4">
+<div class="flex-1 relative">
+<input class="w-full bg-surface-container-highest border-none rounded-full py-4 px-8 focus:ring-2 focus:ring-primary/30 transition-all text-on-surface placeholder-on-surface-variant/50" placeholder="Type your response here..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="mic">mic</span>
+</button>
+</div>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-dim text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform shrink-0">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+<div class="mt-3 flex justify-center">
+<p class="text-[10px] text-on-surface-variant/60 uppercase tracking-[0.2em] font-semibold">Sage is listening and analyzing your communication style</p>
+</div>
+</div>
+</div>
+<!-- Float Info Panel (Asymmetric Editorial Touch) -->
+<div class="absolute top-24 right-8 hidden lg:block w-64 space-y-4">
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl p-6 rounded-lg shadow-sm ring-1 ring-outline-variant/10">
+<h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4">Focus Areas</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-sm text-on-surface">Data Fluency</span>
+<div class="w-12 h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-on-surface">Empathy</span>
+<div class="w-12 h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-1/2 h-full bg-primary"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-on-surface">Clarity</span>
+<div class="w-12 h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-4/5 h-full bg-primary"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-tertiary-container/30 p-6 rounded-lg ring-1 ring-tertiary/10">
+<p class="text-xs text-on-tertiary-container italic leading-relaxed">
+                    "Sage is currently looking for evidence of cross-functional leadership in your responses."
+                </p>
+</div>
+</div>
+</main>
+</body></html>

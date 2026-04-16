@@ -1,0 +1,384 @@
+.pageContainer {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.mainCanvas {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+}
+
+/* Header Redesigned for Symmetry */
+.header {
+  height: 72px;
+  display: grid;
+  grid-template-columns: 160px 1fr 160px; /* Space for buttons on sides */
+  align-items: center;
+  padding: 0 40px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: flex-start;
+  transition: color 0.2s ease;
+}
+
+.backBtn:hover { color: var(--text-primary); }
+
+.centerBadge {
+  display: flex;
+  justify-content: center;
+}
+
+.sessionBadge {
+  background-color: var(--bg-hover);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.1em;
+}
+
+.endBtn {
+  justify-self: end;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.endBtn:hover, .endingActive {
+  background-color: #000 !important;
+  color: #FFF !important;
+  border-color: #000 !important;
+}
+
+.miniSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(150, 150, 150, 0.4);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spinChat 0.8s linear infinite;
+}
+
+@keyframes spinChat {
+  to { transform: rotate(360deg); }
+}
+
+/* Chat Area */
+.chatCanvas {
+  flex: 1;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 48px 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+.messageScroll {
+  width: 100%;
+  max-width: 800px;
+  padding: 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.messageRow { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  max-width: 85%; 
+  position: relative; 
+}
+
+.aiRow { 
+  align-items: flex-start; 
+  align-self: flex-start; 
+}
+
+.userRow { 
+  align-items: flex-end; 
+  align-self: flex-end; 
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden; border: 1px solid var(--border);
+  position: relative;
+  z-index: 2;
+}
+
+/* Thin string connecting avatar and bubble */
+.aiRow::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 14px;
+  width: 1px;
+  height: 16px; /* Equals the gap */
+  background-color: var(--border);
+  z-index: 1;
+}
+
+.userRow::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  right: 14px;
+  width: 1px;
+  height: 16px; /* Equals the gap */
+  background-color: var(--border);
+  z-index: 1;
+}
+
+.aiLogo { width: 100%; height: 100%; object-fit: cover; }
+.userAvatarImg { width: 100%; height: 100%; object-fit: cover; }
+
+.messageBody {
+  display: flex; flex-direction: column; gap: 6px;
+  max-width: 100%;
+}
+
+.userRow .messageBody {
+  align-items: flex-end;
+}
+
+.bubble {
+  padding: 16px 20px; font-size: 15px; line-height: 1.6; border-radius: 12px;
+}
+
+.aiRow .bubble {
+  background-color: var(--bg-surface); color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-top-left-radius: 2px;
+}
+
+.userRow .bubble {
+  background-color: var(--accent); color: #FFF; 
+  border-top-right-radius: 2px;
+}
+
+.time { font-size: 10px; color: var(--text-muted); opacity: 0.5; }
+
+/* Footer */
+.footer {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  padding: 16px 48px 8px;
+  background: linear-gradient(to top, var(--bg-base) 60%, transparent 100%);
+  z-index: 40; display: flex; flex-direction: column; align-items: center;
+}
+
+.inputWrapper {
+  width: 100%; max-width: 800px; background-color: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 6px 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.04); transition: all 0.2s ease;
+}
+
+.inputWrapper:focus-within { border-color: #000; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+
+.form { display: flex; align-items: center; gap: 12px; }
+
+.plusIcon {
+  background: none; border: none; color: var(--text-muted); font-size: 20px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.input {
+  flex: 1; border: none; background: none; padding: 8px 0; font-size: 15px;
+  color: var(--text-primary); outline: none;
+}
+
+.sendIcon {
+  width: 36px; height: 36px; border-radius: 8px; background-color: var(--bg-hover);
+  color: var(--text-primary); border: none; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; transition: all 0.2s ease;
+}
+
+.sendIcon:hover:not(:disabled) { background-color: #000; color: #FFF; }
+
+.aiWarning {
+  font-size: 11px; color: var(--text-muted); opacity: 0.45;
+  margin-top: 12px; text-align: center; letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .header { grid-template-columns: 60px 1fr 120px; padding: 0 16px; }
+  .backBtn { display: flex; }
+  .sessionBadge { padding: 6px 14px; font-size: 12px; }
+  .endBtn { padding: 8px 14px; font-size: 13px; }
+  .chatCanvas { padding-bottom: 0; }
+  .messageScroll { padding: 0 16px; gap: 16px; }
+  .footer { 
+    padding: 0 16px 20px; 
+    background: var(--bg-surface); /* Solid background on mobile to prevent overlap with messages */
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Skeleton Loader */
+.skeletonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 400px;
+  max-width: 100%;
+  padding: 8px 0;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #584395 0%,
+    #B0A3D5 50%,
+    #584395 100%
+  );
+  background-size: 200% 100%;
+  animation: wave 1.5s infinite linear;
+  opacity: 0.25;
+}
+
+.skeletonLine.short {
+  width: 60%;
+}
+
+@keyframes wave {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Confirmation Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirmCard {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirmIcon {
+  width: 56px;
+  height: 56px;
+  background-color: #fef2f2;
+  color: #ef4444;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.confirmIcon span { font-size: 32px; }
+
+.confirmCard h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #111;
+}
+
+.confirmCard p {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+.confirmActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirmBtn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.confirmBtn:hover { opacity: 0.9; }
+.confirmBtn:disabled { background-color: #666; cursor: not-allowed; }
+
+.cancelLink {
+  background: none;
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 12px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelLink:hover { background-color: #f9f9f9; color: #111; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+

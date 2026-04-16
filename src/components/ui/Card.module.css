@@ -1,0 +1,13 @@
+.card {
+  background-color: var(--bg-surface); /* #FFFFFF */
+  border: 1px solid var(--border); /* #E8E4DE */
+  border-radius: var(--radius-default); /* 12px */
+  box-shadow: none; /* No shadow rule */
+  transition: transform var(--transition-fast);
+  overflow: hidden;
+  width: 100%;
+}
+
+.padding {
+  padding: 20px 24px;
+}
