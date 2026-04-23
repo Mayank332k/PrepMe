@@ -31,15 +31,13 @@
 }
 
 .logoBadge {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background: var(--accent);
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFF;
-  overflow: hidden;
+  flex-shrink: 0;
+  background: transparent;
 }
 
 .logoImg {

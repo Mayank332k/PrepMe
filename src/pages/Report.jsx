@@ -3,6 +3,7 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Report.module.css';
 import logo from '../assets/logo.png';
+import api from '../api';
 
 // No mock data - strictly data-driven
 // Custom Hook to animate counting numbers smoothly
@@ -111,19 +112,112 @@ const ProgressBar = ({ label, score, color, delay }) => {
   );
 };
 
-export const Report = ({ user, sessionData, sessionActive, onRetake, onNavigate }) => {
+export const Report = ({ user, sessionData, setSessionData, sessionActive, onRetake, onNavigate }) => {
+  const [loading, setLoading] = useState(!sessionData?.report);
+  const [error, setError] = useState(null);
   const reportData = sessionData?.report;
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      if (reportData || !sessionData?.sessionId) return;
+      
+      setLoading(true);
+      setError(null);
+      try {
+        const { data } = await api.get(`/interview/report/${sessionData.sessionId}`);
+        if (data.success && data.report) {
+          setSessionData({ ...sessionData, report: data.report });
+        } else {
+          setError("Report not found for this session.");
+        }
+      } catch (err) {
+        console.error("Failed to load report", err);
+        setError("Failed to load report. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReport();
+  }, [sessionData?.sessionId, reportData, setSessionData, sessionData]);
   
-  if (!reportData) {
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar user={user} activeTab="report" onNavigate={onNavigate} sessionActive={sessionActive} />
+        <MobileNav user={user} activeTab="report" onNavigate={onNavigate} sessionActive={sessionActive} />
+        <main className={styles.mainCanvas}>
+          <header className={styles.topBar}>
+             <div className={styles.logoSection}>
+               <button className={styles.backBtn} onClick={() => onNavigate('history')}>
+                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+                 Back
+               </button>
+               <img src={logo} alt="Logo" className={styles.logoImg} />
+             </div>
+          </header>
+          <section className={styles.scrollArea}>
+            <div className={styles.reportContainer}>
+              {/* Header Skeleton */}
+              <div className={styles.reportHeader}>
+                <div className={styles.skeleton + ' ' + styles.skeletonTitle}></div>
+                <div className={styles.pageSubtitle}>
+                  <div className={styles.skeleton} style={{ height: '14px', width: '100px' }}></div>
+                  <div className={styles.skeleton + ' ' + styles.datePill} style={{ width: '120px', height: '26px', border: 'none' }}></div>
+                </div>
+              </div>
+
+              {/* Hero Grid Skeleton */}
+              <div className={styles.heroGrid}>
+                <div className={`${styles.glassCard} ${styles.scoreCard}`}>
+                  <div className={styles.scoreSection}>
+                    <div className={styles.skeleton + ' ' + styles.skeletonScore}></div>
+                  </div>
+                  <div className={styles.metricsListWrapper}>
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className={styles.metricItem}>
+                        <div className={styles.skeleton} style={{ height: '14px', width: '120px', marginBottom: '8px' }}></div>
+                        <div className={styles.skeleton + ' ' + styles.skeletonMetricLine}></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Breakdown Grid Skeleton */}
+              <div className={styles.breakdownGrid}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} className={`${styles.glassCard} ${styles.detailColumn}`}>
+                    <div className={styles.detailHeader}>
+                      <div className={styles.skeleton} style={{ width: '36px', height: '36px', borderRadius: '10px' }}></div>
+                      <div className={styles.skeleton} style={{ height: '18px', width: '100px' }}></div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                      {[1, 2, 3, 4].map(j => (
+                        <div key={j} className={styles.skeleton} style={{ height: '14px', width: '100%' }}></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar user={user} activeTab="report" onNavigate={onNavigate} sessionActive={sessionActive} />
         <MobileNav user={user} activeTab="report" onNavigate={onNavigate} sessionActive={sessionActive} />
         <main className={styles.mainCanvas} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '16px' }}>analytics</span>
-            <h2>Generating Report...</h2>
-            <p>Please wait while we crunch the numbers, or return to history if this session is incomplete.</p>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#ef4444' }}>error</span>
+            <h2>Oops!</h2>
+            <p>{error}</p>
+            <button className={styles.retakeBtn} onClick={() => onNavigate('history')} style={{ marginTop: '20px' }}>Back to History</button>
           </div>
         </main>
       </div>
@@ -151,25 +245,15 @@ export const Report = ({ user, sessionData, sessionActive, onRetake, onNavigate 
       <main className={styles.mainCanvas}>
         <header className={styles.topBar}>
           <div className={styles.logoSection}>
-            <div className={styles.logoBadge}>
-              <img src={logo} alt="Logo" className={styles.logoImg} />
-            </div>
+            <button className={styles.backBtn} onClick={() => onNavigate('history')}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+              Back
+            </button>
+            <img src={logo} alt="Logo" className={styles.logoImg} />
           </div>
           
           <div className={styles.headerActions}>
-            <button className={styles.retakeBtn} onClick={onRetake}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
-              New Interview
-            </button>
-            <div className={styles.profileSection}>
-              <div className={styles.avatar}>
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="Profile" />
-                ) : (
-                  <span className={styles.avatarPlaceholder}>{user?.name?.charAt(0) || 'U'}</span>
-                )}
-              </div>
-            </div>
+            {/* Removed retakeBtn and profileSection per user request */}
           </div>
         </header>
 
@@ -179,10 +263,16 @@ export const Report = ({ user, sessionData, sessionActive, onRetake, onNavigate 
             {/* Header Area */}
             <div className={styles.reportHeader}>
               <h2 className={styles.pageTitle}>Interview Analysis</h2>
-              <p className={styles.pageSubtitle}>Session finalized on {(() => {
-                const d = new Date();
-                return `${String(d.getDate()).padStart(2, '0')} ${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getFullYear()).slice(-2)}`;
-              })()}</p>
+              <div className={styles.pageSubtitle}>
+                <span>Session finalized:</span>
+                <div className={styles.datePill}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>calendar_today</span>
+                  {(() => {
+                    const d = sessionData?.updatedAt ? new Date(sessionData.updatedAt) : new Date();
+                    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                  })()}
+                </div>
+              </div>
             </div>
 
             {/* Core Score Card & Metrics Merged */}

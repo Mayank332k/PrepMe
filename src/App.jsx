@@ -16,7 +16,7 @@ function App() {
   const [resumeFile, setResumeFile] = useState(null);
   const [sessionData, setSessionData] = useState(null);
 
-  // Use dummy ID if env is missing to prevent crash
+  // for prevent crash
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "739328229230-dummy.apps.googleusercontent.com";
 
   useEffect(() => {
@@ -55,17 +55,10 @@ function App() {
     setCurrentScreen('upload');
   };
 
-  const handleViewReport = async (sessionId) => {
-    try {
-      const { data } = await api.get(`/interview/report/${sessionId}`);
-      if (data.success && data.report) {
-        setSessionData({ sessionId, report: data.report });
-        setCurrentScreen('report');
-      }
-    } catch (err) {
-      console.error("Failed to load report", err);
-      // fallback or error message
-    }
+  const handleViewReport = (sessionId) => {
+    // Navigate immediately, Report component will handle the fetch
+    setSessionData({ sessionId, report: null });
+    setCurrentScreen('report');
   };
 
   if (isInitializing) {
@@ -132,6 +125,7 @@ function App() {
         return <Report 
           user={user} 
           sessionData={sessionData}
+          setSessionData={setSessionData}
           sessionActive={sessionActive}
           onRetake={() => {
             setResumeFile(null);
