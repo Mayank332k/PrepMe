@@ -92,41 +92,92 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         {/* Custom Confirmation Modal */}
         {showEndConfirm && (
           <div className={styles.modalOverlay}>
-            <div className={styles.confirmCard}>
-              <div className={styles.confirmIcon}>
-                <span className="material-symbols-outlined">exit_to_app</span>
-              </div>
-              <h3>End Interview Session?</h3>
-              <p>We will analyze your performance and generate a detailed report based on your responses.</p>
-              
-              {endError && <p style={{ color: '#ef4444', fontSize: '13px', marginBottom: '20px', fontWeight: 500 }}>{endError}</p>}
-              
-              <div className={styles.confirmActions}>
-                <button 
-                  className={styles.cancelLink}
-                  onClick={() => setShowEndConfirm(false)}
-                  disabled={isEnding}
-                >
-                  Continue Interview
-                </button>
-                <button 
-                  className={styles.confirmBtn}
-                  onClick={async () => {
-                    setIsEnding(true);
-                    setEndError(null);
-                    try {
-                      await onEndSession();
-                    } catch (err) {
-                      setEndError("Failed to generate report. Please try again.");
-                    } finally {
-                      setIsEnding(false);
-                    }
-                  }}
-                  disabled={isEnding}
-                >
-                  {isEnding ? "Processing..." : "Yes, End & Analyze"}
-                </button>
-              </div>
+            <div className={styles.confirmCard} style={endError ? { padding: '40px', maxWidth: '380px' } : {}}>
+              {endError ? (
+                <>
+                  <div style={{ marginBottom: '24px' }}>
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto', display: 'block' }}>
+                      <rect x="20" y="20" width="80" height="80" rx="20" fill="var(--bg-hover)" />
+                      <rect x="35" y="35" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
+                      <rect x="35" y="65" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
+                      <circle cx="75" cy="44" r="3" fill="#ff3b30">
+                        <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                      <circle cx="75" cy="74" r="3" fill="#ff3b30">
+                        <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                      <path d="M60 45L80 80H40L60 45Z" fill="rgba(255, 255, 255, 0.9)" stroke="#ff3b30" stroke-width="3" stroke-linejoin="round"/>
+                      <path d="M60 57V68M60 74V75" stroke="#ff3b30" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <h3 style={{ fontSize: '24px', marginBottom: '12px', color: 'var(--text-primary)' }}>We're Sorry!</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '28px' }}>
+                    Our AI servers are currently undergoing maintenance. Please try ending the session again in a few moments.
+                  </p>
+                  <div className={styles.confirmActions}>
+                    <button 
+                      className={styles.cancelLink}
+                      onClick={() => setShowEndConfirm(false)}
+                      disabled={isEnding}
+                      style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                    >
+                      Close
+                    </button>
+                    <button 
+                      className={styles.confirmBtn}
+                      onClick={async () => {
+                        setIsEnding(true);
+                        setEndError(null);
+                        try {
+                          await onEndSession();
+                        } catch (err) {
+                          setEndError("Failed to generate report. Please try again.");
+                        } finally {
+                          setIsEnding(false);
+                        }
+                      }}
+                      disabled={isEnding}
+                    >
+                      {isEnding ? "Processing..." : "Retry"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.confirmIcon}>
+                    <span className="material-symbols-outlined">exit_to_app</span>
+                  </div>
+                  <h3>End Interview Session?</h3>
+                  <p>We will analyze your performance and generate a detailed report based on your responses.</p>
+                  
+                  <div className={styles.confirmActions}>
+                    <button 
+                      className={styles.cancelLink}
+                      onClick={() => setShowEndConfirm(false)}
+                      disabled={isEnding}
+                    >
+                      Continue Interview
+                    </button>
+                    <button 
+                      className={styles.confirmBtn}
+                      onClick={async () => {
+                        setIsEnding(true);
+                        setEndError(null);
+                        try {
+                          await onEndSession();
+                        } catch (err) {
+                          setEndError("Failed to generate report. Please try again.");
+                        } finally {
+                          setIsEnding(false);
+                        }
+                      }}
+                      disabled={isEnding}
+                    >
+                      {isEnding ? "Processing..." : "Yes, End & Analyze"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
