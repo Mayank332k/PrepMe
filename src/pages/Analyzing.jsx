@@ -6,19 +6,21 @@ export const Analyzing = ({ resumeFile, onComplete }) => {
   const [error, setError] = React.useState(null);
 
   useEffect(() => {
-    // If no file, something went wrong in navigation flow
-    if (!resumeFile) {
-      console.warn("Analyzing mounted without resumeFile");
-      return; 
-    }
-
     const handleAnalysis = async () => {
       const startTime = Date.now();
       try {
-        const formData = new FormData();
-        formData.append('resume', resumeFile);
+        let response;
+        if (resumeFile) {
+          // New Resume Upload (Update)
+          const formData = new FormData();
+          formData.append('resume', resumeFile);
+          response = await api.post('/interview/ingest', formData);
+        } else {
+          // Use Saved Resume
+          response = await api.post('/interview/ingest', {});
+        }
         
-        const { data } = await api.post('/interview/ingest', formData);
+        const { data } = response;
         
         // Always wait for the premium animation to feel "high-end"
         const elapsed = Date.now() - startTime;
@@ -30,11 +32,11 @@ export const Analyzing = ({ resumeFile, onComplete }) => {
       } catch (err) {
         console.error("Analysis Error:", err);
         setError(err.response?.data?.message || "Failed to parse resume. Check your connection.");
-        // Don't auto-complete on error, show the error state or let user go back
       }
     };
     handleAnalysis();
   }, [resumeFile, onComplete]);
+
 
   if (error) {
     return (

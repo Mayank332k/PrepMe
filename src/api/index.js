@@ -37,15 +37,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: Store in Cache
+// Response interceptor: Store in Cache or Invalidate
 api.interceptors.response.use(
   (response) => {
-    if (response.config.method === 'get') {
-      const cacheKey = response.config.url + JSON.stringify(response.config.params || {});
+    const { method, url } = response.config;
+
+    if (method === 'get') {
+      const cacheKey = url + JSON.stringify(response.config.params || {});
       cache.set(cacheKey, {
         data: response.data,
         timestamp: Date.now()
       });
+    } else if (['post', 'put', 'delete', 'patch'].includes(method)) {
+      // Invalidate cache on mutations
+      console.log(`[Cache Invalidate] Due to ${method.toUpperCase()} on ${url}`);
+      cache.clear(); 
     }
     return response;
   },

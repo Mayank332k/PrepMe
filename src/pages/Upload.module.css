@@ -152,6 +152,14 @@
   margin-bottom: 48px;
 }
 
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
 .analyzeBtn {
   padding: 16px 56px;
   border-radius: var(--radius-pill);
@@ -165,10 +173,31 @@
   cursor: pointer;
 }
 
-.analyzeBtn:hover {
+.analyzeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.analyzeBtn:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
+
+.updateLink {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.updateLink:hover {
+  color: var(--info);
+}
+
 
 .badges {
   display: flex;

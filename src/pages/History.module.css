@@ -118,13 +118,17 @@
 
 .pageHeader {
   margin-bottom: 48px;
+}
+
+.headerTitleRow {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
 }
 
 .pageTitle {
-  font-size: 36px; /* var(--size-h1) */
+  font-size: 36px;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-primary);
@@ -132,10 +136,126 @@
 
 .pageSubtitle {
   color: var(--text-secondary);
-  font-size: 15px; /* var(--size-body) */
+  font-size: 15px;
   max-width: 500px;
   line-height: 1.5;
 }
+
+.headerMenuWrapper {
+  position: relative;
+}
+
+.headerMenuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 8px;
+}
+
+.headerMenuBtn:hover {
+  color: var(--text-primary);
+}
+
+.headerDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 6px;
+  min-width: 200px;
+  z-index: 100;
+  animation: slideIn 0.2s ease-out;
+}
+
+
+.menuWrapper {
+  position: relative;
+  z-index: 20;
+}
+
+.menuDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; /* Hidden by default for PC */
+  padding: 8px;
+}
+
+.historyCard:hover .menuDots,
+.menuDots:focus-within {
+  opacity: 1;
+}
+
+.menuDots:hover {
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 6px;
+  min-width: 160px;
+  animation: slideIn 0.2s ease-out;
+  z-index: 100;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.deleteOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: #ff3b30;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.deleteOption:hover {
+  background: rgba(255, 59, 48, 0.08);
+}
+
+.deleteOption span {
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .menuDots {
+    opacity: 1; /* Always visible on mobile */
+  }
+}
+
+
 
 /* Beautiful History Grid */
 .historyGrid {
@@ -187,6 +307,12 @@
   justify-content: space-between;
   align-items: center;
   z-index: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .statusBadge {
@@ -418,9 +544,183 @@
   .pageTitle {
     font-size: 28px;
   }
-  
-  .historyCard {
-    padding: 24px;
-    border-radius: 16px;
-  }
+}
+
+/* Inline Confirm State */
+.historyCard.confirming {
+  border-color: rgba(255, 59, 48, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.02);
+}
+
+.confirmState {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  gap: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.confirmContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.confirmContent span {
+  font-size: 32px;
+  color: #ff3b30;
+}
+
+.confirmText h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.confirmText p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.confirmActions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirmActions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelAction {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.deleteAction {
+  background: #ff3b30;
+  color: white;
+  border: none;
+}
+
+.deleteAction:hover {
+  background: #e03126;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+}
+
+/* Custom Confirmation Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modalContent {
+  background: white;
+  width: 90%;
+  max-width: 380px;
+  padding: 40px;
+  border-radius: 28px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalIcon {
+  width: 72px;
+  height: 72px;
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.modalIcon span {
+  font-size: 36px;
+}
+
+.modalContent h3 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.modalContent p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalActions button {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cancelBtn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.cancelBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.confirmBtn {
+  background: #000;
+  color: white;
+  border: none;
+  order: -1; /* Confirm button first */
+}
+
+.confirmBtn:hover {
+  background: #222;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }

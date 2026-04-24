@@ -1,13 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
+import api from '../api';
 import styles from './Upload.module.css';
 import logo from '../assets/logo.png';
 
 export const Upload = ({ user, onAnalyze, onNavigate }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [resumeStatus, setResumeStatus] = useState({ hasResume: false, resumeName: '' });
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const checkResumeStatus = async () => {
+      try {
+        const { data } = await api.get('/interview/resume-status', { params: { refresh: true } });
+        setResumeStatus({
+          hasResume: data.hasResume,
+          resumeName: data.resumeName || ''
+        });
+      } catch (err) {
+        console.error("Failed to fetch resume status:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkResumeStatus();
+  }, []);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -34,6 +55,17 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleStartAnalysis = (e) => {
+    e.stopPropagation();
+    if (selectedFile) {
+      onAnalyze(selectedFile);
+    } else if (resumeStatus.hasResume) {
+      onAnalyze(null); // Signal to use saved resume
+    } else {
+      triggerFileInput();
+    }
   };
 
   return (
@@ -80,35 +112,56 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={triggerFileInput}
+              onClick={selectedFile ? null : triggerFileInput}
             >
               <div className={styles.docIcon}>
                 <span className="material-symbols-outlined">
-                  {isDragging ? 'upload_file' : selectedFile ? 'task' : 'description'}
+                  {isDragging ? 'upload_file' : selectedFile ? 'task' : resumeStatus.hasResume ? 'assignment_turned_in' : 'description'}
                 </span>
               </div>
               
               <h3 className={styles.dropTitle}>
-                {isDragging ? 'Drop your resume now' : selectedFile ? selectedFile.name : 'Choose a file to analyze'}
+                {isDragging 
+                  ? 'Drop your resume now' 
+                  : selectedFile 
+                    ? selectedFile.name 
+                    : resumeStatus.hasResume 
+                      ? `Saved: ${resumeStatus.resumeName}` 
+                      : 'Choose a file to analyze'}
               </h3>
               
               <p className={styles.dropDesc}>
-                {isDragging ? 'Perfect, release to upload' : selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : 'Drag and drop your file here, or click to browse'}
+                {isDragging 
+                  ? 'Perfect, release to upload' 
+                  : selectedFile 
+                    ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
+                    : resumeStatus.hasResume 
+                      ? 'Ready to start with your saved resume' 
+                      : 'Drag and drop your file here, or click to browse'}
               </p>
               
-              <button 
-                className={styles.analyzeBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (selectedFile) {
-                    onAnalyze(selectedFile);
-                  } else {
+              <div className={styles.actionGroup}>
+                <button 
+                  className={styles.analyzeBtn}
+                  onClick={handleStartAnalysis}
+                  disabled={loading}
+                >
+                  {selectedFile 
+                    ? 'Start Analysis' 
+                    : resumeStatus.hasResume 
+                      ? 'Start with Saved Resume' 
+                      : 'Analyze Resume'}
+                </button>
+
+                {resumeStatus.hasResume && !selectedFile && (
+                  <button className={styles.updateLink} onClick={(e) => {
+                    e.stopPropagation();
                     triggerFileInput();
-                  }
-                }}
-              >
-                {selectedFile ? 'Start Analysis' : 'Analyze Resume'}
-              </button>
+                  }}>
+                    Update/Change Resume
+                  </button>
+                )}
+              </div>
 
               <div className={styles.badges}>
                 <div className={styles.badgeItem}>
@@ -131,3 +184,4 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
 };
 
 export default Upload;
+
