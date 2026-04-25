@@ -30,7 +30,6 @@ export const Analyzing = ({ resumeFile, onComplete }) => {
         
         onComplete(data);
       } catch (err) {
-        console.error("Analysis Error:", err);
         setError(err.response?.data?.message || "Failed to parse resume. Check your connection.");
       }
     };

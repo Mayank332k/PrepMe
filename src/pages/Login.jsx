@@ -13,6 +13,9 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const rotatingMessages = [
     "Enhance your journey for free.",
@@ -50,6 +53,8 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
   const handleLoginSuccess = async (credentialResponse) => {
     try {
       setIsLoading(true);
+      setEmailError('');
+      setPasswordError('');
       // Post to /auth/google - the browser now handles HttpOnly Cookie automatcially
       const response = await api.post('/auth/google', {
         idToken: credentialResponse.credential
@@ -62,27 +67,28 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
         localStorage.setItem('token', accessToken);
       }
       
-      console.log("Login Success, User Info:", user);
       
       // Update global user state in App.jsx (this now handles navigation too)
       if (onAuthSuccess) onAuthSuccess(user);
       
     } catch (error) {
       console.error("Auth Error:", error.response?.data || error.message);
-      alert("Login Error: " + (error.response?.data?.message || error.message));
+      const msg = error.response?.data?.message || "Google Authentication failed.";
+      setEmailError(msg); // Google errors are usually account/email related
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLoginError = () => {
-    console.log('Login Failed');
-    alert("Google Login Failed");
+    setEmailError("Google Login was unsuccessful. Please check your account.");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setEmailError('');
+    setPasswordError('');
     
     try {
       const endpoint = isSignUp ? '/auth/register' : '/auth/login';
@@ -98,7 +104,15 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
       if (onAuthSuccess) onAuthSuccess(user);
     } catch (error) {
       console.error("Manual Auth Error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Authentication failed. Please check your credentials.");
+      const msg = error.response?.data?.message || "Authentication failed.";
+      
+      if (msg.toLowerCase().includes('password')) {
+        setPasswordError(msg);
+      } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user') || msg.toLowerCase().includes('exist')) {
+        setEmailError(msg);
+      } else {
+        setEmailError(msg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -258,13 +272,13 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
             <div className={styles.cardNav}>
               <button 
                 className={`${styles.navTab} ${!isSignUp ? styles.activeTab : ''}`}
-                onClick={() => setIsSignUp(false)}
+                onClick={() => { setIsSignUp(false); setEmailError(''); setPasswordError(''); }}
               >
                 Sign In
               </button>
               <button 
                 className={`${styles.navTab} ${isSignUp ? styles.activeTab : ''}`}
-                onClick={() => setIsSignUp(true)}
+                onClick={() => { setIsSignUp(true); setEmailError(''); setPasswordError(''); }}
               >
                 Sign Up
               </button>
@@ -307,28 +321,40 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
                   type="email"
                   placeholder="name@company.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                  error={emailError}
                   required
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <div className={styles.passwordHeader}>
-                  <label htmlFor="password" className={styles.inputLabel}>Password</label>
-                  {!isSignUp && <button type="button" className={styles.forgotLink}>Forgot?</button>}
-                </div>
                 <Input 
+                  label="Password"
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+                  error={passwordError}
                   required
+                  suffix={
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className={styles.eyeBtn}
+                    >
+                      <span className="material-symbols-outlined">
+                        {showPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  }
                 />
               </div>
 
-              <Button type="submit" fullWidth disabled={isLoading} className={styles.submitBtn}>
-                {isLoading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
+              <Button type="submit" fullWidth loading={isLoading} className={styles.submitBtn}>
+                {isLoading 
+                  ? (isSignUp ? 'Creating Account...' : 'Signing In...') 
+                  : (isSignUp ? 'Create Account' : 'Sign In')}
               </Button>
             </form>
 

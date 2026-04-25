@@ -703,38 +703,24 @@
   flex-direction: column;
 }
 
-.passwordHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.inputLabel {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-primary);
-  opacity: 0.8;
-}
-
-.forgotLink {
+.eyeBtn {
   background: none;
   border: none;
-  font-size: 11px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
   padding: 0;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.forgotLink:hover {
-  opacity: 1;
+.eyeBtn:hover {
+  color: var(--text-primary);
+}
+
+.eyeBtn span {
+  font-size: 20px;
 }
 
 .submitBtn {

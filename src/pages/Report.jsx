@@ -131,7 +131,6 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
           setError("Report not found for this session.");
         }
       } catch (err) {
-        console.error("Failed to load report", err);
         setError("Failed to load report. Please try again later.");
       } finally {
         setLoading(false);

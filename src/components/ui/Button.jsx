@@ -9,21 +9,23 @@ import styles from './Button.module.css';
  * @param {boolean} [props.disabled=false] - Disabled state
  * @param {() => void} [props.onClick] - Click handler
  */
-export const Button = ({ children, variant = 'primary', fullWidth = false, disabled = false, onClick, ...rest }) => {
+export const Button = ({ children, variant = 'primary', fullWidth = false, disabled = false, loading = false, onClick, className, ...rest }) => {
   const classNames = [
     styles.btn,
     styles[variant],
     fullWidth ? styles.fullWidth : '',
-    disabled ? styles.disabled : ''
+    (disabled || loading) ? styles.disabled : '',
+    className
   ].join(' ').trim();
 
   return (
     <button 
       className={classNames} 
-      onClick={!disabled ? onClick : undefined}
-      disabled={disabled}
+      onClick={(!disabled && !loading) ? onClick : undefined}
+      disabled={disabled || loading}
       {...rest}
     >
+      {loading && <span className={styles.spinner}></span>}
       {children}
     </button>
   );

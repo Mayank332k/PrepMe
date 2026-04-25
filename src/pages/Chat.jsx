@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
@@ -27,6 +28,15 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [endError, setEndError] = useState(null);
   const scrollRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+    }
+  }, [inputText]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,10 +70,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } catch (err) {
-      console.error("Chat sync failed:", err);
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    // If user presses Enter without Shift or Command modifiers, send message
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+    // New line is handled by the textarea naturally when Shift or Command modifiers are present
   };
 
   return (
@@ -199,7 +217,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 </div>
                 <div className={styles.messageBody}>
                   <div className={styles.bubble}>
-                    {msg.text}
+                    <div className={styles.markdownContent}>
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
                   </div>
                   <span className={styles.time}>{msg.timestamp}</span>
                 </div>
@@ -228,12 +248,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         <footer className={styles.footer}>
           <div className={styles.inputWrapper}>
             <form onSubmit={handleSendMessage} className={styles.form}>
-              <input 
-                type="text" 
+              <textarea 
+                ref={textareaRef}
                 placeholder="Reply to Prep AI..." 
-                className={styles.input}
+                className={styles.textarea}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
               />
               <button type="submit" className={styles.sendIcon} disabled={!inputText.trim()}>
                 <span className="material-symbols-outlined">arrow_upward</span>

@@ -11,7 +11,7 @@ import styles from './Input.module.css';
  * @param {boolean} [props.required=false] - Required field
  * @param {(e) => void} [props.onChange] - Change handler
  */
-export const Input = ({ label, error, id, type = 'text', placeholder, required = false, onChange, ...rest }) => {
+export const Input = ({ label, error, id, type = 'text', placeholder, required = false, onChange, suffix, ...rest }) => {
   return (
     <div className={styles.wrapper}>
       {label && (
@@ -20,15 +20,18 @@ export const Input = ({ label, error, id, type = 'text', placeholder, required =
           {required && <span className={styles.required}>*</span>}
         </label>
       )}
-      <input 
-        id={id}
-        type={type} 
-        placeholder={placeholder}
-        className={`${styles.input} ${error ? styles.error : ''}`}
-        onChange={onChange}
-        required={required}
-        {...rest}
-      />
+      <div className={styles.inputContainer}>
+        <input 
+          id={id}
+          type={type} 
+          placeholder={placeholder}
+          className={`${styles.input} ${error ? styles.error : ''} ${suffix ? styles.hasSuffix : ''}`}
+          onChange={onChange}
+          required={required}
+          {...rest}
+        />
+        {suffix && <div className={styles.suffix}>{suffix}</div>}
+      </div>
       {error && <span className={styles.errorText}>{error}</span>}
     </div>
   );

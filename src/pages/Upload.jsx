@@ -21,7 +21,6 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
           resumeName: data.resumeName || ''
         });
       } catch (err) {
-        console.error("Failed to fetch resume status:", err);
       } finally {
         setLoading(false);
       }

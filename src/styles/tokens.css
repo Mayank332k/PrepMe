@@ -11,6 +11,10 @@
   --accent         : #000000;   /* pure black for premium contrast */
   --accent-warm    : #D1D5DB;   /* soft silver accent (replaces warm champagne) */
   --info           : #3B82F6;   /* cleaner true blue for info items */
+  --error          : #EF4444;   /* semantic red for errors */
+  --danger         : #EF4444;   /* alias for error red */
+  --bg-error       : #FEF2F2;   /* ultra-light red for backgrounds */
+  --border-error   : #FEE2E2;   /* soft red for borders */
 
   /* Spacing Scale */
   --space-micro    : 4px;
