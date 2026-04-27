@@ -533,3 +533,237 @@
   transform: translateY(-2px);
   box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
+
+.viewTranscriptBtn {
+  justify-self: end;
+  background-color: #f2f2f2;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+}
+
+.viewTranscriptBtn:hover {
+  background-color: #e5e5e5 !important;
+  color: #000 !important;
+  transform: scale(1.05);
+}
+
+.btnContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.btnText {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+}
+
+.btnArrow {
+  position: absolute;
+  right: -30px;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.viewTranscriptBtn:hover .btnText {
+  transform: translateX(-15px);
+  opacity: 0;
+}
+
+.viewTranscriptBtn:hover .btnArrow {
+  right: 0;
+  opacity: 1;
+}
+
+
+/* Transcript Drawer */
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 0.3s ease;
+}
+
+.drawerContent {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  background: white;
+  box-shadow: -10px 0 50px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.drawerHeader {
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawerTitleGroup span {
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.drawerTitleGroup h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.closeDrawer {
+  background: var(--bg-hover);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.closeDrawer:hover {
+  background: #eee;
+  color: var(--text-primary);
+}
+
+.drawerBody {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.transcriptScroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.msgRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.userRow { align-items: flex-end; }
+.aiRow { align-items: flex-start; }
+
+.msgBubble {
+  max-width: 85%;
+  padding: 16px 20px;
+  border-radius: 20px;
+  position: relative;
+}
+
+.userRow .msgBubble {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-bottom-right-radius: 4px;
+}
+
+.aiRow .msgBubble {
+  background-color: #f8f9fa;
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.msgLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  opacity: 0.5;
+}
+
+.msgText {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.msgText p { margin: 0; }
+.msgText p + p { margin-top: 12px; }
+
+.drawerFooter {
+  padding: 20px 32px;
+  background-color: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.drawerFooter p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.emptyTranscript {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  gap: 16px;
+}
+
+.emptyTranscript span { font-size: 48px; opacity: 0.3; }
+.emptyTranscript p { font-size: 15px; margin: 0; }
+
+@media (max-width: 768px) {
+  .drawerContent {
+    max-width: 100%;
+  }
+  
+  .transcriptScroll {
+    padding: 24px 20px;
+  }
+  
+  .msgBubble {
+    max-width: 90%;
+  }
+}

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import api from '../api';
 import styles from './Analyzing.module.css';
 
-export const Analyzing = ({ resumeFile, onComplete }) => {
+export const Analyzing = ({ resumeFile, jobDescription, onComplete }) => {
   const [error, setError] = React.useState(null);
 
   useEffect(() => {
@@ -14,10 +14,11 @@ export const Analyzing = ({ resumeFile, onComplete }) => {
           // New Resume Upload (Update)
           const formData = new FormData();
           formData.append('resume', resumeFile);
+          formData.append('jobDescription', jobDescription || '');
           response = await api.post('/interview/ingest', formData);
         } else {
           // Use Saved Resume
-          response = await api.post('/interview/ingest', {});
+          response = await api.post('/interview/ingest', { jobDescription: jobDescription || '' });
         }
         
         const { data } = response;

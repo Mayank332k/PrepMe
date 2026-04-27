@@ -5,17 +5,24 @@ import api from '../api';
 import styles from './Upload.module.css';
 import logo from '../assets/logo.png';
 
-export const Upload = ({ user, onAnalyze, onNavigate }) => {
+export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavigate }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [resumeStatus, setResumeStatus] = useState({ hasResume: false, resumeName: '' });
-  const [loading, setLoading] = useState(true);
+  const [jobDescription, setJobDescription] = useState('');
+  const [loading, setLoading] = useState(!resumeStatus);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    if (resumeStatus) {
+      setLoading(false);
+      return;
+    }
+
     const checkResumeStatus = async () => {
       try {
-        const { data } = await api.get('/interview/resume-status', { params: { refresh: true } });
+        const { data } = await api.get('/interview/resume-status');
         setResumeStatus({
           hasResume: data.hasResume,
           resumeName: data.resumeName || ''
@@ -27,7 +34,7 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
     };
 
     checkResumeStatus();
-  }, []);
+  }, [resumeStatus, setResumeStatus]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -56,12 +63,30 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
     fileInputRef.current?.click();
   };
 
-  const handleStartAnalysis = (e) => {
-    e.stopPropagation();
+  const handleStartAnalysis = () => {
     if (selectedFile) {
-      onAnalyze(selectedFile);
-    } else if (resumeStatus.hasResume) {
-      onAnalyze(null); // Signal to use saved resume
+      setIsUploading(true);
+      const duration = 2000; // 2 seconds total for smooth fill
+      const start = performance.now();
+      
+      const animate = (time) => {
+        const elapsed = time - start;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        
+        setUploadProgress(progress);
+        
+        if (progress < 100) {
+          requestAnimationFrame(animate);
+        } else {
+          setTimeout(() => {
+            onAnalyze(selectedFile, jobDescription);
+          }, 400);
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    } else if (resumeStatus?.hasResume) {
+      onAnalyze(null, jobDescription);
     } else {
       triggerFileInput();
     }
@@ -75,9 +100,7 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
       <main className={styles.mainCanvas}>
         <header className={styles.topBar}>
           <div className={styles.logoSection}>
-            <div className={styles.logoBadge}>
-              <img src={logo} alt="Logo" className={styles.logoImg} />
-            </div>
+            <img src={logo} alt="Logo" className={styles.logoImg} />
           </div>
           
           <div className={styles.profileSection}>
@@ -92,88 +115,78 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
         </header>
 
         <section className={styles.uploadSection}>
-          <div className={styles.bgBlobs}>
-            <div className={styles.blob1}></div>
-            <div className={styles.blob2}></div>
-          </div>
-
-          <div className={styles.dropzoneWrapper}>
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-              accept=".pdf,.doc,.docx"
-            />
-            
-            <div 
-              className={`${styles.dropzoneGlass} ${isDragging ? styles.dragging : ''}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={selectedFile ? null : triggerFileInput}
-            >
-              <div className={styles.docIcon}>
-                <span className="material-symbols-outlined">
-                  {isDragging ? 'upload_file' : selectedFile ? 'task' : resumeStatus.hasResume ? 'assignment_turned_in' : 'description'}
-                </span>
+          <div className={styles.workspaceGrid}>
+            {/* Resume Section */}
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <span className="material-symbols-outlined">description</span>
+                <h3>Your Resume</h3>
               </div>
               
-              <h3 className={styles.dropTitle}>
-                {isDragging 
-                  ? 'Drop your resume now' 
-                  : selectedFile 
-                    ? selectedFile.name 
-                    : resumeStatus.hasResume 
-                      ? `Saved: ${resumeStatus.resumeName}` 
-                      : 'Choose a file to analyze'}
-              </h3>
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+                accept=".pdf,.doc,.docx"
+              />
               
-              <p className={styles.dropDesc}>
-                {isDragging 
-                  ? 'Perfect, release to upload' 
-                  : selectedFile 
-                    ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
-                    : resumeStatus.hasResume 
-                      ? 'Ready to start with your saved resume' 
-                      : 'Drag and drop your file here, or click to browse'}
-              </p>
-              
-              <div className={styles.actionGroup}>
-                <button 
-                  className={styles.analyzeBtn}
-                  onClick={handleStartAnalysis}
-                  disabled={loading}
-                >
-                  {selectedFile 
-                    ? 'Start Analysis' 
-                    : resumeStatus.hasResume 
-                      ? 'Start with Saved Resume' 
-                      : 'Analyze Resume'}
+              <div 
+                className={`${styles.resumeArea} ${isUploading ? styles.uploading : ''}`}
+                style={{ '--progress': `${uploadProgress}%` }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={!isUploading ? triggerFileInput : undefined}
+              >
+                <div className={styles.resumeInfo}>
+                  <div className={styles.fileIcon}>
+                    <span className="material-symbols-outlined">
+                      {selectedFile ? 'picture_as_pdf' : resumeStatus?.hasResume ? 'verified' : 'upload_file'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className={styles.fileName}>
+                      {selectedFile ? selectedFile.name : resumeStatus?.hasResume ? resumeStatus.resumeName : 'Select Resume (PDF)'}
+                    </div>
+                    <div className={styles.fileStatus}>
+                      {isDragging ? 'Drop to upload' : selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : resumeStatus?.hasResume ? 'Saved in profile' : 'Drag & drop or click to browse'}
+                    </div>
+                  </div>
+                </div>
+                
+                <button className={styles.changeBtn}>
+                  {selectedFile || resumeStatus?.hasResume ? 'Change' : 'Browse'}
                 </button>
-
-                {resumeStatus.hasResume && !selectedFile && (
-                  <button className={styles.updateLink} onClick={(e) => {
-                    e.stopPropagation();
-                    triggerFileInput();
-                  }}>
-                    Update/Change Resume
-                  </button>
-                )}
               </div>
+            </div>
 
-              <div className={styles.badges}>
-                <div className={styles.badgeItem}>
-                  <span className="material-symbols-outlined">check_circle</span>
-                  <span>ATS Optimized</span>
-                </div>
-                <div className={styles.badgeItem}>
-                  <span className="material-symbols-outlined">check_circle</span>
-                  <span>Privacy Secured</span>
-                </div>
+            {/* JD Section */}
+            <div className={styles.jdContainer}>
+              <div className={styles.sectionHeader}>
+                <span className="material-symbols-outlined">work</span>
+                <h3>Target Job Description</h3>
               </div>
+              
+              <textarea 
+                className={styles.jdTextarea}
+                placeholder="Paste the Job Description here (Optional)..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+              />
+            </div>
 
-              {isDragging && <div className={styles.dragOverlay}></div>}
+            {/* Final Action */}
+            <div className={styles.footerAction}>
+              <button 
+                className={styles.startBtn}
+                onClick={handleStartAnalysis}
+                disabled={loading || (!selectedFile && !resumeStatus?.hasResume)}
+              >
+                <span className={styles.btnText}>Start Interview</span>
+                <div className={styles.divider}></div>
+                <span className={styles.iconRight}>arrow_forward</span>
+              </button>
             </div>
           </div>
         </section>
@@ -183,4 +196,3 @@ export const Upload = ({ user, onAnalyze, onNavigate }) => {
 };
 
 export default Upload;
-

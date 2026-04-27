@@ -59,10 +59,6 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
       </nav>
 
       <div className={styles.footer}>
-        <button className={styles.newAnalysisBtn} onClick={() => onNavigate && onNavigate('upload')}>
-          <span className="material-symbols-outlined">add</span>
-          {isExpanded && <span>New Analysis</span>}
-        </button>
 
         <div className={styles.userProfileWrapper}>
           <div 

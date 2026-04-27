@@ -2,71 +2,47 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background-color: var(--bg-base);
-  color: var(--text-primary);
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+  font-family: var(--font-inter, 'Inter', sans-serif);
 }
 
 .mainCanvas {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
   position: relative;
+  background: #fdfdfd;
 }
 
 .topBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 48px;
-  background-color: transparent;
+  padding: 20px 40px;
+  background-color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 30;
 }
 
 .logoSection {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.logoBadge {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: transparent;
 }
 
 .logoImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.logoSection span { font-size: 18px; }
-
-.logoText {
-  font-size: 18px;
-  font-weight: var(--weight-medium);
-  letter-spacing: -0.02em;
-}
-
-.profileSection {
-  display: flex;
-  align-items: center;
+  height: 28px;
+  width: auto;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  border: 4px solid var(--bg-surface);
-  cursor: pointer;
+  border: 1px solid #eee;
 }
 
 .avatar img {
@@ -77,203 +53,284 @@
 
 .uploadSection {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
-  position: relative;
-  z-index: 10;
-}
-
-.dropzoneWrapper {
+  padding: 30px 40px 60px;
+  max-width: 900px;
+  margin: 0 auto;
   width: 100%;
-  max-width: 580px;
-  z-index: 10;
 }
 
-.dropzoneGlass {
-  background-color: var(--bg-surface);
-  border: 1px dashed var(--border);
-  border-radius: 2.5rem;
-  padding: 80px 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  cursor: pointer;
-  box-shadow: 0 40px 100px -30px rgba(49, 51, 46, 0.06);
-  position: relative;
-}
-
-.dropzoneGlass:hover {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-color: var(--info);
-  transform: translateY(-8px);
-  box-shadow: 0 60px 120px -30px rgba(49, 51, 46, 0.1);
-}
-
-.dragging {
-  border-color: var(--info);
-  border-style: solid;
-  transform: scale(1.02) translateY(-8px);
-  background-color: var(--bg-hover);
-}
-
-.docIcon {
-  width: 96px;
-  height: 96px;
-  background-color: var(--bg-hover);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 40px;
-  color: var(--info);
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.dragging .docIcon {
-  background-color: var(--info);
-  color: #FFF;
-  transform: translateY(-16px) scale(1.15);
-}
-
-.dropTitle {
-  font-size: 22px;
-  font-weight: var(--weight-medium);
-  margin-bottom: 12px;
-}
-
-.dropDesc {
-  font-size: 15px;
-  color: var(--text-secondary);
+.headerArea {
   margin-bottom: 48px;
 }
 
-.actionGroup {
+.headerArea h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+  color: #000;
+}
+
+.headerArea p {
+  color: #666;
+  font-size: 16px;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.workspaceGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionCard {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.sectionCard:hover {
+  border-color: #ddd;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sectionHeader span {
+  color: #584395;
+  font-size: 20px;
+}
+
+.sectionHeader h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
+
+/* Resume Section Specifics */
+.resumeArea {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9f9f9;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px dashed #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.resumeArea.uploading {
+  border-style: solid;
+  border-color: transparent;
+  cursor: default;
+}
+
+.resumeArea.uploading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 3px;
+  background: conic-gradient(#3b82f6 var(--progress), transparent 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.resumeArea:hover {
+  background: #f0f0f0;
+  border-color: #bbb;
+}
+
+.resumeInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fileIcon {
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #584395;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.fileName {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.fileStatus {
+  font-size: 12px;
+  color: #888;
+}
+
+.changeBtn {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.changeBtn:hover {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.uploadPlaceholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  color: #888;
+  padding: 10px 0;
+}
+
+/* JD Section Specifics */
+.jdContainer {
   width: 100%;
+  text-align: left;
 }
 
-.analyzeBtn {
-  padding: 16px 56px;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(45deg, #1A1A1A 0%, #2D2D2D 100%);
-  color: #FFF;
-  border: none;
-  font-size: 16px;
-  font-weight: var(--weight-medium);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  cursor: pointer;
+.jdTextarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 24px;
+  background: #fff;
+  border: 1.5px solid #eee;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #1a1a1a;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
-.analyzeBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.analyzeBtn:not(:disabled):hover {
+.jdTextarea:focus {
+  outline: none;
+  border-color: #584395;
+  box-shadow: 0 12px 30px rgba(88, 67, 149, 0.08);
   transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-.updateLink {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 14px;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s;
+.jdTextarea::placeholder {
+  color: #aaa;
 }
 
-.updateLink:hover {
-  color: var(--info);
-}
-
-
-.badges {
+/* Bottom Action - The user's exact button style */
+.footerAction {
   display: flex;
-  gap: 32px;
-  margin-top: 64px;
-  opacity: 0.4;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-bottom: 100px;
 }
 
-.badgeItem {
+.startBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--text-primary);
+  height: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, .1);
+  background: linear-gradient(to bottom, #ffffff80, #ffffff1a);
+  box-shadow: inset 0 1px 1px #ffffffb3, 0 2px 4px #0000000d;
+  transition: all .2s ease-in-out;
+  overflow: hidden;
+  cursor: pointer;
+  color: #333;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 0 16px;
+  gap: 10px;
 }
 
-.badgeItem span:first-child {
-  font-size: 14px;
-  color: var(--success);
+.startBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 1px #ffffffb3, 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
-.blob1 {
-  position: absolute;
-  top: 10%;
-  right: 5%;
-  width: 600px;
-  height: 600px;
-  background: var(--info);
-  opacity: 0.03;
-  filter: blur(100px);
+.startBtn:active {
+  transform: translateY(1px);
+  background: linear-gradient(to top, #fff3, #ffffff1a);
+  box-shadow: inset 0 2px 4px #0000001a, 0 1px 2px #0000000d;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-.blob2 {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 400px;
-  height: 400px;
-  background: var(--warning);
-  opacity: 0.04;
-  filter: blur(100px);
+.btnText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
 }
 
-.dragOverlay {
-  position: absolute;
-  inset: 0;
-  border: 4px solid var(--info);
-  border-radius: 2.5rem;
-  pointer-events: none;
-  animation: pulse 1.5s infinite;
+.divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(0, 0, 0, .1);
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.05); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
+.iconRight {
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  display: flex;
+  align-items: center;
 }
 
-@media (max-width: 1024px) {
-  .topBar { padding: 24px 32px; }
-  .uploadSection { padding: 32px; }
+.startBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
+/* Mobile Adjustments */
 @media (max-width: 768px) {
-  .topBar { padding: 16px 24px; }
-  .logoText { font-size: 16px; }
-  .logoBadge { width: 28px; height: 28px; }
-  .logoBadge span { font-size: 14px; }
+  .topBar { padding: 12px 20px; height: 60px; }
+  .logoImg { height: 22px; }
   
-  .uploadSection { padding: 24px; padding-bottom: 80px; }
-  .dropzoneGlass { padding: 60px 24px; border-radius: 2rem; width: 100%; }
-  .docIcon { width: 72px; height: 72px; margin-bottom: 32px; }
-  .docIcon span { font-size: 32px; }
-  .analyzeBtn { width: 100%; font-size: 15px; }
-  .badges { gap: 16px; margin-top: 40px; align-items: center; }
+  .uploadSection { padding: 20px 16px 100px; }
+  
+  .sectionCard { padding: 20px; border-radius: 20px; }
+  .sectionHeader { margin-bottom: 16px; }
+  .sectionHeader h3 { font-size: 16px; }
+  .sectionHeader span { font-size: 18px; }
+  
+  .resumeArea { padding: 16px; border-radius: 12px; gap: 12px; }
+  .fileIcon { width: 40px; height: 40px; }
+  .fileName { font-size: 14px; }
+  .fileStatus { font-size: 11px; }
+  .changeBtn { padding: 6px 12px; font-size: 12px; border-radius: 8px; width: 100%; }
+  
+  .jdTextarea { min-height: 160px; padding: 16px; border-radius: 20px; font-size: 14px; }
+  
+  .footerAction { margin-top: 12px; justify-content: center; }
+  .startBtn { height: 40px; width: auto; min-width: 130px; }
 }

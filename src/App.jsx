@@ -7,6 +7,7 @@ import { Analyzing } from './pages/Analyzing';
 import { Chat } from './pages/Chat';
 import { Report } from './pages/Report';
 import { History } from './pages/History';
+import { SessionWarningModal } from './components/ui/SessionWarningModal';
 import './index.css';
 
 function App() {
@@ -14,7 +15,11 @@ function App() {
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [resumeFile, setResumeFile] = useState(null);
+  const [jobDescription, setJobDescription] = useState('');
   const [sessionData, setSessionData] = useState(null);
+  const [resumeStatus, setResumeStatus] = useState(null);
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
+  const [pendingNavTarget, setPendingNavTarget] = useState(null);
 
   // for prevent crash
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "739328229230-dummy.apps.googleusercontent.com";
@@ -47,7 +52,30 @@ function App() {
       setCurrentScreen('login');
       return;
     }
+
+    // Block navigation if interview session is active and user is on chat screen
+    if (currentScreen === 'chat' && sessionData && screen !== 'chat') {
+      setPendingNavTarget(screen);
+      setShowSessionWarning(true);
+      return;
+    }
+
     setCurrentScreen(screen);
+  };
+
+  const handleSessionWarningContinue = () => {
+    setShowSessionWarning(false);
+    setPendingNavTarget(null);
+  };
+
+  const handleSessionWarningLeave = () => {
+    setShowSessionWarning(false);
+    // Clear the session data since user chose to leave
+    setSessionData(null);
+    setResumeFile(null);
+    // Navigate to the pending target
+    setCurrentScreen(pendingNavTarget || 'upload');
+    setPendingNavTarget(null);
   };
 
   const handleAuthSuccess = (userData) => {
@@ -83,8 +111,11 @@ function App() {
         return <Upload 
           user={user} 
           sessionActive={sessionActive}
-          onAnalyze={(file) => {
+          resumeStatus={resumeStatus}
+          setResumeStatus={setResumeStatus}
+          onAnalyze={(file, jd) => {
             setResumeFile(file);
+            setJobDescription(jd);
             setCurrentScreen('analyzing');
           }} 
           onNavigate={navigateTo} 
@@ -92,6 +123,7 @@ function App() {
       case 'analyzing': 
         return <Analyzing 
           resumeFile={resumeFile}
+          jobDescription={jobDescription}
           onComplete={(data) => {
             setSessionData(data);
             setCurrentScreen('chat');
@@ -107,7 +139,7 @@ function App() {
             try {
               const { data } = await api.post(`/interview/report/${sessionData.sessionId}`);
               if (data.success && data.report) {
-                setSessionData({ ...sessionData, report: data.report });
+                setSessionData({ ...sessionData, report: data.report, transcript: data.transcript });
                 setCurrentScreen('report');
               }
             } catch (err) {
@@ -150,6 +182,12 @@ function App() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <div className="App">
          {renderComponent()}
+         {showSessionWarning && (
+           <SessionWarningModal
+             onContinue={handleSessionWarningContinue}
+             onLeave={handleSessionWarningLeave}
+           />
+         )}
       </div>
     </GoogleOAuthProvider>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Report.module.css';
@@ -115,18 +116,21 @@ const ProgressBar = ({ label, score, color, delay }) => {
 export const Report = ({ user, sessionData, setSessionData, sessionActive, onRetake, onNavigate }) => {
   const [loading, setLoading] = useState(!sessionData?.report);
   const [error, setError] = useState(null);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [transcript, setTranscript] = useState(sessionData?.transcript || []);
   const reportData = sessionData?.report;
 
   useEffect(() => {
     const fetchReport = async () => {
-      if (reportData || !sessionData?.sessionId) return;
+      if ((reportData && transcript && transcript.length > 0) || !sessionData?.sessionId) return;
       
       setLoading(true);
       setError(null);
       try {
         const { data } = await api.get(`/interview/report/${sessionData.sessionId}`);
         if (data.success && data.report) {
-          setSessionData({ ...sessionData, report: data.report });
+          setSessionData({ ...sessionData, report: data.report, transcript: data.transcript });
+          setTranscript(data.transcript || []);
         } else {
           setError("Report not found for this session.");
         }
@@ -273,7 +277,17 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
           </div>
           
           <div className={styles.headerActions}>
-            {/* Removed retakeBtn and profileSection per user request */}
+            <button 
+              className={styles.viewTranscriptBtn} 
+              onClick={() => setShowTranscript(true)}
+            >
+              <div className={styles.btnContent}>
+                <span className={styles.btnText}>View Chat</span>
+                <span className={styles.btnArrow}>
+                  <span className="material-symbols-outlined">forum</span>
+                </span>
+              </div>
+            </button>
           </div>
         </header>
 
@@ -373,6 +387,48 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
           </div>
         </section>
       </main>
+      {/* Transcript Drawer Overlay */}
+      {showTranscript && (
+        <div className={styles.drawerOverlay} onClick={() => setShowTranscript(false)}>
+          <div className={styles.drawerContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.drawerHeader}>
+              <div className={styles.drawerTitleGroup}>
+                <span className="material-symbols-outlined">history_edu</span>
+                <h3>Interview Transcript</h3>
+              </div>
+              <button className={styles.closeDrawer} onClick={() => setShowTranscript(false)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className={styles.drawerBody}>
+              <div className={styles.transcriptScroll}>
+                {transcript.length > 0 ? (
+                  transcript.map((msg, idx) => (
+                    <div key={idx} className={`${styles.msgRow} ${msg.role === 'user' ? styles.userRow : styles.aiRow}`}>
+                      <div className={styles.msgBubble}>
+                        <div className={styles.msgLabel}>{msg.role === 'user' ? 'You' : 'AI Interviewer'}</div>
+                        <div className={styles.msgText}>
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyTranscript}>
+                    <span className="material-symbols-outlined">sentiment_dissatisfied</span>
+                    <p>No transcript available for this session.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className={styles.drawerFooter}>
+              <p>This is a read-only view of your interview session.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -261,7 +261,14 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                           
                           <div>
                             <h3 className={styles.jobTitle}>
-                              {item.jobDescription || 'General SWE Interview'}
+                              {item.jobDescription 
+                                ? (() => {
+                                    const cleanTitle = item.jobDescription.replace(/\*/g, '').trim();
+                                    return cleanTitle.length > 60 
+                                      ? cleanTitle.substring(0, 60) + '...' 
+                                      : cleanTitle;
+                                  })()
+                                : 'General SWE Interview'}
                             </h3>
                           </div>
                           

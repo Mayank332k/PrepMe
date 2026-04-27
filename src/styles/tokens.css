@@ -5,7 +5,7 @@
   --bg-surface     : #FFFFFF;   /* bright white cards and surfaces */
   --bg-hover       : #F0F2F5;   /* cool neutral hover */
   --border         : #E4E7EB;   /* sharp neutral border */
-  --text-primary   : #111827;   /* crisp dark slate for text */
+  --text-primary   : #121212;   /* crisp very dark slate for text */
   --text-secondary : #4B5563;   /* balanced medium gray */
   --text-muted     : #9CA3AF;   /* soft gray for hints */
   --accent         : #000000;   /* pure black for premium contrast */
@@ -34,7 +34,7 @@
   --radius-pill    : 100px;
 
   /* Typography */
-  --font-main      : 'Inter', 'DM Sans', system-ui, sans-serif;
+  --font-main      : -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --line-height    : 1.7;
 
   /* Font Sizes */
@@ -72,6 +72,7 @@ body {
   font-size: var(--size-body);
   line-height: var(--line-height);
   font-weight: var(--weight-normal);
+  letter-spacing: 0.02em;
 }
 
 h1, h2, h3 {

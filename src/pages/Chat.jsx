@@ -1,10 +1,121 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Chat.module.css';
 import logo from '../assets/logo.png';
+
+const CodeBlock = ({ language, value }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={styles.codeBlockContainer}>
+      <div className={styles.codeHeader}>
+        <div className={styles.codeLang}>
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>code</span>
+          {language || 'code'}
+        </div>
+        <button className={styles.copyBtn} onClick={copyToClipboard} title="Copy code">
+          {copied ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="8" y="8" width="12" height="12" rx="3.5" ry="3.5"></rect>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" opacity="0.5"></path>
+            </svg>
+          )}
+        </button>
+      </div>
+      <div className={styles.codeContent}>
+        <SyntaxHighlighter
+          language={language || 'text'}
+          style={oneLight}
+          PreTag="div"
+          codeTagProps={{ style: { backgroundColor: 'transparent' } }}
+          customStyle={{
+            margin: 0,
+            padding: '16px 20px',
+            backgroundColor: 'transparent',
+            fontSize: '14.5px',
+            lineHeight: '1.6',
+          }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+};
+
+const MarkdownComponents = {
+  code({ node, inline, className, children, ...props }) {
+    const match = /language-(\w+)/.exec(className || '');
+    return !inline && match ? (
+      <CodeBlock 
+        language={match[1]} 
+        value={String(children).replace(/\n$/, '')} 
+      />
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  }
+};
+
+const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData }) => {
+  return (
+    <div className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
+      <div className={styles.messageBody}>
+        <div className={styles.bubbleContainer}>
+          <div className={styles.bubble}>
+            <div className={styles.markdownContent}>
+              <ReactMarkdown components={MarkdownComponents}>{msg.text}</ReactMarkdown>
+            </div>
+          </div>
+        </div>
+
+        {msg.sender === 'ai' && (
+          <div className={styles.messageMetadata}>
+            <button 
+              className={styles.menuTrigger} 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
+              }}
+            >
+              <span className="material-symbols-outlined">more_horiz</span>
+            </button>
+
+            {activeMenuId === msg.id && (
+              <div className={styles.infoDropdown} onClick={(e) => e.stopPropagation()}>
+                <span className={styles.infoLabel}>
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {msg.timestamp}
+                </span>
+                
+                <div className={styles.infoItem}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#666' }}>fingerprint</span>
+                  <span className={styles.infoValue}>Session #{sessionData?.sessionId?.slice(-6).toUpperCase() || 'N/A'}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [messages, setMessages] = useState([]);
@@ -22,11 +133,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       ]);
     }
   }, [sessionData, messages.length]);
+
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [endError, setEndError] = useState(null);
+  const [activeMenuId, setActiveMenuId] = useState(null);
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -39,12 +153,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   }, [inputText]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    scrollRef.current?.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
+  }, [messages, isStreaming]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim() || isTyping) return;
+    if (!inputText.trim() || isTyping || isStreaming) return;
 
     const userText = inputText.trim();
     const sessionId = sessionData?.sessionId;
@@ -61,17 +181,86 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     setIsTyping(true);
 
     try {
-      const { data } = await api.post(`/interview/chat/${sessionId}`, { message: userText });
-      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/interview/chat/${sessionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ message: userText }),
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedResponse = '';
+      let lastUpdateTime = Date.now();
+
+      setIsTyping(false); // Hide skeleton
+      setIsStreaming(true); // Start instant scroll mode
+
+      // Initialize empty AI message
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'ai',
-        text: data.reply,
+        text: '',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.substring(6).trim();
+            
+            if (dataStr === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.content) {
+                accumulatedResponse += parsed.content;
+                
+                // Throttled UI updates (every 40ms) to prevent render thrashing
+                const now = Date.now();
+                if (now - lastUpdateTime > 40) {
+                  setMessages(prev => {
+                    const newMessages = [...prev];
+                    const lastIndex = newMessages.length - 1;
+                    newMessages[lastIndex] = {
+                      ...newMessages[lastIndex],
+                      text: accumulatedResponse
+                    };
+                    return newMessages;
+                  });
+                  lastUpdateTime = now;
+                }
+              }
+            } catch (err) {
+              // Silently handle parse errors for partial chunks
+            }
+          }
+        }
+      }
+
+      // Final update to ensure everything is rendered
+      setMessages(prev => {
+        const newMessages = [...prev];
+        const lastIndex = newMessages.length - 1;
+        newMessages[lastIndex] = {
+          ...newMessages[lastIndex],
+          text: accumulatedResponse
+        };
+        return newMessages;
+      });
     } catch (err) {
-    } finally {
       setIsTyping(false);
+    } finally {
+      setIsStreaming(false);
     }
   };
 
@@ -103,7 +292,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             onClick={() => setShowEndConfirm(true)}
             disabled={isEnding}
           >
-            {isEnding ? <div className={styles.miniSpinner}></div> : "End Session"}
+            <div className={styles.btnContent}>
+              <span className={styles.btnText}>
+                {isEnding ? <div className={styles.miniSpinner}></div> : "End Session"}
+              </span>
+              <span className={styles.btnArrow}>
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </span>
+            </div>
           </button>
         </header>
 
@@ -203,34 +399,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         <section className={styles.chatCanvas}>
           <div className={styles.messageScroll}>
             {messages.map((msg) => (
-              <div key={msg.id} className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
-                <div className={styles.avatar}>
-                  {msg.sender === 'ai' ? (
-                    <img src={logo} alt="AI" className={styles.aiLogo} />
-                  ) : (
-                    user?.avatar ? (
-                      <img src={user.avatar} alt="User" className={styles.userAvatarImg} />
-                    ) : (
-                      <span className="material-symbols-outlined">person</span>
-                    )
-                  )}
-                </div>
-                <div className={styles.messageBody}>
-                  <div className={styles.bubble}>
-                    <div className={styles.markdownContent}>
-                      <ReactMarkdown>{msg.text}</ReactMarkdown>
-                    </div>
-                  </div>
-                  <span className={styles.time}>{msg.timestamp}</span>
-                </div>
-              </div>
+              <ChatMessage 
+                key={msg.id} 
+                msg={msg} 
+                activeMenuId={activeMenuId} 
+                setActiveMenuId={setActiveMenuId} 
+                sessionData={sessionData} 
+              />
             ))}
             
             {isTyping && (
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
-                <div className={styles.avatar}>
-                  <img src={logo} alt="AI" className={styles.aiLogo} />
-                </div>
                 <div className={styles.messageBody}>
                   <div className={styles.skeletonContainer}>
                     <div className={styles.skeletonLine}></div>
@@ -262,7 +441,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               </button>
             </form>
           </div>
-          <p className={styles.aiWarning}>AI can make mistakes. Please verify important info.</p>
+          <p className={styles.aiWarning}>AI can make mistakes</p>
         </footer>
       </main>
     </div>

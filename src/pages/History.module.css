@@ -592,12 +592,12 @@
 
 .confirmActions button {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 100px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cancelAction {
@@ -638,7 +638,7 @@
   width: 90%;
   max-width: 380px;
   padding: 40px;
-  border-radius: 28px;
+  border-radius: 32px;
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -683,9 +683,9 @@
 
 .modalActions button {
   width: 100%;
-  padding: 16px;
-  border-radius: 16px;
-  font-size: 15px;
+  padding: 14px;
+  border-radius: 100px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -700,19 +700,20 @@
 .cancelBtn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+  border-color: rgba(0,0,0,0.1);
 }
 
 .confirmBtn {
-  background: #000;
+  background: #ff3b30; /* Use red for delete confirm */
   color: white;
   border: none;
-  order: -1; /* Confirm button first */
+  order: -1; 
 }
 
 .confirmBtn:hover {
-  background: #222;
+  background: #e03126;
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 20px rgba(255, 59, 48, 0.2);
 }
 
 @keyframes fadeIn {
