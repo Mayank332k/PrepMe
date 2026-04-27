@@ -59,32 +59,96 @@
 }
 
 .backBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
+  background: none;
+  border: none;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+  padding: 8px 18px;
+  border-radius: 100px;
+  width: fit-content;
+  align-self: center;
+  height: 40px;
+  will-change: transform, width, padding, background-color;
+  position: relative;
   margin-right: 16px;
-  font-size: 13px;
+}
+
+.backBtn:hover { 
+  background-color: var(--bg-hover);
+  padding: 8px 14px;
+  transform: translateX(-4px) scale(1.05);
+}
+
+.backBtnContent {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.customArrow {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.arrowShaft {
+  width: 16px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  transform-origin: left center;
+}
+
+.arrowHead {
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  transform: rotate(-45deg);
+  margin-right: -4px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  flex-shrink: 0;
+}
+
+.backBtnText {
+  font-size: 14px;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  margin-left: 10px;
+  width: 38px; /* Adjusted for Report screen font-size */
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-.backBtn:hover {
-  background-color: var(--text-primary);
-  color: var(--bg-surface);
-  border-color: var(--text-primary);
-  transform: translateX(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.backBtn:hover .arrowShaft {
+  width: 36px;
 }
 
-.backBtn span {
-  font-weight: 700;
+.backBtn:hover .arrowHead {
+  transform: rotate(-45deg) scale(1.15);
+}
+
+.backBtn:hover .backBtnText {
+  opacity: 0;
+  width: 0;
+  margin-left: 0;
+  transform: translateX(20px) scale(0.7);
+  filter: blur(6px);
+}
+
+.backBtn:active {
+  transform: translateX(-2px) scale(0.94);
+  transition-duration: 0.1s;
 }
 
 .retakeBtn {

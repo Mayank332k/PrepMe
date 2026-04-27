@@ -101,8 +101,12 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                   className={styles.logoutBtn} 
                   onClick={() => onNavigate && onNavigate('logout')}
                 >
-                  <span className="material-symbols-outlined">logout</span>
-                  Logout
+                  <div className={styles.btnContent}>
+                    <span className={styles.btnText}>Logout</span>
+                    <span className={styles.btnArrow}>
+                      <span className="material-symbols-outlined">logout</span>
+                    </span>
+                  </div>
                 </button>
               </div>
             </div>

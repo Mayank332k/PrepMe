@@ -35,13 +35,95 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  display: none; /* Hidden by default */
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
-  transition: color 0.2s ease;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); /* Snappier entry */
+  padding: 8px 18px;
+  border-radius: 100px;
+  width: fit-content;
+  align-self: center;
+  height: 40px;
+  will-change: transform, width, padding, background-color;
+  position: relative;
 }
 
-.backBtn:hover { color: var(--text-primary); }
+.backBtn:hover { 
+  color: var(--text-primary); 
+  background-color: #f5f5f5;
+  padding: 8px 14px;
+  /* Magnetic shift towards cursor */
+  transform: translateX(-4px) scale(1.05);
+}
+
+.backBtnContent {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.customArrow {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.arrowShaft {
+  width: 16px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2); /* Intent-driven spring */
+  transform-origin: left center;
+}
+
+.arrowHead {
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+  transform: rotate(-45deg);
+  margin-right: -4px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  flex-shrink: 0;
+}
+
+.backBtnText {
+  font-size: 15px;
+  font-weight: 600;
+  margin-left: 10px;
+  width: 42px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* Physics Hover State (Intent Reactive) */
+.backBtn:hover .arrowShaft {
+  width: 36px; /* Aggressive stretch */
+}
+
+.backBtn:hover .arrowHead {
+  transform: rotate(-45deg) scale(1.15);
+}
+
+.backBtn:hover .backBtnText {
+  opacity: 0;
+  width: 0;
+  margin-left: 0;
+  transform: translateX(20px) scale(0.7);
+  filter: blur(6px);
+}
+
+.backBtn:active {
+  transform: translateX(-2px) scale(0.94);
+  transition-duration: 0.1s; /* Instant haptic feedback */
+}
 
 .centerBadge {
   display: flex;
@@ -107,12 +189,16 @@
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.endBtn:hover .btnText {
+.endBtn:hover .btnText, 
+.confirmBtn:hover .btnText, 
+.cancelLink:hover .btnText {
   transform: translateX(-15px);
   opacity: 0;
 }
 
-.endBtn:hover .btnArrow {
+.endBtn:hover .btnArrow, 
+.confirmBtn:hover .btnArrow, 
+.cancelLink:hover .btnArrow {
   right: calc(50% - 10px);
   opacity: 1;
 }
@@ -475,13 +561,39 @@
   align-items: center;
   justify-content: center; 
   cursor: pointer; 
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
 .sendIcon:hover:not(:disabled) { 
-  transform: scale(1.1);
   background-color: #333;
+}
+
+.sendIconContent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sendIconContent span {
+  position: absolute;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#sendIconSecond {
+  transform: translateY(30px);
+}
+
+.sendIcon:hover:not(:disabled) span:first-child {
+  transform: translateY(-30px);
+}
+
+.sendIcon:hover:not(:disabled) #sendIconSecond {
+  transform: translateY(0);
 }
 
 .aiWarning {

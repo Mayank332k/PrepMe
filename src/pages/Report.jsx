@@ -153,10 +153,15 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
           <header className={styles.topBar}>
              <div className={styles.logoSection}>
                <button className={styles.backBtn} onClick={() => onNavigate('history')}>
-                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
-                 Back
+                 <div className={styles.backBtnContent}>
+                   <div className={styles.customArrow}>
+                     <div className={styles.arrowHead}></div>
+                     <div className={styles.arrowShaft}></div>
+                   </div>
+                   <span className={styles.backBtnText}>Back</span>
+                 </div>
                </button>
-               <img src={logo} alt="Logo" className={styles.logoImg} />
+
              </div>
           </header>
           <section className={styles.scrollArea}>
@@ -270,10 +275,14 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
         <header className={styles.topBar}>
           <div className={styles.logoSection}>
             <button className={styles.backBtn} onClick={() => onNavigate('history')}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
-              Back
+              <div className={styles.backBtnContent}>
+                <div className={styles.customArrow}>
+                  <div className={styles.arrowHead}></div>
+                  <div className={styles.arrowShaft}></div>
+                </div>
+                <span className={styles.backBtnText}>Back</span>
+              </div>
             </button>
-            <img src={logo} alt="Logo" className={styles.logoImg} />
           </div>
           
           <div className={styles.headerActions}>

@@ -194,18 +194,32 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let accumulatedResponse = '';
-      let lastUpdateTime = Date.now();
+      let lastUpdateTime = 0;
+      let scrollAnimationFrame;
 
-      setIsTyping(false); // Hide skeleton
-      setIsStreaming(true); // Start instant scroll mode
+      setIsTyping(false); 
+      setIsStreaming(true); 
 
       // Initialize empty AI message
+      const aiMsgId = Date.now() + 1;
       setMessages(prev => [...prev, {
-        id: Date.now() + 1,
+        id: aiMsgId,
         sender: 'ai',
         text: '',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
+
+      const smoothScroll = () => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+        if (isStreaming) {
+          scrollAnimationFrame = requestAnimationFrame(smoothScroll);
+        }
+      };
+
+      // Start the smooth scroll loop
+      scrollAnimationFrame = requestAnimationFrame(smoothScroll);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -217,7 +231,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const dataStr = line.substring(6).trim();
-            
             if (dataStr === '[DONE]') break;
 
             try {
@@ -225,27 +238,32 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               if (parsed.content) {
                 accumulatedResponse += parsed.content;
                 
-                // Throttled UI updates (every 40ms) to prevent render thrashing
+                // Increased throttle to 80ms for smoother code rendering
                 const now = Date.now();
-                if (now - lastUpdateTime > 40) {
+                if (now - lastUpdateTime > 80) {
                   setMessages(prev => {
                     const newMessages = [...prev];
                     const lastIndex = newMessages.length - 1;
-                    newMessages[lastIndex] = {
-                      ...newMessages[lastIndex],
-                      text: accumulatedResponse
-                    };
+                    if (newMessages[lastIndex]?.sender === 'ai') {
+                      newMessages[lastIndex] = {
+                        ...newMessages[lastIndex],
+                        text: accumulatedResponse
+                      };
+                    }
                     return newMessages;
                   });
                   lastUpdateTime = now;
                 }
               }
             } catch (err) {
-              // Silently handle parse errors for partial chunks
+              // Partial chunk skip
             }
           }
         }
       }
+
+      // Cleanup scroll animation
+      cancelAnimationFrame(scrollAnimationFrame);
 
       // Final update to ensure everything is rendered
       setMessages(prev => {
@@ -280,7 +298,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       <main className={styles.mainCanvas}>
         <header className={styles.header}>
           <button className={styles.backBtn} onClick={onEndSession}>
-            <span className="material-symbols-outlined">arrow_back</span>
+            <div className={styles.backBtnContent}>
+              <div className={styles.customArrow}>
+                <div className={styles.arrowHead}></div>
+                <div className={styles.arrowShaft}></div>
+              </div>
+              <span className={styles.backBtnText}>Back</span>
+            </div>
           </button>
           
           <div className={styles.centerBadge}>
@@ -335,7 +359,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       disabled={isEnding}
                       style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                     >
-                      Close
+                      <div className={styles.btnContent}>
+                        <span className={styles.btnText}>Close</span>
+                        <span className={styles.btnArrow}>
+                          <span className="material-symbols-outlined">close</span>
+                        </span>
+                      </div>
                     </button>
                     <button 
                       className={styles.confirmBtn}
@@ -370,7 +399,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       onClick={() => setShowEndConfirm(false)}
                       disabled={isEnding}
                     >
-                      Continue Interview
+                      <div className={styles.btnContent}>
+                        <span className={styles.btnText}>Continue Interview</span>
+                        <span className={styles.btnArrow}>
+                          <span className="material-symbols-outlined">play_arrow</span>
+                        </span>
+                      </div>
                     </button>
                     <button 
                       className={styles.confirmBtn}
@@ -387,7 +421,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       }}
                       disabled={isEnding}
                     >
-                      {isEnding ? "Processing..." : "Yes, End & Analyze"}
+                      <div className={styles.btnContent}>
+                        <span className={styles.btnText}>
+                          {isEnding ? <div className={styles.miniSpinner}></div> : "Yes, End & Analyze"}
+                        </span>
+                        <span className={styles.btnArrow}>
+                          <span className="material-symbols-outlined">analytics</span>
+                        </span>
+                      </div>
                     </button>
                   </div>
                 </>
@@ -437,7 +478,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 rows={1}
               />
               <button type="submit" className={styles.sendIcon} disabled={!inputText.trim()}>
-                <span className="material-symbols-outlined">arrow_upward</span>
+                <div className={styles.sendIconContent}>
+                  <span className="material-symbols-outlined">arrow_upward</span>
+                  <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
+                </div>
               </button>
             </form>
           </div>
