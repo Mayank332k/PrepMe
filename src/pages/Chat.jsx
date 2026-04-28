@@ -141,6 +141,16 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [endError, setEndError] = useState(null);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  // Hint States
+  const [showHintNudge, setShowHintNudge] = useState(false);
+  const [showHintBox, setShowHintBox] = useState(false);
+  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [hintText, setHintText] = useState('');
+  const [hintCancelCount, setHintCancelCount] = useState(0); 
+  const lastActionTime = useRef(Date.now());
+  const hintTimerRef = useRef(null);
+
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -282,13 +292,67 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     }
   };
 
+  // Timer for Hint Nudge (20s inactivity)
+  useEffect(() => {
+    const checkInactivity = () => {
+      const now = Date.now();
+      const diff = now - lastActionTime.current;
+      
+      // Dynamic Delay: 20s -> 40s -> 60s
+      let threshold = 20000;
+      if (hintCancelCount === 1) threshold = 40000;
+      else if (hintCancelCount >= 2) threshold = 60000;
+
+      if (diff >= threshold && !inputText.trim() && !showHintBox && !isStreaming && !showHintNudge && messages.length > 0) {
+        setShowHintNudge(true);
+      }
+    };
+
+    const interval = setInterval(checkInactivity, 5000);
+    return () => clearInterval(interval);
+  }, [inputText, showHintBox, isStreaming, showHintNudge, messages.length, hintCancelCount]);
+
   const handleKeyDown = (e) => {
-    // If user presses Enter without Shift or Command modifiers, send message
+    // Reset timer on any key press
+    lastActionTime.current = Date.now();
+    if (showHintNudge) setShowHintNudge(false);
+
     if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
       e.preventDefault();
       handleSendMessage(e);
     }
-    // New line is handled by the textarea naturally when Shift or Command modifiers are present
+  };
+
+  const requestHint = async () => {
+    setShowHintNudge(false);
+    setShowHintBox(true);
+    setIsHintLoading(true);
+    setHintText('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const sessionId = sessionData?.sessionId;
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/interview/hint/${sessionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ messageHistory: [] })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setHintText(data.hint);
+      } else {
+        setHintText("I'm sorry, I couldn't generate a hint right now.");
+      }
+    } catch (err) {
+      console.error('Hint Fetch Error:', err);
+      setHintText("Failed to connect to the hint service.");
+    } finally {
+      setIsHintLoading(false);
+    }
   };
 
   return (
@@ -297,7 +361,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       <main className={styles.mainCanvas}>
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={onEndSession}>
+          <button className={styles.backBtn} onClick={() => {
+            if (messages.length > 1) setShowEndConfirm(true);
+            else onNavigate('history');
+          }}>
             <div className={styles.backBtnContent}>
               <div className={styles.customArrow}>
                 <div className={styles.arrowHead}></div>
@@ -307,22 +374,21 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             </div>
           </button>
           
-          <div className={styles.centerBadge}>
-            <span className={styles.sessionBadge}>Round 1</span>
-          </div>
+          <div></div> {/* Spacer for grid symmetry */}
           
           <button 
             className={`${styles.endBtn} ${isEnding ? styles.endingActive : ''}`} 
             onClick={() => setShowEndConfirm(true)}
             disabled={isEnding}
           >
-            <div className={styles.btnContent}>
-              <span className={styles.btnText}>
+            <div className={styles.endBtnContent}>
+              <span className={styles.endBtnText}>
                 {isEnding ? <div className={styles.miniSpinner}></div> : "End Session"}
               </span>
-              <span className={styles.btnArrow}>
-                <span className="material-symbols-outlined">arrow_forward</span>
-              </span>
+              <div className={styles.customArrowForward}>
+                <div className={styles.arrowShaft}></div>
+                <div className={styles.arrowHeadForward}></div>
+              </div>
             </div>
           </button>
         </header>
@@ -399,11 +465,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       onClick={() => setShowEndConfirm(false)}
                       disabled={isEnding}
                     >
-                      <div className={styles.btnContent}>
-                        <span className={styles.btnText}>Continue Interview</span>
-                        <span className={styles.btnArrow}>
-                          <span className="material-symbols-outlined">play_arrow</span>
-                        </span>
+                      <div className={styles.endBtnContent}>
+                        <div className={styles.customArrow}>
+                          <div className={styles.arrowHead}></div>
+                          <div className={styles.arrowShaft}></div>
+                        </div>
+                        <span className={styles.backBtnText}>Continue</span>
                       </div>
                     </button>
                     <button 
@@ -421,13 +488,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       }}
                       disabled={isEnding}
                     >
-                      <div className={styles.btnContent}>
-                        <span className={styles.btnText}>
-                          {isEnding ? <div className={styles.miniSpinner}></div> : "Yes, End & Analyze"}
+                      <div className={styles.endBtnContent}>
+                        <span className={styles.endBtnText} style={{ width: '110px' }}>
+                          {isEnding ? <div className={styles.miniSpinner}></div> : "End & Analyze"}
                         </span>
-                        <span className={styles.btnArrow}>
-                          <span className="material-symbols-outlined">analytics</span>
-                        </span>
+                        <div className={styles.customArrowForward}>
+                          <div className={styles.arrowShaft}></div>
+                          <div className={styles.arrowHeadForward}></div>
+                        </div>
                       </div>
                     </button>
                   </div>
@@ -466,6 +534,59 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         </section>
 
         <footer className={styles.footer}>
+          {/* Unified Morphing Hint Container */}
+          {(showHintNudge || showHintBox) && (
+            <div className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill}`}>
+              {!showHintBox ? (
+                <div className={styles.hintPillContent}>
+                  <button className={styles.nudgeBtn} onClick={requestHint}>
+                    <span className="material-symbols-outlined">lightbulb</span>
+                    Hints
+                  </button>
+                  <button className={styles.nudgeClose} onClick={() => {
+                    setShowHintNudge(false);
+                    setHintCancelCount(prev => prev + 1); // Increase delay for next time
+                    lastActionTime.current = Date.now(); // Reset timer
+                  }}>
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.hintExpandedContent}>
+                  <div className={styles.hintHeader}>
+                    <div className={styles.hintTitle}>
+                      <span className="material-symbols-outlined">lightbulb</span>
+                      AI Hint
+                    </div>
+                    <div className={styles.hintActions}>
+                      <button 
+                        className={styles.hintRegen} 
+                        onClick={requestHint}
+                        disabled={isHintLoading}
+                        title="Regenerate Hint"
+                      >
+                        <span className="material-symbols-outlined">refresh</span>
+                      </button>
+                      <button className={styles.hintClose} onClick={() => setShowHintBox(false)}>
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className={styles.hintBody}>
+                    {isHintLoading ? (
+                      <div className={styles.hintSkeleton}>
+                        <div className={styles.hintSkeletonLine}></div>
+                        <div className={styles.hintSkeletonLine} style={{ width: '80%' }}></div>
+                      </div>
+                    ) : (
+                      <ReactMarkdown>{hintText}</ReactMarkdown>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className={styles.inputWrapper}>
             <form onSubmit={handleSendMessage} className={styles.form}>
               <textarea 
