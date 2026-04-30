@@ -1146,3 +1146,72 @@
     transform: translateX(-50%) !important;
   }
 }
+
+.resumedPill {
+  position: fixed;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.96); /* Higher opacity for better readability */
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.12); /* More defined border */
+  padding: 10px 20px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12); /* Stronger shadow */
+  animation: pillSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.pillExiting {
+  animation: pillSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Mobile specific adjustment */
+@media (max-width: 768px) {
+  .resumedPill {
+    bottom: 140px; /* Thoda aur upar mobile par input box ke wajah se */
+    padding: 8px 14px;
+  }
+  .resumedText {
+    font-size: 13px !important;
+  }
+}
+
+.resumedIcon {
+  color: #10b981;
+  font-size: 18px !important;
+}
+
+.resumedText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+@keyframes pillSlideUp {
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, 20px) scale(0.9); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, 0) scale(1); 
+  }
+}
+
+@keyframes pillSlideDown {
+  from { 
+    opacity: 1; 
+    transform: translate(-50%, 0) scale(1); 
+  }
+  to { 
+    opacity: 0; 
+    transform: translate(-50%, 15px) scale(0.95); 
+  }
+}

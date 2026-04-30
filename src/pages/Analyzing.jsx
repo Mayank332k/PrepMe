@@ -5,7 +5,12 @@ import styles from './Analyzing.module.css';
 export const Analyzing = ({ resumeFile, jobDescription, onComplete }) => {
   const [error, setError] = React.useState(null);
 
+  const hasStarted = React.useRef(false);
+
   useEffect(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
     const handleAnalysis = async () => {
       const startTime = Date.now();
       try {
@@ -32,10 +37,12 @@ export const Analyzing = ({ resumeFile, jobDescription, onComplete }) => {
         onComplete(data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to parse resume. Check your connection.");
+        // If it fails, allow retry
+        hasStarted.current = false;
       }
     };
     handleAnalysis();
-  }, [resumeFile, onComplete]);
+  }, [resumeFile, onComplete, jobDescription]);
 
 
   if (error) {

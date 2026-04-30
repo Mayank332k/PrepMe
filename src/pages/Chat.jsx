@@ -120,18 +120,62 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [messages, setMessages] = useState([]);
 
-  // Initialize with results from Analysis
+  // Initialize with results from Analysis or Restore Session
   useEffect(() => {
-    if (sessionData?.firstMessage && messages.length === 0) {
-      setMessages([
-        {
-          id: Date.now(),
-          sender: 'ai',
-          text: sessionData.firstMessage,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const restoreSession = async () => {
+      const sessionId = sessionData?.sessionId;
+      if (!sessionId || messages.length > 0) return;
+
+      setIsInitialLoading(true);
+      try {
+        const { data } = await api.get(`/interview/session/${sessionId}`);
+        
+        // Handle completed session by redirecting back
+        if (data.success && data.message === "Interview completed successfully!") {
+          localStorage.removeItem('activeSessionId');
+          onNavigate('upload');
+          return;
         }
-      ]);
-    }
+
+        if (data.success && data.session.transcript.length > 0) {
+          const formattedMessages = data.session.transcript.map((m, idx) => ({
+            id: `history-${idx}`,
+            sender: m.role === 'assistant' ? 'ai' : 'user',
+            text: m.content,
+            timestamp: 'Earlier'
+          }));
+          setMessages(formattedMessages);
+          
+          // Only show pill if it's a refresh (no firstMessage in props) 
+          // and we have actual history
+          if (!sessionData?.firstMessage) {
+            setIsResumed(true);
+            setTimeout(() => {
+              setIsExiting(true);
+              setTimeout(() => {
+                setIsResumed(false);
+                setIsExiting(false);
+              }, 600); // Animation duration
+            }, 5000);
+          }
+        } else if (sessionData?.firstMessage) {
+          setMessages([
+            {
+              id: Date.now(),
+              sender: 'ai',
+              text: sessionData.firstMessage,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to restore session:", err);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    restoreSession();
   }, [sessionData, messages.length]);
 
   const [inputText, setInputText] = useState('');
@@ -141,6 +185,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [endError, setEndError] = useState(null);
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [isResumed, setIsResumed] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   
   // Hint States
   const [showHintNudge, setShowHintNudge] = useState(false);
@@ -205,7 +252,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const decoder = new TextDecoder();
       let accumulatedResponse = '';
       let lastUpdateTime = 0;
-      let scrollAnimationFrame;
+      let lineBuffer = ''; // Buffer for partial SSE lines
 
       setIsTyping(false); 
       setIsStreaming(true); 
@@ -219,75 +266,70 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
 
-      const smoothScroll = () => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollIntoView({ behavior: 'auto' });
-        }
-        if (isStreaming) {
-          scrollAnimationFrame = requestAnimationFrame(smoothScroll);
-        }
-      };
-
-      // Start the smooth scroll loop
-      scrollAnimationFrame = requestAnimationFrame(smoothScroll);
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        lineBuffer += chunk;
+        
+        const lines = lineBuffer.split('\n');
+        lineBuffer = lines.pop(); // Keep the last (potentially partial) line
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.substring(6).trim();
-            if (dataStr === '[DONE]') break;
+          const trimmedLine = line.trim();
+          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+          
+          const dataStr = trimmedLine.substring(6).trim();
+          if (dataStr === '[DONE]') break;
 
-            try {
-              const parsed = JSON.parse(dataStr);
-              if (parsed.content) {
-                accumulatedResponse += parsed.content;
-                
-                // Increased throttle to 80ms for smoother code rendering
-                const now = Date.now();
-                if (now - lastUpdateTime > 80) {
-                  setMessages(prev => {
-                    const newMessages = [...prev];
-                    const lastIndex = newMessages.length - 1;
-                    if (newMessages[lastIndex]?.sender === 'ai') {
-                      newMessages[lastIndex] = {
-                        ...newMessages[lastIndex],
-                        text: accumulatedResponse
-                      };
-                    }
-                    return newMessages;
-                  });
-                  lastUpdateTime = now;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed.content) {
+              accumulatedResponse += parsed.content;
+              
+              const now = Date.now();
+              // Faster throttle (30ms) for smoother "typing" feel
+              if (now - lastUpdateTime > 30) {
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastIndex = newMessages.length - 1;
+                  if (newMessages[lastIndex]?.sender === 'ai') {
+                    newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
+                  }
+                  return newMessages;
+                });
+                lastUpdateTime = now;
+
+                // Smooth scroll to bottom
+                if (scrollRef.current) {
+                  scrollRef.current.scrollIntoView({ behavior: 'auto' });
                 }
               }
-            } catch (err) {
-              // Partial chunk skip
             }
+          } catch (err) {
+            console.warn('Streaming parse error:', err, 'Line:', trimmedLine);
           }
         }
       }
-
-      // Cleanup scroll animation
-      cancelAnimationFrame(scrollAnimationFrame);
 
       // Final update to ensure everything is rendered
       setMessages(prev => {
         const newMessages = [...prev];
         const lastIndex = newMessages.length - 1;
-        newMessages[lastIndex] = {
-          ...newMessages[lastIndex],
-          text: accumulatedResponse
-        };
+        if (newMessages[lastIndex]?.sender === 'ai') {
+          newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
+        }
         return newMessages;
       });
+      setIsStreaming(false);
+      
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (err) {
+      console.error('Streaming error:', err);
       setIsTyping(false);
-    } finally {
       setIsStreaming(false);
     }
   };
@@ -507,7 +549,22 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         <section className={styles.chatCanvas}>
           <div className={styles.messageScroll}>
-            {messages.map((msg) => (
+            {isResumed && (
+              <div className={`${styles.resumedPill} ${isExiting ? styles.pillExiting : ''}`}>
+                <span className={`material-symbols-outlined ${styles.resumedIcon}`}>check_circle</span>
+                <span className={styles.resumedText}>Session Resumed</span>
+              </div>
+            )}
+
+            {isInitialLoading && messages.length === 0 ? (
+              <div style={{ padding: '20px' }}>
+                <div className={styles.skeletonContainer}>
+                  <div className={styles.skeletonLine}></div>
+                  <div className={styles.skeletonLine}></div>
+                  <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                </div>
+              </div>
+            ) : messages.map((msg) => (
               <ChatMessage 
                 key={msg.id} 
                 msg={msg} 

@@ -30,7 +30,15 @@ function App() {
         const response = await api.get('/auth/me');
         if (response.data && response.data.user) {
           setUser(response.data.user);
-          setCurrentScreen('upload'); // Go to upload if logged in
+          
+          // Check for active session persistence
+          const activeSessionId = localStorage.getItem('activeSessionId');
+          if (activeSessionId) {
+            setSessionData({ sessionId: activeSessionId });
+            setCurrentScreen('chat');
+          } else {
+            setCurrentScreen('upload');
+          }
         }
       } catch (err) {
         console.warn("User not authenticated");
@@ -46,6 +54,7 @@ function App() {
     if (screen === 'logout') {
       api.get('/auth/logout').catch(() => {});
       localStorage.removeItem('token');
+      localStorage.removeItem('activeSessionId');
       setUser(null);
       setResumeFile(null);
       setSessionData(null);
@@ -71,6 +80,7 @@ function App() {
   const handleSessionWarningLeave = () => {
     setShowSessionWarning(false);
     // Clear the session data since user chose to leave
+    localStorage.removeItem('activeSessionId');
     setSessionData(null);
     setResumeFile(null);
     // Navigate to the pending target
@@ -125,6 +135,9 @@ function App() {
           resumeFile={resumeFile}
           jobDescription={jobDescription}
           onComplete={(data) => {
+            if (data.sessionId) {
+              localStorage.setItem('activeSessionId', data.sessionId);
+            }
             setSessionData(data);
             setCurrentScreen('chat');
           }} 
@@ -139,6 +152,7 @@ function App() {
             try {
               const { data } = await api.post(`/interview/report/${sessionData.sessionId}`);
               if (data.success && data.report) {
+                localStorage.removeItem('activeSessionId');
                 setSessionData({ ...sessionData, report: data.report, transcript: data.transcript });
                 setCurrentScreen('report');
               }
