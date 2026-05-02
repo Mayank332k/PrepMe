@@ -81,7 +81,9 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
         <div className={styles.bubbleContainer}>
           <div className={styles.bubble}>
             <div className={styles.markdownContent}>
-              <ReactMarkdown components={MarkdownComponents}>{msg.text}</ReactMarkdown>
+              <ReactMarkdown components={MarkdownComponents}>
+                {msg.text.replace(/\n(?!\n)/g, '  \n')}
+              </ReactMarkdown>
             </div>
           </div>
         </div>
@@ -183,7 +185,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [endError, setEndError] = useState(null);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [isResumed, setIsResumed] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -201,11 +203,24 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea with refined smooth transition
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // 1. Save current height
+      const startHeight = textarea.style.height;
+      
+      // 2. Measure new height
+      textarea.style.height = 'auto';
+      const targetHeight = `${Math.min(textarea.scrollHeight, 150)}px`;
+      
+      // 3. Restore start height immediately
+      textarea.style.height = startHeight;
+      
+      // 4. In the next frame, apply target height to trigger transition
+      requestAnimationFrame(() => {
+        textarea.style.height = targetHeight;
+      });
     }
   }, [inputText]);
 
@@ -288,24 +303,19 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             if (parsed.content) {
               accumulatedResponse += parsed.content;
               
-              const now = Date.now();
-              // Faster throttle (30ms) for smoother "typing" feel
-              if (now - lastUpdateTime > 30) {
-                setMessages(prev => {
-                  const newMessages = [...prev];
-                  const lastIndex = newMessages.length - 1;
-                  if (newMessages[lastIndex]?.sender === 'ai') {
-                    newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
-                  }
-                  return newMessages;
-                });
-                lastUpdateTime = now;
-
-                // Smooth scroll to bottom
-                if (scrollRef.current) {
-                  scrollRef.current.scrollIntoView({ behavior: 'auto' });
+              // Force React state update
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastIndex = newMessages.length - 1;
+                if (newMessages[lastIndex]?.sender === 'ai') {
+                  newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
                 }
-              }
+                return newMessages;
+              });
+
+              // YIELD TO MAIN THREAD: 15ms pause (approx 1 frame). 
+              // This guarantees the UI paints each chunk/word individually, fixing the freeze bug and creating a smooth typewriter effect.
+              await new Promise(resolve => setTimeout(resolve, 15));
             }
           } catch (err) {
             console.warn('Streaming parse error:', err, 'Line:', trimmedLine);
@@ -403,10 +413,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       <main className={styles.mainCanvas}>
         <header className={styles.header}>
-          <button className={styles.backBtn} onClick={() => {
-            if (messages.length > 1) setShowEndConfirm(true);
-            else onNavigate('history');
-          }}>
+          <button 
+            className={styles.backBtn} 
+            onClick={() => setShowBackConfirm(true)}
+          >
             <div className={styles.backBtnContent}>
               <div className={styles.customArrow}>
                 <div className={styles.arrowHead}></div>
@@ -419,130 +429,82 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           <div></div> {/* Spacer for grid symmetry */}
           
           <button 
-            className={`${styles.endBtn} ${isEnding ? styles.endingActive : ''}`} 
+            className={styles.endBtn} 
             onClick={() => setShowEndConfirm(true)}
-            disabled={isEnding}
+            disabled={isTyping || isStreaming || isEnding}
           >
-            <div className={styles.endBtnContent}>
-              <span className={styles.endBtnText}>
-                {isEnding ? <div className={styles.miniSpinner}></div> : "End Session"}
-              </span>
-              <div className={styles.customArrowForward}>
-                <div className={styles.arrowShaft}></div>
-                <div className={styles.arrowHeadForward}></div>
-              </div>
-            </div>
+            {isEnding ? <div className={styles.dashedSpinner}></div> : "End Session"}
           </button>
         </header>
 
-        {/* Custom Confirmation Modal */}
+        {showBackConfirm && (
+          <div className={styles.modalOverlay} onClick={() => setShowBackConfirm(false)}>
+            <div className={styles.confirmCardMinimal} onClick={e => e.stopPropagation()}>
+              <div className={styles.minimalHeader}>
+                <h3 className={styles.minimalTitle}>Leave Interview?</h3>
+                <p className={styles.minimalSubtext}>Progress in this session will not be saved.</p>
+              </div>
+              
+              <div className={styles.minimalActions}>
+                <button 
+                  className={styles.minimalCancelBtn}
+                  onClick={() => setShowBackConfirm(false)}
+                >
+                  Continue
+                </button>
+                
+                <button 
+                  className={styles.minimalLeaveBtn}
+                  onClick={() => {
+                    localStorage.removeItem('activeSessionId');
+                    onNavigate('history', true);
+                  }}
+                >
+                  Leave
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showEndConfirm && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.confirmCard} style={endError ? { padding: '40px', maxWidth: '380px' } : {}}>
-              {endError ? (
-                <>
-                  <div style={{ marginBottom: '24px' }}>
-                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 auto', display: 'block' }}>
-                      <rect x="20" y="20" width="80" height="80" rx="20" fill="var(--bg-hover)" />
-                      <rect x="35" y="35" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
-                      <rect x="35" y="65" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
-                      <circle cx="75" cy="44" r="3" fill="#ff3b30">
-                        <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite" />
-                      </circle>
-                      <circle cx="75" cy="74" r="3" fill="#ff3b30">
-                        <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
-                      </circle>
-                      <path d="M60 45L80 80H40L60 45Z" fill="rgba(255, 255, 255, 0.9)" stroke="#ff3b30" stroke-width="3" stroke-linejoin="round"/>
-                      <path d="M60 57V68M60 74V75" stroke="#ff3b30" stroke-width="4" stroke-linecap="round"/>
-                    </svg>
-                  </div>
-                  <h3 style={{ fontSize: '24px', marginBottom: '12px', color: 'var(--text-primary)' }}>We're Sorry!</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '28px' }}>
-                    Our AI servers are currently undergoing maintenance. Please try ending the session again in a few moments.
-                  </p>
-                  <div className={styles.confirmActions}>
-                    <button 
-                      className={styles.cancelLink}
-                      onClick={() => setShowEndConfirm(false)}
-                      disabled={isEnding}
-                      style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                    >
-                      <div className={styles.btnContent}>
-                        <span className={styles.btnText}>Close</span>
-                        <span className={styles.btnArrow}>
-                          <span className="material-symbols-outlined">close</span>
-                        </span>
-                      </div>
-                    </button>
-                    <button 
-                      className={styles.confirmBtn}
-                      onClick={async () => {
-                        setIsEnding(true);
-                        setEndError(null);
-                        try {
-                          await onEndSession();
-                        } catch (err) {
-                          setEndError("Failed to generate report. Please try again.");
-                        } finally {
-                          setIsEnding(false);
-                        }
-                      }}
-                      disabled={isEnding}
-                    >
-                      {isEnding ? "Processing..." : "Retry"}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className={styles.confirmIcon}>
-                    <span className="material-symbols-outlined">exit_to_app</span>
-                  </div>
-                  <h3>End Interview Session?</h3>
-                  <p>We will analyze your performance and generate a detailed report based on your responses.</p>
-                  
-                  <div className={styles.confirmActions}>
-                    <button 
-                      className={styles.cancelLink}
-                      onClick={() => setShowEndConfirm(false)}
-                      disabled={isEnding}
-                    >
-                      <div className={styles.endBtnContent}>
-                        <div className={styles.customArrow}>
-                          <div className={styles.arrowHead}></div>
-                          <div className={styles.arrowShaft}></div>
-                        </div>
-                        <span className={styles.backBtnText}>Continue</span>
-                      </div>
-                    </button>
-                    <button 
-                      className={styles.confirmBtn}
-                      onClick={async () => {
-                        setIsEnding(true);
-                        setEndError(null);
-                        try {
-                          await onEndSession();
-                        } catch (err) {
-                          setEndError("Failed to generate report. Please try again.");
-                        } finally {
-                          setIsEnding(false);
-                        }
-                      }}
-                      disabled={isEnding}
-                    >
-                      <div className={styles.endBtnContent}>
-                        <span className={styles.endBtnText} style={{ width: '110px' }}>
-                          {isEnding ? <div className={styles.miniSpinner}></div> : "End & Analyze"}
-                        </span>
-                        <div className={styles.customArrowForward}>
-                          <div className={styles.arrowShaft}></div>
-                          <div className={styles.arrowHeadForward}></div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </>
-              )}
+          <div className={styles.modalOverlay} onClick={() => !isEnding && setShowEndConfirm(false)}>
+            <div className={styles.confirmCardMinimal} onClick={e => e.stopPropagation()}>
+              <div className={styles.minimalHeader}>
+                <h3 className={styles.minimalTitle}>End Session?</h3>
+                <p className={styles.minimalSubtext}>this will eval the final result of this interview</p>
+              </div>
+              
+              <div className={styles.minimalActions}>
+                {!isEnding && (
+                  <button 
+                    className={styles.minimalCancelBtn}
+                    onClick={() => setShowEndConfirm(false)}
+                  >
+                    Continue
+                  </button>
+                )}
+                
+                <button 
+                  className={`${styles.minimalEndBtn} ${isEnding ? styles.centeredEnd : ''}`}
+                  onClick={async () => {
+                    setIsEnding(true);
+                    try {
+                      await onEndSession();
+                    } catch (err) {
+                      setIsEnding(false);
+                    }
+                  }}
+                  disabled={isEnding}
+                >
+                  {isEnding ? (
+                    <div className={styles.iosSpinner}>
+                      {[...Array(8)].map((_, i) => <div key={i} className={styles.iosBar}></div>)}
+                    </div>
+                  ) : (
+                    "End"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -586,7 +548,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 </div>
               </div>
             )}
-            <div ref={scrollRef} style={{ height: '100px', flexShrink: 0 }} />
+            <div ref={scrollRef} style={{ height: '20px', flexShrink: 0 }} />
           </div>
         </section>
 

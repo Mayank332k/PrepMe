@@ -262,7 +262,7 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
       { label: "Confidence", score: reportData.metrics?.confidence || 0, color: "var(--color-purple)" },
     ],
     strengths: reportData.strengths || [],
-    weaknesses: reportData.growth || reportData.weaknesses || [], // Added fallback for backend naming mismatch
+    weaknesses: reportData.areasForGrowth || reportData.growth || reportData.weaknesses || [], 
     topicsToImprove: reportData.suggestedTopics || []
   };
 

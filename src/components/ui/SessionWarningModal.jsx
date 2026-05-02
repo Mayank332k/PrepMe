@@ -3,23 +3,26 @@ import styles from './SessionWarningModal.module.css';
 
 export const SessionWarningModal = ({ onContinue, onLeave }) => {
   return (
-    <div className={styles.overlay} onClick={onContinue}>
-      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.iconWrap}>
-          <span className="material-symbols-outlined">warning</span>
+    <div className={styles.modalOverlay} onClick={onContinue}>
+      <div className={styles.confirmCardMinimal} onClick={e => e.stopPropagation()}>
+        <div className={styles.minimalHeader}>
+          <h3 className={styles.minimalTitle}>Leave Interview?</h3>
+          <p className={styles.minimalSubtext}>Progress in this session will not be saved.</p>
         </div>
-        <h3>Interview in Progress</h3>
-        <p>
-          You have an active interview session. Leaving now will 
-          <strong> end your session </strong> 
-          and all progress will be lost.
-        </p>
-        <div className={styles.actions}>
-          <button className={styles.continueBtn} onClick={onContinue}>
-            Continue Interview
+        
+        <div className={styles.minimalActions}>
+          <button 
+            className={styles.minimalCancelBtn}
+            onClick={onContinue}
+          >
+            Continue
           </button>
-          <button className={styles.leaveBtn} onClick={onLeave}>
-            Leave Session
+          
+          <button 
+            className={styles.minimalLeaveBtn}
+            onClick={onLeave}
+          >
+            Leave
           </button>
         </div>
       </div>

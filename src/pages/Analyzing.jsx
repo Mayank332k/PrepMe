@@ -46,6 +46,8 @@ export const Analyzing = ({ resumeFile, jobDescription, onComplete }) => {
 
 
   if (error) {
+    const isValidationError = error.toLowerCase().includes('pdf') || error.toLowerCase().includes('text');
+
     return (
       <div className={styles.container}>
         <div className={styles.glowBackdrop}></div>
@@ -53,29 +55,25 @@ export const Analyzing = ({ resumeFile, jobDescription, onComplete }) => {
           <div className={styles.errorBox}>
             <div className={styles.maintenanceSvg}>
               <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Background Plate */}
                 <rect x="20" y="20" width="80" height="80" rx="20" fill="var(--bg-hover)" />
-                
-                {/* Server Racks */}
                 <rect x="35" y="35" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
                 <rect x="35" y="65" width="50" height="18" rx="6" fill="var(--text-secondary)" opacity="0.2"/>
-                
-                {/* Blinking Red Lights */}
                 <circle cx="75" cy="44" r="3" fill="#ff3b30">
                   <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite" />
                 </circle>
                 <circle cx="75" cy="74" r="3" fill="#ff3b30">
                   <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
                 </circle>
-
-                {/* Exclamation Triangle */}
                 <path d="M60 45L80 80H40L60 45Z" fill="rgba(255, 255, 255, 0.9)" stroke="#ff3b30" stroke-width="3" stroke-linejoin="round"/>
                 <path d="M60 57V68M60 74V75" stroke="#ff3b30" stroke-width="4" stroke-linecap="round"/>
               </svg>
             </div>
-            <h3>We're Sorry!</h3>
-            <p>Our AI servers are currently undergoing maintenance or experiencing high load. Please try again in a few moments.</p>
-            <button className={styles.retryBtn} onClick={() => window.location.reload()}>Retry Connection</button>
+            <h3>{isValidationError ? "Processing Error" : "Analysis Failed"}</h3>
+            <p className={styles.errorMessage}>{error}</p>
+            <div className={styles.errorActions}>
+              <button className={styles.retryBtn} onClick={() => window.location.reload()}>Retry</button>
+              <button className={styles.backBtn} onClick={() => window.location.href = '/'}>Choose Another File</button>
+            </div>
           </div>
         </div>
       </div>

@@ -49,13 +49,24 @@ export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavig
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setSelectedFile(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      if (file.type !== 'application/pdf') {
+        alert("Please upload a PDF file only.");
+        return;
+      }
+      setSelectedFile(file);
     }
   };
 
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.type !== 'application/pdf') {
+        alert("Please upload a PDF file only.");
+        e.target.value = ''; // Reset input
+        return;
+      }
+      setSelectedFile(file);
     }
   };
 
@@ -128,7 +139,7 @@ export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavig
                 ref={fileInputRef}
                 onChange={handleFileSelect}
                 style={{ display: 'none' }}
-                accept=".pdf,.doc,.docx"
+                accept=".pdf"
               />
               
               <div 

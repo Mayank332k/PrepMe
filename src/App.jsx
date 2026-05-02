@@ -50,7 +50,7 @@ function App() {
     checkAuth();
   }, []);
 
-  const navigateTo = (screen) => {
+  const navigateTo = (screen, force = false) => {
     if (screen === 'logout') {
       api.get('/auth/logout').catch(() => {});
       localStorage.removeItem('token');
@@ -63,7 +63,7 @@ function App() {
     }
 
     // Block navigation if interview session is active and user is on chat screen
-    if (currentScreen === 'chat' && sessionData && screen !== 'chat') {
+    if (!force && currentScreen === 'chat' && sessionData && screen !== 'chat') {
       setPendingNavTarget(screen);
       setShowSessionWarning(true);
       return;
