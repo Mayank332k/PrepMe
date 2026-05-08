@@ -317,7 +317,8 @@
 }
 
 .bubble {
-  padding: 16px 20px; font-size: 16px; line-height: 1.6; border-radius: 12px;
+  padding: 16px 20px; font-size: 16.4px; line-height: 1.6; border-radius: 12px;
+  font-weight: 430;
 }
 
 .bubbleContainer {
@@ -792,34 +793,46 @@
 .skeletonContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 400px;
-  max-width: 100%;
-  padding: 8px 0;
+  gap: 12px;
+  width: 480px; /* Increased from 280px */
+  max-width: 90%;
+  padding: 12px 0;
 }
 
 .skeletonLine {
   height: 12px;
-  border-radius: 100px;
+  border-radius: 6px;
   background: linear-gradient(
     90deg,
-    #584395 0%,
-    #B0A3D5 50%,
-    #584395 100%
+    rgba(240, 240, 240, 0.4) 0%,
+    rgba(210, 210, 210, 0.7) 50%,
+    rgba(240, 240, 240, 0.4) 100%
   );
   background-size: 200% 100%;
-  animation: wave 1.5s infinite linear;
-  opacity: 0.25;
+  /* Combine shimmer with a one-time growth animation */
+  animation: 
+    shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1),
+    growHorizontal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform-origin: left;
+  will-change: transform, background-position;
 }
 
 .skeletonLine.short {
-  width: 60%;
+  width: 65%;
+  animation-delay: 0.1s; /* Slight stagger for more "organic" feel */
 }
 
-@keyframes wave {
+@keyframes growHorizontal {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+
 
 /* Confirmation Modal Overlay */
 .modalOverlay {
@@ -1162,14 +1175,11 @@
   border-radius: 100px;
   background: linear-gradient(90deg, rgba(255, 128, 181, 0.25) 0%, rgba(144, 137, 252, 0.25) 50%, rgba(255, 128, 181, 0.25) 100%);
   background-size: 200% 100%;
-  animation: wave 2s infinite linear;
+  animation: shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
   opacity: 0.5;
 }
 
-@keyframes wave {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+
 
 @media (max-width: 768px) {
   .hintExpanded {

@@ -103,7 +103,15 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
             {activeMenuId === msg.id && (
               <div className={styles.infoDropdown} onClick={(e) => e.stopPropagation()}>
                 <span className={styles.infoLabel}>
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {msg.timestamp}
+                  {(() => {
+                    const msgDate = msg.date || new Date();
+                    const today = new Date();
+                    const isToday = msgDate.getDate() === today.getDate() && 
+                                   msgDate.getMonth() === today.getMonth() && 
+                                   msgDate.getFullYear() === today.getFullYear();
+                    
+                    return isToday ? 'Today' : msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  })()}, {msg.timestamp}
                 </span>
                 
                 <div className={styles.infoItem}>
@@ -141,10 +149,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         if (data.success && data.session.transcript.length > 0) {
           const formattedMessages = data.session.transcript.map((m, idx) => ({
-            id: `history-${idx}`,
+            id: m._id || `msg-${idx}-${Date.now()}`, // Truly unique ID for state management
             sender: m.role === 'assistant' ? 'ai' : 'user',
             text: m.content,
-            timestamp: 'Earlier'
+            timestamp: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : 'Earlier',
+            date: m.timestamp ? new Date(m.timestamp) : new Date()
           }));
           setMessages(formattedMessages);
           
@@ -242,10 +251,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     const sessionId = sessionData?.sessionId;
 
     const newUserMsg = {
-      id: Date.now(),
+      id: `user-${Date.now()}`,
       sender: 'user',
       text: userText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: new Date()
     };
 
     setMessages(prev => [...prev, newUserMsg]);
@@ -273,12 +283,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       setIsStreaming(true); 
 
       // Initialize empty AI message
-      const aiMsgId = Date.now() + 1;
+      const aiMsgId = `ai-${Date.now()}`;
       setMessages(prev => [...prev, {
         id: aiMsgId,
         sender: 'ai',
         text: '',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: new Date()
       }]);
 
       while (true) {
@@ -540,8 +551,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
                 <div className={styles.messageBody}>
                   <div className={styles.skeletonContainer}>
-                    <div className={styles.skeletonLine}></div>
-                    <div className={styles.skeletonLine}></div>
                     <div className={styles.skeletonLine}></div>
                     <div className={`${styles.skeletonLine} ${styles.short}`}></div>
                   </div>

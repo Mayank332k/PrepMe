@@ -312,7 +312,13 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
                   <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>calendar_today</span>
                   {(() => {
                     const d = sessionData?.updatedAt ? new Date(sessionData.updatedAt) : new Date();
-                    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const today = new Date();
+                    const isToday = d.getDate() === today.getDate() && 
+                                   d.getMonth() === today.getMonth() && 
+                                   d.getFullYear() === today.getFullYear();
+                    
+                    return isToday ? `Today, ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}` : 
+                                     d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                   })()}
                 </div>
               </div>
