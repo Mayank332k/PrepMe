@@ -56,6 +56,37 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
               </div>
             </div>
             
+            <div className={styles.usageSection}>
+                <div className={styles.usageHeader}>
+                  <span className={styles.usageLabel}>Monthly Limit</span>
+                  <span className={`${styles.usageStats} ${user?.interviewsUsed >= user?.interviewLimit ? styles.limitReached : ''}`}>
+                    {user?.interviewsUsed || 0}/{user?.interviewLimit || 0}
+                  </span>
+                </div>
+                <div className={styles.progressContainer}>
+                  {[...Array(4)].map((_, i) => {
+                    const limit = user?.interviewLimit || 20;
+                    const used = user?.interviewsUsed || 0;
+                    const remaining = limit - used;
+                    const chunkRemaining = Math.max(0, Math.min(5, remaining - (i * 5)));
+                    const fillWidth = (chunkRemaining / 5) * 100;
+                    const isWarning = remaining <= 5;
+                    
+                    return (
+                      <div key={i} className={styles.chunk}>
+                        <div 
+                          className={`${styles.chunkFill} ${isWarning ? styles.warning : ''}`}
+                          style={{ width: `${fillWidth}%` }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {user?.interviewsUsed >= user?.interviewLimit && (
+                  <p className={styles.usageNote}>Monthly limit reached</p>
+                )}
+              </div>
+              
             <div className={styles.cardActions}>
               <button 
                 className={styles.logoutBtn} 

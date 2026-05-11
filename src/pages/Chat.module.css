@@ -478,6 +478,13 @@
   margin-bottom: 5px;
 }
 
+.markdownContent hr {
+  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  opacity: 2;
+}
+
 /* Code Blocks */
 .codeBlockContainer {
   margin: 16px 0;

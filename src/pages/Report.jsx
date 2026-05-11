@@ -5,6 +5,8 @@ import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Report.module.css';
 import logo from '../assets/logo.png';
 import api from '../api';
+import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // No mock data - strictly data-driven
 // Custom Hook to animate counting numbers smoothly
@@ -112,6 +114,73 @@ const ProgressBar = ({ label, score, color, delay }) => {
     </div>
   );
 };
+
+const CodeBlock = ({ language, value }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={styles.codeBlockContainer}>
+      <div className={styles.codeHeader}>
+        <div className={styles.codeLang}>
+          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>code</span>
+          {language || 'code'}
+        </div>
+        <button className={styles.copyBtn} onClick={copyToClipboard} title="Copy code">
+          {copied ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="8" y="8" width="12" height="12" rx="3.5" ry="3.5"></rect>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" opacity="0.5"></path>
+            </svg>
+          )}
+        </button>
+      </div>
+      <div className={styles.codeContent}>
+        <SyntaxHighlighter
+          language={language || 'text'}
+          style={oneLight}
+          PreTag="div"
+          codeTagProps={{ style: { backgroundColor: 'transparent' } }}
+          customStyle={{
+            margin: 0,
+            padding: '16px 20px',
+            backgroundColor: 'transparent',
+            fontSize: '13.5px',
+            lineHeight: '1.6',
+          }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+};
+
+const MarkdownComponents = {
+  code({ node, inline, className, children, ...props }) {
+    const match = /language-(\w+)/.exec(className || '');
+    return !inline && match ? (
+      <CodeBlock 
+        language={match[1]} 
+        value={String(children).replace(/\n$/, '')} 
+      />
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  }
+};
+
 
 export const Report = ({ user, sessionData, setSessionData, sessionActive, onRetake, onNavigate }) => {
   const [loading, setLoading] = useState(!sessionData?.report);
@@ -424,7 +493,9 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onRet
                       <div className={styles.msgBubble}>
                         <div className={styles.msgLabel}>{msg.role === 'user' ? 'You' : 'AI Interviewer'}</div>
                         <div className={styles.msgText}>
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown components={MarkdownComponents}>
+                            {msg.content.replace(/\n(?!\n)/g, '  \n')}
+                          </ReactMarkdown>
                         </div>
                       </div>
                     </div>

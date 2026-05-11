@@ -190,13 +190,17 @@ export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavig
             {/* Final Action */}
             <div className={styles.footerAction}>
               <button 
-                className={styles.startBtn}
+                className={`${styles.startBtn} ${user?.interviewsUsed >= user?.interviewLimit ? styles.limitReachedBtn : ''}`}
                 onClick={handleStartAnalysis}
-                disabled={loading || (!selectedFile && !resumeStatus?.hasResume)}
+                disabled={loading || (!selectedFile && !resumeStatus?.hasResume) || user?.interviewsUsed >= user?.interviewLimit}
               >
-                <span className={styles.btnText}>Start Interview</span>
+                <span className={styles.btnText}>
+                  {user?.interviewsUsed >= user?.interviewLimit ? 'Limit Reached' : 'Start Interview'}
+                </span>
                 <div className={styles.divider}></div>
-                <span className={styles.iconRight}>arrow_forward</span>
+                <span className={styles.iconRight}>
+                  {user?.interviewsUsed >= user?.interviewLimit ? 'block' : 'arrow_forward'}
+                </span>
               </button>
             </div>
           </div>

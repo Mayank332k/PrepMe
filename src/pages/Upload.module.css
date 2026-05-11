@@ -311,6 +311,19 @@
   transform: none;
 }
 
+.limitReachedBtn {
+  background: rgba(239, 68, 68, 0.05) !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.limitReachedBtn .btnText {
+  color: #ef4444;
+}
+
+.limitReachedBtn .iconRight {
+  color: #ef4444;
+}
+
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .topBar { padding: 12px 20px; height: 60px; }

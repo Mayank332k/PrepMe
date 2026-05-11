@@ -221,6 +221,17 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
               </div>
             </div>
 
+            {/* CHART SKELETON */}
+            {loading && (
+              <div className={styles.chartSkeleton}>
+                <div className={styles.chartSkeletonHeader}>
+                  <div className={`${styles.skeletonLine}`} style={{ width: '35%', height: '22px', borderRadius: '8px' }}></div>
+                  <div className={`${styles.skeletonLine}`} style={{ width: '45%', height: '32px', borderRadius: '100px' }}></div>
+                </div>
+                <div className={styles.chartSkeletonBody}></div>
+              </div>
+            )}
+
             {/* CHART SECTION */}
             {!loading && !error && historyItems.length > 0 && chartData.length > 0 && (
               <div className={styles.chartSection}>

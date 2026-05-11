@@ -138,6 +138,14 @@ function App() {
             if (data.sessionId) {
               localStorage.setItem('activeSessionId', data.sessionId);
             }
+            // Update user state with new usage data
+            if (data.interviewsUsed !== undefined) {
+              setUser(prev => ({
+                ...prev,
+                interviewsUsed: data.interviewsUsed,
+                interviewLimit: data.interviewLimit
+              }));
+            }
             setSessionData(data);
             setCurrentScreen('chat');
           }} 
