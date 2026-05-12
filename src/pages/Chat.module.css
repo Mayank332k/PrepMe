@@ -13,6 +13,10 @@
   overflow: hidden;
 }
 
+:global([data-theme='light']) .pageContainer {
+  --chat-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
 .mainCanvas {
   position: relative;
   flex: 1;
@@ -237,10 +241,14 @@
   top: 37%;
   width: 12%;
   height: 28%;
-  background: var(--accent);
+  background: currentColor;
   border-radius: 50%/20%;
   opacity: 0;
   animation: iosSpin 0.8s linear infinite;
+}
+
+.minimalEndBtn .iosBar {
+  background: currentColor !important;
 }
 
 .iosBar:nth-child(1) { transform: rotate(0deg) translate(0, -142%); animation-delay: 0s; }
@@ -626,7 +634,7 @@
   background-color: var(--chat-pill);
   border: 1px solid var(--chat-border); 
   border-radius: 26px; 
-  padding: 7px 9px 7px 22px;
+  padding: 7px 9px 7px 18px;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -647,7 +655,7 @@
   border: none;
   background: none;
   padding: 8px 0;
-  font-size: 17px;
+  font-size: 16px;
   color: var(--text-primary);
   outline: none;
   resize: none;
@@ -660,6 +668,7 @@
 
 .textarea::placeholder {
   color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .sendIcon {
