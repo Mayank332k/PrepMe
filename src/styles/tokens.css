@@ -69,7 +69,8 @@
   --glass-bg-hover : rgba(42, 42, 42, 0.92);
   --glass-highlight: rgba(255, 255, 255, 0.08);
   --glass-highlight-hover: rgba(255, 255, 255, 0.14);
-  --shimmer-mid    : rgba(70, 70, 70, 0.8);
+  --shimmer-from   : rgba(255, 255, 255, 0.05);
+  --shimmer-mid    : rgba(255, 255, 255, 0.12);
   --hint-accent    : #e9ddff;
   --shadow-card    : 0 18px 48px rgba(0, 0, 0, 0.32);
   --shadow-card-hover: 0 24px 58px rgba(0, 0, 0, 0.42);

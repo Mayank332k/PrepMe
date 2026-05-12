@@ -1272,7 +1272,7 @@
   background: linear-gradient(90deg, var(--glass-highlight) 0%, var(--glass-highlight-hover) 50%, var(--glass-highlight) 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 
