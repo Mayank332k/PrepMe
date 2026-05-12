@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
-import logo from '../../assets/logo.png';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -39,7 +39,7 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
     >
       <header className={styles.header}>
         <div className={styles.logoBadge} onClick={toggleSidebar}>
-          <img src={logo} alt="Logo" className={styles.logoImg} />
+          <span className={styles.logoText}>PrepMe</span>
         </div>
       </header>
 
@@ -59,6 +59,10 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
       </nav>
 
       <div className={styles.footer}>
+        <div className={styles.sidebarActions}>
+          <ThemeToggle className={styles.sidebarThemeBtn} />
+          {isExpanded && <span className={styles.linkLabel}>Switch Theme</span>}
+        </div>
 
         <div className={styles.userProfileWrapper}>
           <div 

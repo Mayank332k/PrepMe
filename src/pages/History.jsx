@@ -3,7 +3,6 @@ import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './History.module.css';
-import logo from '../assets/logo.png';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
@@ -326,15 +325,24 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
             )}
 
             {loading ? (
-              <div className={styles.skeletonGrid}>
+              <div className={styles.historyGrid}>
                 {[1, 2, 3, 4, 5, 6].map((skel) => (
                   <div key={skel} className={styles.skeletonCard}>
                     <div className={styles.skeletonHeader}>
                       <div className={`${styles.skeletonLine} ${styles.skeletonBadge}`}></div>
-                      <div className={`${styles.skeletonLine} ${styles.skeletonDate}`}></div>
                     </div>
-                    <div className={`${styles.skeletonLine} ${styles.skeletonTitle}`}></div>
-                    <div className={`${styles.skeletonLine} ${styles.skeletonFooter}`}></div>
+                    <div className={styles.skeletonBody}>
+                      <div className={styles.skeletonContent}>
+                        <div className={`${styles.skeletonLine} ${styles.skeletonTitle}`}></div>
+                        <div className={`${styles.skeletonLine} ${styles.skeletonSubtitle}`}></div>
+                      </div>
+                      <div className={`${styles.skeletonLine} ${styles.skeletonCircle}`}></div>
+                    </div>
+                    <div className={`${styles.skeletonLine} ${styles.skeletonSummary}`}></div>
+                    <div className={styles.skeletonFooter}>
+                      <div className={`${styles.skeletonLine} ${styles.skeletonDate}`}></div>
+                      <div className={`${styles.skeletonLine} ${styles.skeletonButton}`}></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -405,11 +413,13 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                         ) : (
                           <>
                             <div className={styles.cardHeader}>
-                              <span className={`${styles.statusBadge} ${styles[item.status] || ''}`}>
-                                {item.status}
-                              </span>
+                              <div className={styles.headerLeft}>
+                                <div className={`${styles.statusBadge} ${styles[item.status] || ''}`}>
+                                  <span className={styles.statusDot}></span>
+                                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                </div>
+                              </div>
                               <div className={styles.headerRight}>
-                                <span className={styles.dateText}>{dateString}</span>
                                 <div className={styles.menuWrapper} ref={isMenuOpen ? menuRef : null}>
                                   <button 
                                     className={styles.menuDots}
@@ -430,37 +440,77 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                               </div>
                             </div>
                             
-                            <div>
-                              <h3 className={styles.jobTitle}>
-                                {item.jobDescription 
-                                  ? (() => {
-                                      const cleanTitle = item.jobDescription.replace(/\*/g, '').trim();
-                                      return cleanTitle.length > 60 
-                                        ? cleanTitle.substring(0, 60) + '...' 
-                                        : cleanTitle;
-                                    })()
-                                  : 'General SWE Interview'}
-                              </h3>
+                            <div className={styles.cardBody}>
+                              <div className={styles.bodyContent}>
+                                <h3 className={styles.jobTitle}>
+                                  {item.jobDescription 
+                                    ? (() => {
+                                        const cleanTitle = item.jobDescription.replace(/\*/g, '').trim();
+                                        return cleanTitle.length > 50 
+                                          ? cleanTitle.substring(0, 50) + '...' 
+                                          : cleanTitle;
+                                      })()
+                                    : 'General SWE Interview'}
+                                </h3>
+                                <p className={styles.jobSubtitle}>
+                                  {item.focusArea || 'Backend + Problem Solving'}
+                                </p>
+                              </div>
+
+                              {isCompleted && (
+                                <div className={styles.scoreCircleWrapper}>
+                                  <svg className={styles.scoreSvg} viewBox="0 0 100 100">
+                                    <circle 
+                                      className={styles.scoreTrack} 
+                                      cx="50" cy="50" r="45" 
+                                    />
+                                    <circle 
+                                      className={styles.scoreProgress} 
+                                      cx="50" cy="50" r="45" 
+                                      strokeDasharray={`${2 * Math.PI * 45 * (item.score / 100)} ${2 * Math.PI * 45}`}
+                                      style={{ stroke: item.score >= 80 ? '#22c55e' : item.score >= 50 ? '#f59e0b' : '#ef4444' }}
+                                    />
+                                  </svg>
+                                  <div className={styles.scoreTextCenter}>
+                                    <div className={styles.scoreValueCenter}>
+                                      {item.score}<span className={styles.scoreTotal}>/100</span>
+                                    </div>
+                                    <div className={styles.scoreLabelCenter}>Score</div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
+
+                            {isCompleted && (
+                              <div className={styles.summarySection}>
+                                <div className={styles.summaryIcon}>
+                                  <span className="material-symbols-outlined" style={{ 
+                                    color: item.score >= 80 ? '#22c55e' : item.score >= 50 ? '#f59e0b' : '#ef4444' 
+                                  }}>
+                                    {item.score >= 80 ? 'trending_up' : item.score >= 50 ? 'bar_chart' : 'trending_down'}
+                                  </span>
+                                </div>
+                                <div className={styles.summaryText}>
+                                  <h4 style={{ 
+                                    color: item.score >= 80 ? '#22c55e' : item.score >= 50 ? '#f59e0b' : '#ef4444' 
+                                  }}>
+                                    {item.score >= 80 ? 'Excellent Performance' : item.score >= 50 ? 'Needs Improvement' : 'Below Average'}
+                                  </h4>
+                                  <p>{item.summaryNote || 'Review recommended to strengthen key areas.'}</p>
+                                </div>
+                              </div>
+                            )}
                             
                             <div className={styles.cardFooter}>
-                              <div className={styles.scoreWrapper}>
-                                {isCompleted ? (
-                                  <>
-                                    <span className={styles.scoreLabel}>Score:</span>
-                                    <span className={styles.scoreValue}>
-                                      {item.score !== null && item.score !== undefined ? `${item.score}/100` : '--'}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className={styles.scoreLabel}>Not Scored</span>
-                                )}
+                              <div className={styles.dateSection}>
+                                <span className="material-symbols-outlined">calendar_today</span>
+                                <span>Completed on <span className={styles.dateHighlight}>{dateString}</span></span>
                               </div>
                               
                               {isCompleted && (
-                                <div className={styles.viewAction}>
-                                  View Details <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
-                                </div>
+                                <button className={styles.viewReportBtn}>
+                                  View Report <span className="material-symbols-outlined">chevron_right</span>
+                                </button>
                               )}
                             </div>
                           </>

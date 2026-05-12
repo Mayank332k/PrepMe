@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Chat.module.css';
-import logo from '../assets/logo.png';
 
 const CodeBlock = ({ language, value }) => {
   const [copied, setCopied] = useState(false);
@@ -40,7 +39,8 @@ const CodeBlock = ({ language, value }) => {
       <div className={styles.codeContent}>
         <SyntaxHighlighter
           language={language || 'text'}
-          style={oneLight}
+          style={oneDark}
+          useInlineStyles={false}
           PreTag="div"
           codeTagProps={{ style: { backgroundColor: 'transparent' } }}
           customStyle={{
@@ -58,12 +58,37 @@ const CodeBlock = ({ language, value }) => {
   );
 };
 
+const languageAliases = {
+  js: 'javascript',
+  node: 'javascript',
+  ts: 'typescript',
+  py: 'python',
+  sh: 'bash',
+  shell: 'bash',
+  zsh: 'bash',
+  cplusplus: 'cpp',
+  'c++': 'cpp',
+  cs: 'csharp',
+  yml: 'yaml',
+};
+
+const getCodeLanguage = (className = '') => {
+  const languageClass = className
+    .split(/\s+/)
+    .find((name) => name.startsWith('language-'));
+
+  if (!languageClass) return '';
+
+  const language = languageClass.replace('language-', '').toLowerCase();
+  return languageAliases[language] || language;
+};
+
 const MarkdownComponents = {
   code({ node, inline, className, children, ...props }) {
-    const match = /language-(\w+)/.exec(className || '');
-    return !inline && match ? (
+    const language = getCodeLanguage(className);
+    return !inline && language ? (
       <CodeBlock 
-        language={match[1]} 
+        language={language} 
         value={String(children).replace(/\n$/, '')} 
       />
     ) : (
@@ -211,6 +236,15 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
+  const chatCanvasRef = useRef(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Show button if user scrolls up by more than 300px from bottom
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 300;
+    setShowScrollBtn(!isAtBottom);
+  };
 
   // Auto-resize textarea with refined smooth transition
   useEffect(() => {
@@ -242,6 +276,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  const scrollToBottom = () => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -380,7 +418,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     lastActionTime.current = Date.now();
     if (showHintNudge) setShowHintNudge(false);
 
-    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) {
+    // Send on Cmd+Enter or Ctrl+Enter, while plain Enter goes to next line
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSendMessage(e);
     }
@@ -520,7 +559,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
         )}
 
-        <section className={styles.chatCanvas}>
+        <section 
+          className={styles.chatCanvas} 
+          ref={chatCanvasRef}
+          onScroll={handleScroll}
+        >
           <div className={styles.messageScroll}>
             {isResumed && (
               <div className={`${styles.resumedPill} ${isExiting ? styles.pillExiting : ''}`}>
@@ -562,59 +605,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         </section>
 
         <footer className={styles.footer}>
-          {/* Unified Morphing Hint Container */}
-          {(showHintNudge || showHintBox) && (
-            <div className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill}`}>
-              {!showHintBox ? (
-                <div className={styles.hintPillContent}>
-                  <button className={styles.nudgeBtn} onClick={requestHint}>
-                    <span className="material-symbols-outlined">lightbulb</span>
-                    Hints
-                  </button>
-                  <button className={styles.nudgeClose} onClick={() => {
-                    setShowHintNudge(false);
-                    setHintCancelCount(prev => prev + 1); // Increase delay for next time
-                    lastActionTime.current = Date.now(); // Reset timer
-                  }}>
-                    <span className="material-symbols-outlined">close</span>
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.hintExpandedContent}>
-                  <div className={styles.hintHeader}>
-                    <div className={styles.hintTitle}>
-                      <span className="material-symbols-outlined">lightbulb</span>
-                      AI Hint
-                    </div>
-                    <div className={styles.hintActions}>
-                      <button 
-                        className={styles.hintRegen} 
-                        onClick={requestHint}
-                        disabled={isHintLoading}
-                        title="Regenerate Hint"
-                      >
-                        <span className="material-symbols-outlined">refresh</span>
-                      </button>
-                      <button className={styles.hintClose} onClick={() => setShowHintBox(false)}>
-                        <span className="material-symbols-outlined">close</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div className={styles.hintBody}>
-                    {isHintLoading ? (
-                      <div className={styles.hintSkeleton}>
-                        <div className={styles.hintSkeletonLine}></div>
-                        <div className={styles.hintSkeletonLine} style={{ width: '80%' }}></div>
-                      </div>
-                    ) : (
-                      <ReactMarkdown>{hintText}</ReactMarkdown>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className={styles.inputWrapper}>
             <form onSubmit={handleSendMessage} className={styles.form}>
               <textarea 
@@ -636,6 +626,68 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
           <p className={styles.aiWarning}>AI can make mistakes</p>
         </footer>
+
+        {/* Unified Morphing Hint Container - Moved outside footer to fix backdrop-filter issues */}
+        {(showHintNudge || showHintBox) && (
+          <div className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill}`}>
+            {!showHintBox ? (
+              <div className={styles.hintPillContent}>
+                <button className={styles.nudgeBtn} onClick={requestHint}>
+                  <span className="material-symbols-outlined">lightbulb</span>
+                  Hints
+                </button>
+                <button className={styles.nudgeClose} onClick={() => {
+                  setShowHintNudge(false);
+                  setHintCancelCount(prev => prev + 1); 
+                  lastActionTime.current = Date.now();
+                }}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            ) : (
+              <div className={styles.hintExpandedContent}>
+                <div className={styles.hintHeader}>
+                  <div className={styles.hintTitle}>
+                    <span className="material-symbols-outlined">lightbulb</span>
+                    AI Hint
+                  </div>
+                  <div className={styles.hintActions}>
+                    <button 
+                      className={styles.hintRegen} 
+                      onClick={requestHint}
+                      disabled={isHintLoading}
+                      title="Regenerate Hint"
+                    >
+                      <span className="material-symbols-outlined">refresh</span>
+                    </button>
+                    <button className={styles.hintClose} onClick={() => setShowHintBox(false)}>
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.hintBody}>
+                  {isHintLoading ? (
+                    <div className={styles.hintSkeleton}>
+                      <div className={styles.hintSkeletonLine}></div>
+                      <div className={styles.hintSkeletonLine} style={{ width: '80%' }}></div>
+                    </div>
+                  ) : (
+                    <ReactMarkdown>{hintText}</ReactMarkdown>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {showScrollBtn && (
+          <button 
+            className={styles.scrollDownBtn} 
+            onClick={scrollToBottom}
+            title="Scroll to bottom"
+          >
+            <span className="material-symbols-outlined">arrow_downward</span>
+          </button>
+        )}
       </main>
     </div>
   );

@@ -3,10 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Report.module.css';
-import logo from '../assets/logo.png';
 import api from '../api';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // No mock data - strictly data-driven
 // Custom Hook to animate counting numbers smoothly
@@ -147,7 +146,7 @@ const CodeBlock = ({ language, value }) => {
       <div className={styles.codeContent}>
         <SyntaxHighlighter
           language={language || 'text'}
-          style={oneLight}
+          style={oneDark}
           PreTag="div"
           codeTagProps={{ style: { backgroundColor: 'transparent' } }}
           customStyle={{
@@ -182,7 +181,7 @@ const MarkdownComponents = {
 };
 
 
-export const Report = ({ user, sessionData, setSessionData, sessionActive, onRetake, onNavigate }) => {
+export const Report = ({ user, sessionData, setSessionData, sessionActive, onNavigate }) => {
   const [loading, setLoading] = useState(!sessionData?.report);
   const [error, setError] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);

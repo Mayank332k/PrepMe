@@ -15,8 +15,7 @@
   flex-direction: column;
   height: 100%;
   min-width: 0;
-  background: radial-gradient(circle at top right, rgba(220, 226, 236, 0.3), transparent 50%),
-              radial-gradient(circle at bottom left, rgba(243, 244, 246, 0.5), transparent 60%);
+  background: var(--bg-base);
 }
 
 /* Updated TopBar aligned with Report.jsx */
@@ -26,10 +25,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  background-color: rgba(248, 249, 250, 0.7);
+  background-color: var(--bg-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   z-index: 10;
 }
@@ -62,22 +61,21 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--text-primary);
-  color: white;
-  border: none;
+  background: var(--accent);
+  color: var(--bg-base);
+  border: 1px solid var(--border);
   padding: 10px 20px;
   border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .newInterviewBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  background: #000;
+  background: var(--accent-hover);
 }
 
 .headerActions {
@@ -104,7 +102,7 @@
 
 .historyContainer {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
 }
 
 .pageHeader {
@@ -168,11 +166,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  padding: 5px 9px;
-  background: white;
-  border: 0.7px solid rgba(0, 0, 0, 0.1);
+  padding: 5px 12px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
   border-radius: 100px;
-  color: #1a1a1a;
+  color: var(--text-primary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -182,12 +180,12 @@
 
 .filterDropdownBtn:hover {
   border-color: rgba(0, 0, 0, 0.2);
-  background: #fafafa;
+  background: var(--bg-hover);
 }
 
 .chevron {
   font-size: 16px;
-  color: #666;
+  color: var(--text-muted);
   transition: transform 0.3s ease;
 }
 
@@ -200,10 +198,10 @@
   top: 100%;
   left: 0;
   margin-top: 10px;
-  background: white;
+  background: var(--bg-surface);
   border-radius: 24px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   padding: 8px;
   min-width: 180px;
   z-index: 100;
@@ -280,10 +278,10 @@
   top: 100%;
   right: 0;
   margin-top: 10px;
-  background: white;
+  background: var(--bg-surface);
   border-radius: 24px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   padding: 6px;
   min-width: 200px;
   z-index: 100;
@@ -324,10 +322,10 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: white;
+  background: var(--bg-surface);
   border-radius: 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
   padding: 6px;
   min-width: 160px;
   animation: slideIn 0.2s ease-out;
@@ -374,16 +372,14 @@
 /* Professional History Grid Redesign */
 .historyGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 24px;
   padding-bottom: 100px;
 }
 
 .historyCard {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 24px;
   padding: 24px;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -396,128 +392,235 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.historyCard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
-  pointer-events: none;
-}
-
 .historyCard:hover {
-  transform: translateY(-3px) scale(1.01);
-  background: rgba(255, 255, 255, 0.5);
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+  transform: translateY(-4px);
+  border-color: var(--text-muted);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  background: var(--bg-hover);
 }
 
 .cardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 2;
-}
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 10px;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .statusBadge.completed {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
-  border: 1px solid rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.1);
 }
 
 .statusBadge.ongoing {
-  background: rgba(59, 130, 246, 0.1);
-  color: #2563eb;
-  border: 1px solid rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.1);
 }
 
-.dateText {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
+.cardBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.bodyContent {
+  flex: 1;
+  min-width: 0; /* Critical for text wrapping in flex */
 }
 
 .jobTitle {
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.4;
-  margin: 0;
-  z-index: 2;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.cardFooter {
-  margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 2;
-}
-
-.scoreWrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.scoreLabel {
-  font-size: 12px;
+.jobSubtitle {
+  font-size: 15px;
   color: var(--text-secondary);
+  margin: 0;
+  font-weight: 500;
+}
+
+.scoreCircleWrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+
+.scoreSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.scoreTrack {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 6;
+}
+
+.scoreProgress {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease-out;
+}
+
+.scoreTextCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
+}
+
+.scoreValueCenter {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.scoreTotal {
+  font-size: 12px;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
-.scoreValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-primary);
+.scoreLabelCenter {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
 }
 
-.viewAction {
+.summarySection {
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.summaryIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-hover);
   display: flex;
   align-items: center;
-  gap: 2px;
-  color: var(--text-primary);
-  font-size: 12px;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.summaryText h4 {
+  font-size: 14px;
   font-weight: 700;
-  opacity: 0.8;
+  margin: 0 0 4px 0;
+}
+
+.summaryText p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.dateSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.dateSection span:first-child {
+  font-size: 16px;
+}
+
+.dateHighlight {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.viewReportBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.historyCard:hover .viewAction {
-  color: #000;
-  transform: translateX(4px);
+.viewReportBtn:hover {
+  background: var(--bg-surface);
+  border-color: var(--text-muted);
+  transform: translateX(2px);
+}
+
+.viewReportBtn span {
+  font-size: 18px;
 }
 
 .menuDots {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--bg-hover);
   color: var(--text-muted);
-  border: none;
+  border: 1px solid var(--border);
   cursor: pointer;
-  border-radius: 100px;
-  width: 28px;
-  height: 28px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   transition: all 0.2s;
   outline: none;
 }
@@ -527,7 +630,7 @@
 }
 
 .menuDots:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--glass-highlight-hover);
   color: var(--text-primary);
 }
 
@@ -544,16 +647,15 @@
 }
 
 .skeletonCard {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--bg-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 20px;
-  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  height: 180px;
+  gap: 24px;
   animation: skeletonStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
@@ -571,7 +673,7 @@
 }
 
 .skeletonLine {
-  background: rgba(209, 213, 219, 0.3);
+  background: var(--shimmer-from);
   border-radius: 6px;
   position: relative;
   overflow: hidden;
@@ -583,9 +685,9 @@
   top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    rgba(255, 255, 255, 0) 100%
+    transparent 0%,
+    var(--glass-highlight-hover) 50%,
+    transparent 100%
   );
   animation: premiumShimmer 1.8s infinite ease-in-out;
   transform: skewX(-20deg);
@@ -598,13 +700,47 @@
 
 .skeletonHeader {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
-.skeletonBadge { height: 24px; width: 80px; border-radius: 12px; }
-.skeletonDate { height: 16px; width: 60px; margin-top: 4px; }
-.skeletonTitle { height: 24px; width: 70%; margin-top: 10px; }
-.skeletonFooter { margin-top: auto; height: 20px; width: 40%; }
+.skeletonBadge { height: 26px; width: 100px; border-radius: 100px; }
+
+.skeletonBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.skeletonContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeletonTitle { height: 22px; width: 80%; }
+.skeletonSubtitle { height: 16px; width: 60%; }
+
+.skeletonCircle { 
+  width: 72px; 
+  height: 72px; 
+  border-radius: 50%; 
+  flex-shrink: 0;
+}
+
+.skeletonSummary { height: 60px; width: 100%; border-radius: 24px; }
+
+.skeletonFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.skeletonDate { height: 18px; width: 120px; }
+.skeletonButton { height: 38px; width: 130px; border-radius: 100px; }
 
 .emptyState {
   display: flex;
@@ -612,9 +748,9 @@
   align-items: center;
   justify-content: center;
   height: 350px;
-  background: rgba(255,255,255,0.4);
+  background: var(--bg-surface);
   backdrop-filter: blur(10px);
-  border: 2px dashed rgba(0,0,0,0.06);
+  border: 2px dashed var(--border);
   border-radius: 24px;
   text-align: center;
   padding: 40px;
@@ -687,7 +823,7 @@
 /* Inline Confirm State */
 .historyCard.confirming {
   border-color: rgba(255, 59, 48, 0.3);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-surface);
   transform: scale(1.02);
 }
 
@@ -772,7 +908,7 @@
 }
 
 .modalContent {
-  background: white;
+  background: var(--bg-surface);
   width: 90%;
   max-width: 380px;
   padding: 40px;
@@ -785,7 +921,7 @@
 .modalIcon {
   width: 72px;
   height: 72px;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--bg-hover);
   color: var(--text-primary);
   border-radius: 20px;
   display: flex;
@@ -866,12 +1002,12 @@
 
 /* Chart Styles */
 .chartSection {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 41px;
   padding: 23px;
   margin-bottom: 43px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
 }
 
 .chartHeader {
@@ -889,7 +1025,7 @@
 
 .chartTabs {
   display: flex;
-  background: rgb(242, 242, 242);
+  background: var(--bg-hover);
   padding: 3px;
   border-radius: 100px;
   gap: 0;
@@ -903,7 +1039,7 @@
   bottom: 3px;
   left: 3px;
   width: calc((100% - 6px) / 3);
-  background: white;
+  background: var(--bg-surface);
   border-radius: 100px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -917,7 +1053,7 @@
   background: transparent !important;
   font-size: 11px;
   font-weight: 700;
-  color: #666;
+  color: var(--text-muted);
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
   display: flex;
@@ -936,7 +1072,7 @@
 }
 
 .chartTab:hover {
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .chartTab span {
@@ -945,7 +1081,7 @@
 
 
 .chartTab.activeTab {
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .chartContainer {
@@ -969,7 +1105,7 @@
   height: 100%;
   padding: 40px;
   text-align: center;
-  color: #8f8f8f;
+  color: var(--text-muted);
 }
 
 .emptyChartState span:first-child {
@@ -981,7 +1117,7 @@
 .emptyChartState p {
   font-size: 16px;
   font-weight: 500;
-  color: #4a4a4a;
+  color: var(--text-secondary);
   margin: 0 0 4px 0;
 }
 
@@ -1057,16 +1193,96 @@
   .chartTab span {
     font-size: 11px;
   }
+
+  .historyGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .historyCard {
+    padding: 24px;
+    border-radius: 28px;
+    gap: 16px;
+  }
+
+  .cardBody {
+    gap: 12px;
+  }
+
+  .jobTitle {
+    font-size: 19px;
+  }
+
+  .jobSubtitle {
+    font-size: 14px;
+  }
+
+  .scoreCircleWrapper {
+    width: 64px;
+    height: 64px;
+  }
+
+  .scoreValueCenter {
+    font-size: 16px;
+  }
+
+  .scoreTotal {
+    font-size: 10px;
+  }
+
+  .scoreLabelCenter {
+    font-size: 8px;
+  }
+
+  .summarySection {
+    padding: 12px 0;
+    gap: 12px;
+  }
+
+  .summaryIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .summaryIcon span {
+    font-size: 18px;
+  }
+
+  .summaryText h4 {
+    font-size: 13px;
+  }
+
+  .summaryText p {
+    font-size: 12px;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .dateSection {
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  .viewReportBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    font-size: 13px;
+  }
 }
 
 /* Chart Skeleton */
 .chartSkeleton {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 41px;
   padding: 23px;
   margin-bottom: 43px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
 }
 
 .chartSkeletonHeader {
@@ -1080,7 +1296,7 @@
 .chartSkeletonBody {
   width: 100%;
   height: 250px;
-  background: rgba(209, 213, 219, 0.1);
+  background: var(--shimmer-from);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -1092,9 +1308,9 @@
   top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    rgba(255, 255, 255, 0) 100%
+    transparent 0%,
+    var(--glass-highlight-hover) 50%,
+    transparent 100%
   );
   animation: premiumShimmer 1.8s infinite ease-in-out;
   transform: skewX(-20deg);
@@ -1116,4 +1332,29 @@
   .chartSkeletonBody {
     height: 180px;
   }
+
+  .skeletonCard {
+    padding: 24px;
+    border-radius: 28px;
+    gap: 20px;
+  }
+
+  .skeletonCircle {
+    width: 64px;
+    height: 64px;
+  }
+
+  .skeletonTitle { height: 22px; }
+  .skeletonSubtitle { height: 14px; }
+  .skeletonSummary { height: 48px; }
+
+  .skeletonFooter {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .skeletonDate { width: 100%; height: 14px; }
+  .skeletonButton { width: 100%; height: 34px; }
 }
+

@@ -181,11 +181,6 @@ function App() {
           sessionData={sessionData}
           setSessionData={setSessionData}
           sessionActive={sessionActive}
-          onRetake={() => {
-            setResumeFile(null);
-            setSessionData(null);
-            setCurrentScreen('upload');
-          }} 
           onNavigate={navigateTo} 
         />;
       case 'history':

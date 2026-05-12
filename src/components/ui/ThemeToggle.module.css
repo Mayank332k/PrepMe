@@ -1,0 +1,81 @@
+.themeBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+.themeBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--text-primary);
+}
+
+.themeBtn:active {
+  transform: scale(0.95);
+}
+
+.iconWrapper {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  position: absolute;
+  font-size: 22px;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.visible {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.hidden {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+/* Force specific colors based on theme as requested */
+:global([data-theme='dark']) .icon {
+  color: #FFFFFF !important;
+}
+
+:global([data-theme='light']) .icon {
+  color: #000000 !important;
+}
+
+/* Visibility enhancements for Dark Mode */
+:global([data-theme='dark']) .themeBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+:global([data-theme='dark']) .themeBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Clean appearance for Light Mode */
+:global([data-theme='light']) .themeBtn {
+  background: #f8f9fa;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global([data-theme='light']) .themeBtn:hover {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.3);
+}

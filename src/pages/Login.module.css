@@ -193,7 +193,7 @@
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: var(--bg-surface);
   padding: 12px 20px;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -214,7 +214,7 @@
   width: 100%;
   height: 100%;
   position: relative;
-  background: #0d0d12;
+  background: var(--bg-base);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -237,7 +237,7 @@
 .virtualPage {
   width: 100%;
   height: 100%;
-  background: white;
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 16px;
@@ -296,7 +296,7 @@
   width: 100%;
   height: 100%;
   padding: 24px;
-  background: white;
+  background: var(--bg-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,7 +426,7 @@
 .indicatorDot span { font-size: 16px; }
 
 .indicatorDot.active {
-  background: white;
+  background: var(--bg-surface);
   border-color: var(--phase-color);
   color: var(--phase-color);
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -529,7 +529,7 @@
   width: 56px;
   height: 56px;
   background-color: var(--accent);
-  color: #FFF;
+  color: var(--bg-base);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -591,12 +591,12 @@
   animation: pageEnter var(--transition-page) ease-out;
   border: 1px solid var(--border);
   padding: 32px; /* Reduced from 48px */
-  background: radial-gradient(circle at top left, #FFFFFF 0%, #FDFBF7 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)), var(--bg-surface);
   border-radius: var(--radius-large);
   position: relative;
   box-shadow: 
-    0 40px 100px -20px rgba(44, 41, 38, 0.08),
-    0 0 0 1px rgba(238, 231, 215, 0.5);
+    0 40px 100px -20px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -666,7 +666,7 @@
 .dividerText {
   position: relative;
   z-index: 2;
-  background: #FFFFFF;
+  background: var(--bg-surface);
   padding: 0 20px;
   color: var(--text-muted);
   font-size: 10px;
@@ -730,8 +730,8 @@
   font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: var(--text-primary) !important;
-  color: #fff !important;
+  background: var(--accent) !important;
+  color: var(--bg-base) !important;
   border-radius: var(--radius-pill) !important;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   transition: all 0.3s ease !important;

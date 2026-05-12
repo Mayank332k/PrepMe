@@ -16,7 +16,7 @@
   transform: translate(-50%, -50%);
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(209, 213, 219, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.16) 0%, transparent 70%);
   z-index: 1;
   animation: glowPulse 8s infinite alternate;
 }
@@ -38,7 +38,7 @@
 .documentCard {
   width: 240px;
   height: 320px;
-  background: #FFFFFF;
+  background: var(--bg-surface);
   border-radius: var(--radius-large);
   border: 1px solid var(--border);
   padding: 32px;
@@ -46,7 +46,7 @@
   flex-direction: column;
   gap: 16px;
   position: relative;
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.42);
   animation: cardEntry 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -176,7 +176,7 @@
 
 .retryBtn {
   background: var(--text-primary);
-  color: #FFFFFF;
+  color: var(--bg-base);
   border: none;
   padding: 12px 24px;
   border-radius: 100px;

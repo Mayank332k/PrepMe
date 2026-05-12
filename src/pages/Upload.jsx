@@ -3,7 +3,6 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import api from '../api';
 import styles from './Upload.module.css';
-import logo from '../assets/logo.png';
 
 export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavigate }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -111,7 +110,7 @@ export const Upload = ({ user, resumeStatus, setResumeStatus, onAnalyze, onNavig
       <main className={styles.mainCanvas}>
         <header className={styles.topBar}>
           <div className={styles.logoSection}>
-            <img src={logo} alt="Logo" className={styles.logoImg} />
+            <span className={styles.logoText}>PrepMe</span>
           </div>
           
           <div className={styles.profileSection}>

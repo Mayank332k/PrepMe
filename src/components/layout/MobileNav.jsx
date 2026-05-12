@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from './MobileNav.module.css';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
   const [showProfileCard, setShowProfileCard] = useState(false);
@@ -88,6 +89,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
               </div>
               
             <div className={styles.cardActions}>
+              <ThemeToggle className={styles.mobileThemeToggle} />
               <button 
                 className={styles.logoutBtn} 
                 onClick={() => onNavigate && onNavigate('logout')}
