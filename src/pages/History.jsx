@@ -3,7 +3,25 @@ import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './History.module.css';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const score = payload[0].value;
+    const color = score >= 50 ? '#5a9e3f' : '#af4b4b';
+    
+    return (
+      <div className={styles.customTooltip}>
+        <p className={styles.tooltipDate}>{label}</p>
+        <div className={styles.tooltipScoreGroup}>
+          <span className={styles.tooltipValue} style={{ color }}>{score}</span>
+          <span className={styles.tooltipTotal}>/100</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   const [historyItems, setHistoryItems] = useState([]);
@@ -118,7 +136,8 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
 
     if (completedItems.length === 0) return [];
 
-    let data = completedItems.map(item => ({
+    let data = completedItems.map((item, index) => ({
+      id: item._id || item.sessionId || `session-${index}`,
       date: new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       score: item.score
     }));
@@ -134,6 +153,45 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   };
 
   const chartData = getChartData();
+
+  const getStats = () => {
+    const completed = historyItems.filter(item => item.status === 'completed' && item.score != null);
+    if (completed.length === 0) return null;
+
+    // Get items in the current range (7d, 1m, or all)
+    const now = new Date();
+    let startDate = new Date(0);
+    if (chartRange === '7d') startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    else if (chartRange === '1m') startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const rangeItems = completed
+      .filter(item => new Date(item.createdAt) >= startDate)
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    if (rangeItems.length === 0) return null;
+
+    const totalInterviews = completed.length; // Lifetime total
+    const rangeAvg = Math.round(rangeItems.reduce((acc, curr) => acc + curr.score, 0) / rangeItems.length);
+    
+    let improvementRate = 0;
+    let trend = 'neutral';
+    
+    if (rangeItems.length >= 2) {
+      const firstScore = rangeItems[0].score;
+      const lastScore = rangeItems[rangeItems.length - 1].score;
+      improvementRate = firstScore > 0 ? Math.round(((lastScore - firstScore) / firstScore) * 100) : 0;
+      trend = improvementRate > 0 ? 'upward' : improvementRate < 0 ? 'downward' : 'neutral';
+    }
+
+    return {
+      total: totalInterviews,
+      avgScore: rangeAvg,
+      improvementRate,
+      trend
+    };
+  };
+
+  const stats = getStats();
 
   return (
     <div className={styles.pageContainer}>
@@ -222,106 +280,149 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
 
             {/* CHART SKELETON */}
             {loading && (
-              <div className={styles.chartSkeleton}>
-                <div className={styles.chartSkeletonHeader}>
-                  <div className={`${styles.skeletonLine}`} style={{ width: '35%', height: '22px', borderRadius: '8px' }}></div>
-                  <div className={`${styles.skeletonLine}`} style={{ width: '45%', height: '32px', borderRadius: '100px' }}></div>
+              <>
+                <div className={styles.chartSkeleton}>
+                  <div className={styles.chartSkeletonHeader}>
+                    <div className={`${styles.skeletonLine}`} style={{ width: '35%', height: '22px', borderRadius: '8px' }}></div>
+                    <div className={`${styles.skeletonLine}`} style={{ width: '45%', height: '32px', borderRadius: '100px' }}></div>
+                  </div>
+                  <div className={styles.chartSkeletonBody}></div>
                 </div>
-                <div className={styles.chartSkeletonBody}></div>
-              </div>
+                <div className={styles.statsSkeleton}>
+                  <div className={styles.skeletonInner}></div>
+                </div>
+              </>
             )}
 
             {/* CHART SECTION */}
             {!loading && !error && historyItems.length > 0 && chartData.length > 0 && (
-              <div className={styles.chartSection}>
-                <div className={styles.chartHeader}>
-                  <h3 className={styles.chartTitle}>Performance Trend</h3>
-                  <div className={styles.chartTabs}>
-                    <div 
-                      className={styles.activeIndicator} 
-                      style={{ 
-                        transform: `translateX(${chartRange === '7d' ? '0%' : chartRange === '1m' ? '100%' : '200%'})`
-                      }} 
-                    />
-                    <button 
-                      className={`${styles.chartTab} ${chartRange === '7d' ? styles.activeTab : ''}`}
-                      onClick={() => setChartRange('7d')}
-                    >
-                      <span className="material-symbols-outlined">calendar_view_week</span>
-                      7d
-                    </button>
-                    <button 
-                      className={`${styles.chartTab} ${chartRange === '1m' ? styles.activeTab : ''}`}
-                      onClick={() => setChartRange('1m')}
-                    >
-                      <span className="material-symbols-outlined">calendar_month</span>
-                      1m
-                    </button>
-                    <button 
-                      className={`${styles.chartTab} ${chartRange === 'all' ? styles.activeTab : ''}`}
-                      onClick={() => setChartRange('all')}
-                    >
-                      <span className="material-symbols-outlined">all_inclusive</span>
-                      All
-                    </button>
+              <>
+                <div className={styles.chartSection}>
+                  <div className={styles.chartHeader}>
+                    <h3 className={styles.chartTitle}>Performance Trend</h3>
+                    <div className={styles.chartTabs}>
+                      <div 
+                        className={styles.activeIndicator} 
+                        style={{ 
+                          transform: `translateX(${chartRange === '7d' ? '0%' : chartRange === '1m' ? '100%' : '200%'})`
+                        }} 
+                      />
+                      <button 
+                        className={`${styles.chartTab} ${chartRange === '7d' ? styles.activeTab : ''}`}
+                        onClick={() => setChartRange('7d')}
+                      >
+                        <span className="material-symbols-outlined">calendar_view_week</span>
+                        7d
+                      </button>
+                      <button 
+                        className={`${styles.chartTab} ${chartRange === '1m' ? styles.activeTab : ''}`}
+                        onClick={() => setChartRange('1m')}
+                      >
+                        <span className="material-symbols-outlined">calendar_month</span>
+                        1m
+                      </button>
+                      <button 
+                        className={`${styles.chartTab} ${chartRange === 'all' ? styles.activeTab : ''}`}
+                        onClick={() => setChartRange('all')}
+                      >
+                        <span className="material-symbols-outlined">all_inclusive</span>
+                        All
+                      </button>
+                    </div>
+                  </div>
+                  <div className={styles.chartContainer}>
+                    {chartData.length < 2 ? (
+                      <div className={styles.emptyChartState}>
+                        <span className="material-symbols-outlined">analytics</span>
+                        <p>Not enough data to show performance trend yet.</p>
+                        <span>Complete a few more sessions to see your progress!</span>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={isMobile ? 180 : 280} minWidth={0}>
+                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" strokeOpacity={0.5} />
+                          <XAxis 
+                            dataKey="id" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tickFormatter={(id) => {
+                              const item = chartData.find(d => d.id === id);
+                              return item ? item.date : '';
+                            }}
+                            tick={{ fontSize: 11, fill: '#666' }} 
+                            dy={10} 
+                            minTickGap={20}
+                          />
+                          <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 11, fill: '#666' }} 
+                            dx={-10} 
+                            width={40}
+                            domain={[0, 100]} 
+                            allowDecimals={false}
+                            tickCount={6}
+                          />
+                          <Tooltip 
+                            content={<CustomTooltip />}
+                            cursor={{ fill: 'rgba(255, 255, 255, 0.05)', radius: 6 }}
+                            wrapperStyle={{ outline: 'none' }}
+                            offset={isMobile ? -80 : 10}
+                          />
+                          <Bar 
+                            dataKey="score" 
+                            radius={[6, 6, 0, 0]}
+                            barSize={isMobile ? 14 : 24}
+                            animationDuration={1500}
+                          >
+                            {chartData.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={entry.score >= 50 ? '#5a9e3f' : '#af4b4b'} 
+                                fillOpacity={0.9}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 </div>
-                <div className={styles.chartContainer}>
-                  {chartData.length < 2 ? (
-                    <div className={styles.emptyChartState}>
-                      <span className="material-symbols-outlined">analytics</span>
-                      <p>Not enough data to show performance trend yet.</p>
-                      <span>Complete a few more sessions to see your progress!</span>
+
+                {stats && (
+                  <div className={styles.statsContainer}>
+                    <div className={styles.statPill}>
+                      <div className={`${styles.statIcon} ${styles.neutral}`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>work_history</span>
+                      </div>
+                      <div className={styles.statLabel}>Interviews Given:</div>
+                      <div className={styles.statValue}>{stats.total}</div>
                     </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={isMobile ? 180 : 280} minWidth={0}>
-                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
-                        <defs>
-                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#5a9e3f" stopOpacity={0.15}/>
-                            <stop offset="100%" stopColor="#5a9e3f" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#eaeaea" />
-                        <XAxis 
-                          dataKey="date" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 11, fill: '#8f8f8f' }} 
-                          dy={10} 
-                          minTickGap={20}
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 11, fill: '#8f8f8f' }} 
-                          dx={-10} 
-                          width={40}
-                          domain={[0, 100]} 
-                          allowDecimals={false}
-                          tickCount={6}
-                        />
-                        <Tooltip 
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}
-                          itemStyle={{ color: '#5a9e3f', fontWeight: 'bold' }}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="score" 
-                          stroke="#5a9e3f" 
-                          strokeWidth={2.5} 
-                          fillOpacity={1} 
-                          fill="url(#colorScore)" 
-                          activeDot={{ r: 6, fill: '#5a9e3f', stroke: '#fff', strokeWidth: 2 }}
-                          animationDuration={1000}
-                          animationEasing="ease-in-out"
-                          isAnimationActive={true}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </div>
+                    
+                    <div className={styles.statPill}>
+                      <div className={`${styles.statIcon} ${styles.neutral}`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>auto_graph</span>
+                      </div>
+                      <div className={styles.statLabel}>Avg. Score:</div>
+                      <div className={styles.statValue}>{stats.avgScore}/100</div>
+                    </div>
+
+                    <div className={styles.statPill}>
+                      <div className={`${styles.statIcon} ${styles[stats.trend]}`}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                          {stats.trend === 'upward' ? 'trending_up' : stats.trend === 'downward' ? 'trending_down' : 'trending_flat'}
+                        </span>
+                      </div>
+                      <div className={styles.statLabel}>Performance:</div>
+                      <div className={styles.statValue} style={{ 
+                        color: stats.trend === 'upward' ? '#22c55e' : stats.trend === 'downward' ? '#ef4444' : 'inherit'
+                      }}>
+                        {stats.improvementRate > 0 ? '+' : ''}{stats.improvementRate}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {loading ? (

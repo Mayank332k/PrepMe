@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
     const cachedResponse = cache.get(cacheKey);
 
     if (cachedResponse && (Date.now() - cachedResponse.timestamp < CACHE_DURATION)) {
-      console.log(`[Cache Hit] ${config.url}`);
+
       config.adapter = () => Promise.resolve({
         data: cachedResponse.data,
         status: 200,
@@ -50,7 +50,7 @@ api.interceptors.response.use(
       });
     } else if (['post', 'put', 'delete', 'patch'].includes(method)) {
       // Invalidate cache on mutations
-      console.log(`[Cache Invalidate] Due to ${method.toUpperCase()} on ${url}`);
+
       cache.clear(); 
     }
     return response;
