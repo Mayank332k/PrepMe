@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -6,6 +6,15 @@ import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Chat.module.css';
+import aiIcon from '../assets/image.png';
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+if (recognition) {
+  recognition.continuous = true;
+  recognition.interimResults = true;
+}
 
 const CodeBlock = ({ language, value }) => {
   const [copied, setCopied] = useState(false);
@@ -99,16 +108,90 @@ const MarkdownComponents = {
   }
 };
 
-const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData }) => {
+// Helper to clean markdown for Voice Mode
+const stripMarkdown = (text) => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+    .replace(/\*(.*?)\*/g, '$1')     // Italic
+    .replace(/__(.*?)__/g, '$1')     // Bold underscore
+    .replace(/_(.*?)_/g, '$1')       // Italic underscore
+    .replace(/`(.*?)`/g, '$1')       // Inline code
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
+    .replace(/#+\s/g, '')            // Headers
+    .trim();
+};
+
+const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData, activeVoiceMessageId, currentSpokenWordIndex }) => {
+  const isSpeaking = activeVoiceMessageId === msg.id;
+  const lyricContainerRef = useRef(null);
+  
+  // Memoize cleaned words to prevent re-splitting on every render
+  const words = useMemo(() => {
+    const cleanText = isSpeaking ? stripMarkdown(msg.text) : msg.text;
+    return cleanText.split(/\s+/);
+  }, [msg.text, isSpeaking]);
+
+  // Adjust scroll position to keep active word centered
+  useEffect(() => {
+    if (isSpeaking && lyricContainerRef.current) {
+      const activeWord = lyricContainerRef.current.querySelector(`.${styles.wordActive}`);
+      const viewport = lyricContainerRef.current.closest(`.${styles.lyricViewport}`);
+      
+      if (activeWord && viewport) {
+        const viewportHeight = viewport.offsetHeight;
+        const wordOffset = activeWord.offsetTop;
+        const wordHeight = activeWord.offsetHeight;
+        
+        // Calculate the translation needed to put the active word at the center of the viewport
+        // Use translate3d for hardware acceleration and sub-pixel accuracy
+        const targetScroll = wordOffset - (viewportHeight / 2) + (wordHeight / 2);
+        lyricContainerRef.current.style.transform = `translate3d(0, ${-targetScroll}px, 0)`;
+      }
+    }
+  }, [currentSpokenWordIndex, isSpeaking]);
+  
   return (
     <div className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
       <div className={styles.messageBody}>
         <div className={styles.bubbleContainer}>
-          <div className={styles.bubble}>
+          <div className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ''}`}>
             <div className={styles.markdownContent}>
-              <ReactMarkdown components={MarkdownComponents}>
-                {msg.text.replace(/\n(?!\n)/g, '  \n')}
-              </ReactMarkdown>
+              {isSpeaking ? (
+                <div className={styles.lyricViewport}>
+                  <div className={styles.lyricText} ref={lyricContainerRef}>
+                    {words.map((word, wIdx) => {
+                      const isPast = wIdx < currentSpokenWordIndex;
+                      const isActive = wIdx === currentSpokenWordIndex;
+                      const isFuture = wIdx > currentSpokenWordIndex;
+                      
+                      return (
+                        <span 
+                          key={wIdx} 
+                          className={`${styles.lyricWord} ${
+                            isActive ? styles.wordActive : 
+                            isPast ? styles.wordPast : styles.wordFuture
+                          }`}
+                        >
+                          {word.split('').map((char, cIdx) => (
+                            <span 
+                              key={cIdx} 
+                              className={styles.lyricChar}
+                              style={{ transitionDelay: isActive ? `${cIdx * 0.06}s` : '0s' }}
+                            >
+                              {char}
+                            </span>
+                          ))}
+                          <span className={styles.lyricChar}>&nbsp;</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <ReactMarkdown components={MarkdownComponents}>
+                  {msg.text.replace(/\n(?!\n)/g, '  \n')}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
         </div>
@@ -174,7 +257,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         if (data.success && data.session.transcript.length > 0) {
           const formattedMessages = data.session.transcript.map((m, idx) => ({
-            id: m._id || `msg-${idx}-${Date.now()}`, // Truly unique ID for state management
+            id: m._id || `msg-${idx}-${Date.now()}`,
             sender: m.role === 'assistant' ? 'ai' : 'user',
             text: m.content,
             timestamp: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : 'Earlier',
@@ -182,8 +265,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           }));
           setMessages(formattedMessages);
           
-          // Only show pill if it's a refresh (no firstMessage in props) 
-          // and we have actual history
           if (!sessionData?.firstMessage) {
             setIsResumed(true);
             setTimeout(() => {
@@ -233,6 +314,29 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [hintCancelCount, setHintCancelCount] = useState(0); 
   const lastActionTime = useRef(Date.now());
   const hintTimerRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [activeVoiceMessageId, setActiveVoiceMessageId] = useState(null);
+  const [currentSpokenWordIndex, setCurrentSpokenWordIndex] = useState(-1);
+  const isDictatingRef = useRef(false);
+  const isListeningRef = useRef(false);
+  const isVoiceModeRef = useRef(false);
+  const sendMessageRef = useRef(null);
+  const silenceTimerRef = useRef(null);
+  const [voiceWave, setVoiceWave] = useState(false);
+  const recognitionBaseTextRef = useRef('');
+  const inputTextRef = useRef(inputText);
+  const speechQueueRef = useRef([]);
+  const isSpeakingChunkRef = useRef(false);
+  const totalWordsSpokenRef = useRef(0);
+
+  // Sync inputTextRef with state
+  useEffect(() => {
+    inputTextRef.current = inputText;
+  }, [inputText]);
 
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
@@ -277,16 +381,221 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Sync refs with state
+  useEffect(() => {
+    isDictatingRef.current = isDictating;
+    isListeningRef.current = isListening;
+    isVoiceModeRef.current = isVoiceMode;
+    sendMessageRef.current = handleSendMessage;
+  }); // Run on every render to ensure sendMessageRef always has the latest closure/state
+
+  // Dictation Effect
+  useEffect(() => {
+    if (!recognition) return;
+
+    recognition.onstart = () => {
+      recognitionBaseTextRef.current = inputTextRef.current;
+    };
+
+    recognition.onresult = (event) => {
+      let currentSessionFinal = '';
+      let currentSessionInterim = '';
+
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          currentSessionFinal += event.results[i][0].transcript;
+        } else {
+          currentSessionInterim += event.results[i][0].transcript;
+        }
+      }
+
+      if (isDictatingRef.current || isListeningRef.current) {
+        const base = recognitionBaseTextRef.current;
+        const newText = base + (base && !base.endsWith(' ') ? ' ' : '') + currentSessionFinal + currentSessionInterim;
+        setInputText(newText);
+
+        // Auto-send logic (only in voice mode and based on final results)
+        if (isVoiceModeRef.current && currentSessionFinal.trim().length > 0) {
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = setTimeout(() => {
+            if (sendMessageRef.current) {
+              sendMessageRef.current();
+            }
+          }, 1500);
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsDictating(false);
+      setIsListening(false);
+      setIsVoiceMode(false);
+    };
+
+    recognition.onend = () => {
+      // Auto-restart only if we're supposed to be dictating (not in voice mode listening cycle)
+      if (isDictatingRef.current) {
+        try {
+          recognition.start();
+        } catch (e) {}
+      }
+    };
+
+    return () => {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+    };
+  }, []);
+
+  const toggleDictation = () => {
+    if (isDictating) {
+      recognition.stop();
+      setIsDictating(false);
+    } else {
+      if (recognition) {
+        try {
+          recognition.start();
+          setIsDictating(true);
+        } catch (e) {
+          console.warn("Recognition already running:", e);
+          setIsDictating(true); // Sync state if already running
+        }
+      } else {
+        alert("Speech recognition is not supported in your browser.");
+      }
+    }
+  };
+
+  const startListeningSession = () => {
+    if (!recognition || !isVoiceModeRef.current) return;
+    
+    // Small delay to let audio hardware settle
+    setTimeout(() => {
+      try {
+        recognition.start();
+        setIsListening(true);
+        isListeningRef.current = true;
+      } catch (e) {
+        // If already started, just ensure state is sync'd
+        setIsListening(true);
+        isListeningRef.current = true;
+      }
+    }, 300);
+  };
+
+  const toggleVoiceMode = async () => {
+    if (!recognition) {
+      alert("Speech recognition is not supported in your browser.");
+      return;
+    }
+    
+    if (isVoiceMode) {
+      // Stopping Voice Mode
+      setIsVoiceMode(false);
+      isVoiceModeRef.current = false;
+      recognition.stop();
+      setIsListening(false);
+      isListeningRef.current = false;
+      
+      // STOP AI SPEECH and RESET ANIMATION
+      window.speechSynthesis.cancel();
+      setActiveVoiceMessageId(null);
+      setCurrentSpokenWordIndex(-1);
+
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    } else {
+      // Starting Voice Mode - REQUEST PERMISSION FIRST
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        setIsVoiceMode(true);
+        isVoiceModeRef.current = true;
+        setIsListening(false);
+        isListeningRef.current = false;
+        
+        const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai');
+        if (lastAiMsg) {
+          const utterance = speakMessage(lastAiMsg.text, lastAiMsg.id);
+          if (utterance) {
+            utterance.onend = () => {
+              if (isVoiceModeRef.current) {
+                startListeningSession();
+              }
+            };
+          }
+        } else {
+          startListeningSession();
+        }
+      } catch (err) {
+        console.error("Microphone access denied:", err);
+        alert("Microphone access is required for Voice Mode. Please enable it in your browser settings.");
+      }
+    }
+  };
+
+  const speakMessage = (text, messageId) => {
+    if (!('speechSynthesis' in window)) return null;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // HUMAN VOICE SELECTION
+    const voices = window.speechSynthesis.getVoices();
+    // Prioritize "Neural", "Enhanced", or high-quality specific voices
+    const premiumVoice = voices.find(v => 
+      v.name.includes('Neural') || 
+      v.name.includes('Enhanced') || 
+      v.name.includes('Google US English') || 
+      v.name.includes('Samantha') || 
+      v.name.includes('Premium')
+    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    
+    if (premiumVoice) utterance.voice = premiumVoice;
+    
+    // Natural conversational settings
+    utterance.rate = 1.0;  // Natural human speed
+    utterance.pitch = 0.98; // Slightly warmer/deeper tone
+    utterance.volume = 1.0;
+
+    // Track word boundaries for "Lyrics" animation
+    if (messageId) {
+      setActiveVoiceMessageId(messageId);
+      setCurrentSpokenWordIndex(-1);
+      
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          const textUpToBoundary = text.substring(0, event.charIndex);
+          const words = textUpToBoundary.trim().split(/\s+/);
+          const wordIndex = textUpToBoundary.trim() === '' ? 0 : words.length;
+          setCurrentSpokenWordIndex(wordIndex);
+        }
+      };
+
+      utterance.onend = () => {
+        setActiveVoiceMessageId(null);
+        setCurrentSpokenWordIndex(-1);
+      };
+    }
+    
+    window.speechSynthesis.speak(utterance);
+    return utterance;
+  };
+
   const scrollToBottom = () => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputText.trim() || isTyping || isStreaming) return;
-
+    if (e) e.preventDefault();
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    
     const userText = inputText.trim();
+    if (!userText || isTyping || isStreaming) return;
+
     const sessionId = sessionData?.sessionId;
+    const wasInVoiceMode = isVoiceMode; 
 
     const newUserMsg = {
       id: `user-${Date.now()}`,
@@ -299,6 +608,19 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     setMessages(prev => [...prev, newUserMsg]);
     setInputText('');
     setIsTyping(true);
+    
+    // Stop listening while AI is thinking/speaking
+    if (wasInVoiceMode) {
+      recognition.stop();
+      setIsListening(false);
+    }
+
+    // Reset streaming speech state
+    speechQueueRef.current = [];
+    isSpeakingChunkRef.current = false;
+    totalWordsSpokenRef.current = 0;
+    let lastProcessedIndex = 0;
+    let accumulatedResponse = '';
 
     try {
       const token = localStorage.getItem('token');
@@ -313,9 +635,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let accumulatedResponse = '';
-      let lastUpdateTime = 0;
-      let lineBuffer = ''; // Buffer for partial SSE lines
+      let lineBuffer = '';
 
       setIsTyping(false); 
       setIsStreaming(true); 
@@ -338,7 +658,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         lineBuffer += chunk;
         
         const lines = lineBuffer.split('\n');
-        lineBuffer = lines.pop(); // Keep the last (potentially partial) line
+        lineBuffer = lines.pop();
 
         for (const line of lines) {
           const trimmedLine = line.trim();
@@ -352,7 +672,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             if (parsed.content) {
               accumulatedResponse += parsed.content;
               
-              // Force React state update
               setMessages(prev => {
                 const newMessages = [...prev];
                 const lastIndex = newMessages.length - 1;
@@ -362,35 +681,96 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 return newMessages;
               });
 
-              // YIELD TO MAIN THREAD: 15ms pause (approx 1 frame). 
-              // This guarantees the UI paints each chunk/word individually, fixing the freeze bug and creating a smooth typewriter effect.
+              if (wasInVoiceMode) {
+                const sentenceEndRegex = /[.!?](\s+|\n|$)/g;
+                let match;
+                while ((match = sentenceEndRegex.exec(accumulatedResponse.slice(lastProcessedIndex))) !== null) {
+                  const endPos = lastProcessedIndex + match.index + match[0].length;
+                  const sentence = accumulatedResponse.slice(lastProcessedIndex, endPos).trim();
+                  
+                  if (sentence) {
+                    speechQueueRef.current.push(sentence);
+                    if (!isSpeakingChunkRef.current) {
+                      processSpeechQueue(aiMsgId);
+                    }
+                  }
+                  lastProcessedIndex = endPos;
+                }
+              }
+
               await new Promise(resolve => setTimeout(resolve, 15));
             }
-          } catch (err) {
-            console.warn('Streaming parse error:', err, 'Line:', trimmedLine);
-          }
+          } catch (err) {}
         }
       }
-
-      // Final update to ensure everything is rendered
-      setMessages(prev => {
-        const newMessages = [...prev];
-        const lastIndex = newMessages.length - 1;
-        if (newMessages[lastIndex]?.sender === 'ai') {
-          newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
-        }
-        return newMessages;
-      });
-      setIsStreaming(false);
       
-      if (scrollRef.current) {
-        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      setIsStreaming(false);
+
+      if (wasInVoiceMode && lastProcessedIndex < accumulatedResponse.length) {
+        const remaining = accumulatedResponse.slice(lastProcessedIndex).trim();
+        if (remaining) {
+          speechQueueRef.current.push(remaining);
+          if (!isSpeakingChunkRef.current) {
+            processSpeechQueue(aiMsgId);
+          }
+        }
       }
     } catch (err) {
       console.error('Streaming error:', err);
       setIsTyping(false);
       setIsStreaming(false);
     }
+  };
+
+  const processSpeechQueue = (messageId) => {
+    if (!isVoiceModeRef.current) {
+      speechQueueRef.current = [];
+      isSpeakingChunkRef.current = false;
+      return;
+    }
+
+    if (speechQueueRef.current.length === 0) {
+      isSpeakingChunkRef.current = false;
+      if (isVoiceModeRef.current) {
+        startListeningSession();
+      }
+      return;
+    }
+
+    isSpeakingChunkRef.current = true;
+    const sentence = speechQueueRef.current.shift();
+    
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    const voices = window.speechSynthesis.getVoices();
+    const premiumVoice = voices.find(v => 
+      v.name.includes('Neural') || 
+      v.name.includes('Enhanced') || 
+      v.name.includes('Google US English') || 
+      v.name.includes('Samantha') || 
+      v.name.includes('Premium')
+    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    
+    if (premiumVoice) utterance.voice = premiumVoice;
+    utterance.rate = 1.0;
+    utterance.pitch = 0.98;
+    
+    const wordOffset = totalWordsSpokenRef.current;
+    setActiveVoiceMessageId(messageId);
+    
+    utterance.onboundary = (event) => {
+      if (event.name === 'word') {
+        const textUpToChar = sentence.substring(0, event.charIndex);
+        const wordsInChunk = textUpToChar.trim() ? textUpToChar.trim().split(/\s+/).length : 0;
+        setCurrentSpokenWordIndex(wordOffset + wordsInChunk);
+      }
+    };
+
+    utterance.onend = () => {
+      totalWordsSpokenRef.current += sentence.trim().split(/\s+/).length;
+      processSpeechQueue(messageId);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   // Timer for Hint Nudge (20s inactivity)
@@ -587,6 +967,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 activeMenuId={activeMenuId} 
                 setActiveMenuId={setActiveMenuId} 
                 sessionData={sessionData} 
+                activeVoiceMessageId={activeVoiceMessageId}
+                currentSpokenWordIndex={currentSpokenWordIndex}
               />
             ))}
             
@@ -607,21 +989,62 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         <footer className={styles.footer}>
           <div className={styles.inputWrapper}>
             <form onSubmit={handleSendMessage} className={styles.form}>
-              <textarea 
-                ref={textareaRef}
-                placeholder="Reply to Prep AI..." 
-                className={styles.textarea}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                rows={1}
-              />
-              <button type="submit" className={styles.sendIcon} disabled={!inputText.trim()}>
-                <div className={styles.sendIconContent}>
-                  <span className="material-symbols-outlined">arrow_upward</span>
-                  <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
+              <div className={styles.textareaContainer}>
+                <textarea 
+                  ref={textareaRef}
+                  placeholder={isVoiceMode ? "Listening..." : "Reply to Prep AI..."} 
+                  className={styles.textarea}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  disabled={isVoiceMode}
+                />
+                <div className={styles.inputActions}>
+                  <button 
+                    type="button" 
+                    className={`${styles.micBtn} ${isDictating ? styles.activeMic : ''}`}
+                    onClick={toggleDictation}
+                    title="Dictate (Speech-to-Text)"
+                  >
+                    <span className="material-symbols-outlined">mic</span>
+                  </button>
+                  
+                  {isVoiceMode ? (
+                    <button 
+                      type="button"
+                      className={styles.voicePillBlue} 
+                      onClick={toggleVoiceMode}
+                    >
+                      <div className={styles.bouncingDots}>
+                        <div className={styles.dot} />
+                        <div className={styles.dot} />
+                        <div className={styles.dot} />
+                        <div className={styles.dot} />
+                      </div>
+                      <span className={styles.endText}>End</span>
+                    </button>
+                  ) : inputText.trim() ? (
+                    <button type="submit" className={styles.sendIcon}>
+                      <div className={styles.sendIconContent}>
+                        <span className="material-symbols-outlined">arrow_upward</span>
+                        <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <button 
+                      type="button" 
+                      className={styles.voiceModeTrigger} 
+                      onClick={toggleVoiceMode}
+                      title="Start Voice Mode"
+                    >
+                      <div className={styles.aiIconCircle}>
+                        <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
+                      </div>
+                    </button>
+                  )}
                 </div>
-              </button>
+              </div>
             </form>
           </div>
           <p className={styles.aiWarning}>AI can make mistakes</p>

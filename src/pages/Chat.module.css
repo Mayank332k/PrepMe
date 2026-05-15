@@ -633,8 +633,10 @@
   max-width: 850px; 
   background-color: var(--chat-pill);
   border: 1px solid var(--chat-border); 
-  border-radius: 26px; 
-  padding: 7px 9px 7px 18px;
+  border-radius: 34px; 
+  padding: 6px 10px 6px 20px;
+  display: flex;
+  align-items: center;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -643,7 +645,12 @@
   border-color: var(--chat-border-strong);
 }
 
-.form { display: flex; align-items: flex-end; gap: 12px; }
+.form { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  width: 100%;
+}
 
 .plusIcon {
   background: none; border: none; color: var(--text-muted); font-size: 20px;
@@ -652,15 +659,17 @@
 
 .textarea {
   flex: 1;
+  min-width: 0;
   border: none;
   background: none;
-  padding: 8px 0;
+  padding: 10px 0;
   font-size: 16px;
   color: var(--text-primary);
   outline: none;
   resize: none;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 22px;
+  min-height: 42px;
   max-height: 150px;
   overflow-y: auto;
   transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -774,8 +783,8 @@
     border-top: none;
   }
   .inputWrapper {
-    padding: 6px 8px 6px 20px;
-    border-radius: 24px;
+    padding: 2px 10px 2px 24px;
+    border-radius: 34px;
   }
   .sendIcon {
     width: 38px;
@@ -783,7 +792,9 @@
   }
   .textarea {
     font-size: 14px;
-    padding: 6px 0;
+    padding: 12px 0;
+    line-height: 20px;
+    min-height: 38px;
   }
   .codeBlockContainer {
     min-width: 0;
@@ -1108,7 +1119,7 @@
 }
 
 .hintPill {
-  bottom: 85px;
+  bottom: 95px;
   left: 50%;
   transform: translateX(-50%);
   width: 140px;
@@ -1413,4 +1424,382 @@
     width: 32px;
     height: 32px;
   }
+}
+
+/* Voice Mode & Dictation Styles */
+.textareaContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.inputActions {
+  display: flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 10px;
+  margin-right: 4px;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.micBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.micBtn:hover {
+  background: var(--glass-bg-hover);
+  color: var(--text-primary);
+}
+
+.micBtn span {
+  font-size: 20px;
+  font-variation-settings: 'wght' 700;
+  transition: all 0.2s ease;
+}
+
+.activeMic {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+  animation: micPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes micPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.voiceModeTrigger {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.voiceModeTrigger:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
+}
+
+.voicePillBlue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0084ff;
+  padding: 13px 14px;
+  border-radius: 32px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(0, 132, 255, 0.2);
+}
+
+.voicePillBlue:hover {
+  transform: scale(1.05);
+  background: #0073e6;
+}
+
+.endText {
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  margin-left: 2px;
+}
+
+.bouncingDots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  animation: dotBounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+.dot:nth-child(3) { animation-delay: -0.08s; }
+
+@keyframes dotBounce {
+  0%, 100% { transform: scale(0.8); opacity: 0.5; }
+  30% { transform: scale(1.5); opacity: 1; }
+  50% { transform: scale(0.9); }
+  70% { transform: scale(1.2); }
+  85% { transform: scale(0.95); }
+}
+
+.closeVoiceMode {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeVoiceMode:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pillPop {
+  from { transform: translateY(20px) scale(0.8); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .textareaContainer {
+    gap: 6px;
+  }
+  .inputWrapper {
+    padding: 2px 4px 2px 16px;
+  }
+  .voicePillBlue {
+    padding: 8px 10px;
+    gap: 4px;
+    border-radius: 20px;
+  }
+  .endText {
+    font-size: 14px;
+  }
+  .dot {
+    width: 3px;
+    height: 3px;
+  }
+}
+.aiIconCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid var(--border);
+}
+
+.aiIconCircleSmall {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid var(--chat-border);
+}
+
+.aiIconImg {
+  width: 55%;
+  height: 55%;
+  font-weight: 500;
+  object-fit: contain;
+  filter: contrast(1.4) brightness(0.9);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.voiceModeTrigger:hover .aiIconImg {
+  transform: scale(1.1);
+}
+
+.voiceModeTrigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@media (max-width: 768px) {
+  .aiIconCircle {
+    width: 38px;
+    height: 38px;
+  }
+  .voiceModeTrigger {
+    width: 38px;
+    height: 38px;
+  }
+}
+.lyricBubble {
+  background: transparent !important;
+  border: none !important;
+  padding: 40px 20px !important;
+  box-shadow: none !important;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.lyricText {
+  font-size: 32px;
+  line-height: 1.4;
+  font-weight: 700;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 12px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.lyricBubble {
+  background: transparent !important;
+  border: none !important;
+  padding: 40px 0 !important;
+  box-shadow: none !important;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow: visible;
+}
+
+.lyricViewport {
+  height: 450px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+  background: #000000;
+}
+
+/* More efficient gradient overlays instead of mask-image */
+.lyricViewport::before,
+.lyricViewport::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 120px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.lyricViewport::before {
+  top: 0;
+  background: linear-gradient(to bottom, #000000 0%, transparent 100%);
+}
+
+.lyricViewport::after {
+  bottom: 0;
+  background: linear-gradient(to top, #000000 0%, transparent 100%);
+}
+
+@media (max-width: 768px) {
+  .lyricViewport {
+    height: 320px;
+  }
+}
+
+.lyricText {
+  width: 100%;
+  font-size: 38px;
+  line-height: 1.6;
+  font-weight: 700;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 18px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  /* Deep Ease-Out for a dreamy, slow feel */
+  transition: transform 1.5s cubic-bezier(0.15, 1, 0.3, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .lyricText {
+    font-size: 26px;
+    gap: 0 10px;
+    padding: 0 15px;
+  }
+}
+
+.lyricWord {
+  transition: transform 1.2s cubic-bezier(0.15, 1, 0.3, 1);
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.lyricChar {
+  display: inline-block;
+  transition: 
+    color 0.8s cubic-bezier(0.15, 1, 0.3, 1),
+    opacity 0.8s cubic-bezier(0.15, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.15, 1, 0.3, 1);
+}
+
+.wordActive .lyricChar {
+  color: #ffffff;
+  transform: scale(1.06);
+  opacity: 1;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+}
+
+.wordPast .lyricChar {
+  color: rgba(255, 255, 255, 0.2);
+  opacity: 0.3;
+  transform: scale(0.95);
+}
+
+.wordFuture .lyricChar {
+  color: rgba(255, 255, 255, 0.35);
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.wordActive {
+  z-index: 10;
+  letter-spacing: 0.01em; /* Subtle expansion */
+}
+
+.wordPast {
+  transform: translate3d(0, -15px, 0);
+}
+
+.wordFuture {
+  transform: translate3d(0, 10px, 0);
 }
