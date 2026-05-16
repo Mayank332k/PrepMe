@@ -35,9 +35,10 @@
   align-items: center;
   padding: 0 40px;
   background-color: var(--bg-base);
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
   z-index: 30;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .backBtn {
@@ -56,6 +57,10 @@
   height: 40px;
   will-change: transform, width, padding, background-color;
   position: relative;
+}
+
+:global([data-theme='light']) .backBtn {
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
 /* Invisible hit-area expansion to prevent flickering on shrink */
@@ -174,6 +179,7 @@
   justify-content: center;
   height: 42px;
   min-width: 130px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .endBtn:hover:not(:disabled) {
@@ -647,9 +653,11 @@
 
 .form { 
   display: flex; 
-  align-items: center; 
+  flex-direction: column;
   gap: 12px; 
-  width: 100%;
+  width: 100% !important;
+  max-width: 800px !important;
+  margin: 0 auto !important;
 }
 
 .plusIcon {
@@ -694,6 +702,16 @@
   transition: all 0.3s ease;
   flex-shrink: 0;
   margin-bottom: 0;
+}
+
+:global([data-theme='light']) .sendIcon {
+  background-color: #000000;
+  color: #FFFFFF !important;
+  border-color: #000000;
+}
+
+:global([data-theme='light']) .sendIcon:hover:not(:disabled) {
+  background-color: #333333;
 }
 
 .sendIcon:hover:not(:disabled) { 
@@ -892,6 +910,8 @@
     color: var(--text-muted);
   }
 }
+
+
 
 /* Skeleton Loader */
 .skeletonContainer {
@@ -1431,7 +1451,8 @@
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  width: 100%;
+  width: 100% !important;
+  max-width: 800px !important;
 }
 
 .textPill {
@@ -1439,13 +1460,18 @@
   background-color: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--chat-border);
+  border: 1px solid var(--border);
   border-radius: 28px;
   padding: 4px 12px;
   display: flex;
   align-items: center;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   min-height: 52px;
+}
+
+:global([data-theme='light']) .textPill,
+:global([data-theme='light']) .actionPill {
+  border: 1px solid rgba(0, 0, 0, 0.14) !important;
 }
 
 .actionPill {
@@ -1456,7 +1482,7 @@
   background-color: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--chat-border);
+  border: 1px solid var(--border);
   border-radius: 28px;
   height: 52px;
   padding: 0 8px;
@@ -1572,23 +1598,24 @@
 }
 
 .dot {
-  width: 4px;
-  height: 4px;
-  background: white;
-  border-radius: 50%;
-  animation: dotBounce 1.4s infinite ease-in-out both;
+  width: 6px;
+  height: 6px;
+  background: #FFFFFF;
+  border-radius: 100px;
+  opacity: 0.9;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
 }
 
-.dot:nth-child(1) { animation-delay: -0.32s; }
-.dot:nth-child(2) { animation-delay: -0.16s; }
-.dot:nth-child(3) { animation-delay: -0.08s; }
-
-@keyframes dotBounce {
-  0%, 100% { transform: scale(0.8); opacity: 0.5; }
-  30% { transform: scale(1.5); opacity: 1; }
-  50% { transform: scale(0.9); }
-  70% { transform: scale(1.2); }
-  85% { transform: scale(0.95); }
+.dot:nth-child(1) { 
+  transform: scaleY(calc(1 + (var(--v1, 0)))); 
+}
+.dot:nth-child(2) { 
+  transform: scaleY(calc(1 + (var(--v2, 0)))); 
+  transition-delay: 0.02s;
+}
+.dot:nth-child(3) { 
+  transform: scaleY(calc(1 + (var(--v3, 0)))); 
+  transition-delay: 0.04s;
 }
 
 .closeVoiceMode {
@@ -1672,6 +1699,15 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 1px solid var(--border);
+}
+
+:global([data-theme='light']) .aiIconCircle {
+  background: #000000;
+  border-color: #000000;
+}
+
+:global([data-theme='light']) .aiIconImg {
+  filter: invert(1) brightness(1.5);
 }
 
 .aiIconCircleSmall {
@@ -1766,7 +1802,7 @@
   justify-content: flex-start;
   position: relative;
   overflow: hidden;
-  background: #000000;
+  background: var(--bg-base);
 }
 
 /* More efficient gradient overlays instead of mask-image */
@@ -1783,12 +1819,12 @@
 
 .lyricViewport::before {
   top: 0;
-  background: linear-gradient(to bottom, #000000 0%, transparent 100%);
+  background: linear-gradient(to bottom, var(--bg-base) 0%, transparent 100%);
 }
 
 .lyricViewport::after {
   bottom: 0;
-  background: linear-gradient(to top, #000000 0%, transparent 100%);
+  background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%);
 }
 
 @media (max-width: 768px) {
@@ -1838,20 +1874,21 @@
 }
 
 .wordActive .lyricChar {
-  color: #ffffff;
+  color: var(--text-primary);
   transform: scale(1.06);
   opacity: 1;
-  text-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+  /* Use a more subtle shadow that adapts to the theme background */
+  text-shadow: 0 0 18px var(--border);
 }
 
 .wordPast .lyricChar {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   opacity: 0.3;
   transform: scale(0.95);
 }
 
 .wordFuture .lyricChar {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-secondary);
   opacity: 0.5;
   transform: scale(0.98);
 }

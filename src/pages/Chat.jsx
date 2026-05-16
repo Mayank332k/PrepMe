@@ -14,6 +14,8 @@ const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 if (recognition) {
   recognition.continuous = true;
   recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
 }
 
 const CodeBlock = ({ language, value }) => {
@@ -332,6 +334,15 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const speechQueueRef = useRef([]);
   const isSpeakingChunkRef = useRef(false);
   const totalWordsSpokenRef = useRef(0);
+  
+  // Audio Visualizer Refs
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const dataArrayRef = useRef(null);
+  const sourceRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const pillRef = useRef(null); // Ref for direct DOM update
+  const [micVolume, setMicVolume] = useState(0);
 
   // Sync inputTextRef with state
   useEffect(() => {
@@ -485,6 +496,56 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     }, 300);
   };
 
+  const startVisualizer = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.fftSize = 64;
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      dataArrayRef.current = new Uint8Array(bufferLength);
+
+      const updateVolume = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+        
+        // Get specific frequency bands for 3 dots
+        // BOOSTED STRETCH: Higher multiplier (3.5) for "long pill" look
+        const v1 = Math.min(dataArrayRef.current[2] / 50, 3.5);
+        const v2 = Math.min(dataArrayRef.current[8] / 50, 3.5);
+        const v3 = Math.min(dataArrayRef.current[15] / 50, 3.5);
+        
+        // DIRECT DOM UPDATE for frequency-specific jiggle
+        if (pillRef.current) {
+          pillRef.current.style.setProperty('--v1', v1);
+          pillRef.current.style.setProperty('--v2', v2);
+          pillRef.current.style.setProperty('--v3', v3);
+        }
+        
+        animationFrameRef.current = requestAnimationFrame(updateVolume);
+      };
+      
+      updateVolume();
+    } catch (err) {
+      console.error("Visualizer failed:", err);
+    }
+  };
+
+  const stopVisualizer = () => {
+    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    if (sourceRef.current) {
+      sourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
+    }
+    if (audioContextRef.current?.state !== 'closed') {
+      audioContextRef.current?.close();
+    }
+    setMicVolume(0);
+    analyserRef.current = null;
+  };
+
   const toggleVoiceMode = async () => {
     if (!recognition) {
       alert("Speech recognition is not supported in your browser.");
@@ -495,7 +556,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       // Stopping Voice Mode
       setIsVoiceMode(false);
       isVoiceModeRef.current = false;
-      recognition.stop();
+      stopVisualizer();
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+      }
       setIsListening(false);
       isListeningRef.current = false;
       
@@ -508,12 +572,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     } else {
       // Starting Voice Mode - REQUEST PERMISSION FIRST
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        await startVisualizer();
         
         setIsVoiceMode(true);
         isVoiceModeRef.current = true;
         setIsListening(false);
         isListeningRef.current = false;
+
+        // Auto-scroll to bottom as voice UI expands
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
         
         const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai');
         if (lastAiMsg) {
@@ -1014,12 +1083,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 
                 {isVoiceMode ? (
                   <button 
+                    ref={pillRef}
                     type="button"
                     className={styles.voicePillBlue} 
                     onClick={toggleVoiceMode}
+                    style={{ '--volume': micVolume }}
                   >
                     <div className={styles.bouncingDots}>
-                      <div className={styles.dot} />
                       <div className={styles.dot} />
                       <div className={styles.dot} />
                       <div className={styles.dot} />
