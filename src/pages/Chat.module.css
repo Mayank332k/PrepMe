@@ -1427,22 +1427,41 @@
 }
 
 /* Voice Mode & Dictation Styles */
-.textareaContainer {
-  position: relative;
+.unifiedInputRow {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 10px;
   width: 100%;
 }
 
-.inputActions {
+.textPill {
+  flex-grow: 1;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--chat-border);
+  border-radius: 28px;
+  padding: 4px 12px;
   display: flex;
   align-items: center;
-  align-self: flex-end;
-  gap: 10px;
-  margin-right: 4px;
-  padding-bottom: 4px;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 52px;
+}
+
+.actionPill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: -1px;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--chat-border);
+  border-radius: 28px;
+  height: 52px;
+  padding: 0 8px;
   flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .micBtn {
@@ -1456,7 +1475,18 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  transform-origin: center;
+}
+
+.micHidden {
+  width: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  transform: scale(0);
 }
 
 .micBtn:hover {
@@ -1504,14 +1534,23 @@
 .voicePillBlue {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   background: #0084ff;
-  padding: 13px 14px;
+  padding: 12px 18px;
   border-radius: 32px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 0 4px 12px rgba(0, 132, 255, 0.2);
+  transform-origin: center center;
+  animation: liquidPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes liquidPop {
+  0% { transform: scaleX(0.2) scaleY(0.5); opacity: 0; border-radius: 50px; }
+  60% { transform: scaleX(1.1) scaleY(1.05); border-radius: 20px; }
+  100% { transform: scaleX(1) scaleY(1); opacity: 1; border-radius: 32px; }
 }
 
 .voicePillBlue:hover {
@@ -1576,16 +1615,42 @@
 }
 
 @media (max-width: 768px) {
-  .textareaContainer {
-    gap: 6px;
+  .chatCanvas { padding-bottom: 0; }
+  .messageScroll { padding: 0 10px 0 6px; gap: 12px; }
+  .footer { 
+    padding: 0 10px 10px 6px; 
+    background: var(--bg-base);
+    border-top: none;
   }
   .inputWrapper {
-    padding: 2px 4px 2px 16px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
   }
+  .sendIcon {
+    width: 38px;
+    height: 38px;
+  }
+  .textarea {
+    font-size: 14px;
+    padding: 10px 0;
+    line-height: 20px;
+    min-height: 38px;
+  }
+  
+  .textPill {
+    padding: 4px 12px 4px 8px;
+  }
+
+  .unifiedInputRow {
+    gap: 6px;
+  }
+
   .voicePillBlue {
-    padding: 8px 10px;
-    gap: 4px;
-    border-radius: 20px;
+    padding: 12px 10px;
+    gap: 1px;
+    border-radius: 28px;
   }
   .endText {
     font-size: 14px;

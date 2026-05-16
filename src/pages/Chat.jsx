@@ -987,9 +987,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         </section>
 
         <footer className={styles.footer}>
-          <div className={styles.inputWrapper}>
-            <form onSubmit={handleSendMessage} className={styles.form}>
-              <div className={styles.textareaContainer}>
+          <form onSubmit={handleSendMessage} className={styles.form}>
+            <div className={styles.unifiedInputRow}>
+              <div className={styles.textPill}>
                 <textarea 
                   ref={textareaRef}
                   placeholder={isVoiceMode ? "Listening..." : "Reply to Prep AI..."} 
@@ -1000,53 +1000,54 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   rows={1}
                   disabled={isVoiceMode}
                 />
-                <div className={styles.inputActions}>
+              </div>
+
+              <div className={styles.actionPill}>
+                <button 
+                  type="button" 
+                  className={`${styles.micBtn} ${isDictating ? styles.activeMic : ''} ${isVoiceMode ? styles.micHidden : ''}`}
+                  onClick={toggleDictation}
+                  title="Dictate (Speech-to-Text)"
+                >
+                  <span className="material-symbols-outlined">mic</span>
+                </button>
+                
+                {isVoiceMode ? (
+                  <button 
+                    type="button"
+                    className={styles.voicePillBlue} 
+                    onClick={toggleVoiceMode}
+                  >
+                    <div className={styles.bouncingDots}>
+                      <div className={styles.dot} />
+                      <div className={styles.dot} />
+                      <div className={styles.dot} />
+                      <div className={styles.dot} />
+                    </div>
+                    <span className={styles.endText}>End</span>
+                  </button>
+                ) : inputText.trim() ? (
+                  <button type="submit" className={styles.sendIcon}>
+                    <div className={styles.sendIconContent}>
+                      <span className="material-symbols-outlined">arrow_upward</span>
+                      <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
+                    </div>
+                  </button>
+                ) : (
                   <button 
                     type="button" 
-                    className={`${styles.micBtn} ${isDictating ? styles.activeMic : ''}`}
-                    onClick={toggleDictation}
-                    title="Dictate (Speech-to-Text)"
+                    className={styles.voiceModeTrigger} 
+                    onClick={toggleVoiceMode}
+                    title="Start Voice Mode"
                   >
-                    <span className="material-symbols-outlined">mic</span>
+                    <div className={styles.aiIconCircle}>
+                      <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
+                    </div>
                   </button>
-                  
-                  {isVoiceMode ? (
-                    <button 
-                      type="button"
-                      className={styles.voicePillBlue} 
-                      onClick={toggleVoiceMode}
-                    >
-                      <div className={styles.bouncingDots}>
-                        <div className={styles.dot} />
-                        <div className={styles.dot} />
-                        <div className={styles.dot} />
-                        <div className={styles.dot} />
-                      </div>
-                      <span className={styles.endText}>End</span>
-                    </button>
-                  ) : inputText.trim() ? (
-                    <button type="submit" className={styles.sendIcon}>
-                      <div className={styles.sendIconContent}>
-                        <span className="material-symbols-outlined">arrow_upward</span>
-                        <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
-                      </div>
-                    </button>
-                  ) : (
-                    <button 
-                      type="button" 
-                      className={styles.voiceModeTrigger} 
-                      onClick={toggleVoiceMode}
-                      title="Start Voice Mode"
-                    >
-                      <div className={styles.aiIconCircle}>
-                        <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
-                      </div>
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
           <p className={styles.aiWarning}>AI can make mistakes</p>
         </footer>
 
