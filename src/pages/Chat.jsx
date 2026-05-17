@@ -8,15 +8,8 @@ import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Chat.module.css';
 import aiIcon from '../assets/image.png';
 
+// Detect browser support — actual instance is created lazily per session
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-
-if (recognition) {
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
-  recognition.maxAlternatives = 1;
-}
 
 const CodeBlock = ({ language, value }) => {
   const [copied, setCopied] = useState(false);
@@ -316,16 +309,20 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [hintCancelCount, setHintCancelCount] = useState(0); 
   const lastActionTime = useRef(Date.now());
   const hintTimerRef = useRef(null);
-  const recognitionRef = useRef(null);
 
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [showVoiceBetaModal, setShowVoiceBetaModal] = useState(false);
   const [isDictating, setIsDictating] = useState(false);
+  // Lazily created per session — avoids Android Chrome gesture-policy violations
+  const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [activeVoiceMessageId, setActiveVoiceMessageId] = useState(null);
   const [currentSpokenWordIndex, setCurrentSpokenWordIndex] = useState(-1);
   const isDictatingRef = useRef(false);
   const isListeningRef = useRef(false);
   const isVoiceModeRef = useRef(false);
+  const activeVoiceMessageIdRef = useRef(null);
+  const isStreamingRef = useRef(false);
   const sendMessageRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const [voiceWave, setVoiceWave] = useState(false);
@@ -342,12 +339,29 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const sourceRef = useRef(null);
   const animationFrameRef = useRef(null);
   const pillRef = useRef(null); // Ref for direct DOM update
+  const orbRef = useRef(null); // Ref for immersive voice listening bubble
   const [micVolume, setMicVolume] = useState(0);
 
-  // Sync inputTextRef with state
+  // Sync inputTextRef and activeVoiceMessageIdRef with state
   useEffect(() => {
     inputTextRef.current = inputText;
   }, [inputText]);
+
+  // Lock body scroll when Beta Modal is open to prevent mobile scroll shifts
+  useEffect(() => {
+    if (showVoiceBetaModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showVoiceBetaModal]);
+
+  useEffect(() => {
+    activeVoiceMessageIdRef.current = activeVoiceMessageId;
+  }, [activeVoiceMessageId]);
 
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
@@ -386,10 +400,31 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     scrollRef.current?.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
   }, [messages, isStreaming]);
 
+  // Keep Voice Mode components fully pinned inside the viewport
+  useEffect(() => {
+    if (isVoiceMode) {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isVoiceMode, activeVoiceMessageId, isTyping, inputText]);
+
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  // Warm up SpeechSynthesis voices to avoid Chrome/Safari lazy-load race condition
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      };
+    }
   }, []);
 
   // Sync refs with state
@@ -397,18 +432,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     isDictatingRef.current = isDictating;
     isListeningRef.current = isListening;
     isVoiceModeRef.current = isVoiceMode;
+    isStreamingRef.current = isStreaming;
     sendMessageRef.current = handleSendMessage;
   }); // Run on every render to ensure sendMessageRef always has the latest closure/state
 
-  // Dictation Effect
-  useEffect(() => {
-    if (!recognition) return;
-
-    recognition.onstart = () => {
+  // Bind event handlers to a recognition instance (called after lazy creation)
+  const bindRecognitionHandlers = (rec) => {
+    rec.onstart = () => {
       recognitionBaseTextRef.current = inputTextRef.current;
     };
 
-    recognition.onresult = (event) => {
+    rec.onresult = (event) => {
       let currentSessionFinal = '';
       let currentSessionInterim = '';
 
@@ -425,81 +459,106 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         const newText = base + (base && !base.endsWith(' ') ? ' ' : '') + currentSessionFinal + currentSessionInterim;
         setInputText(newText);
 
-        // Auto-send logic (only in voice mode and based on final results)
         if (isVoiceModeRef.current && currentSessionFinal.trim().length > 0) {
           if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = setTimeout(() => {
             if (sendMessageRef.current) {
               sendMessageRef.current();
             }
-          }, 1500);
+          }, 500);
         }
       }
     };
 
-    recognition.onerror = (event) => {
+    rec.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      setIsDictating(false);
-      setIsListening(false);
-      setIsVoiceMode(false);
-    };
-
-    recognition.onend = () => {
-      // Auto-restart only if we're supposed to be dictating (not in voice mode listening cycle)
-      if (isDictatingRef.current) {
-        try {
-          recognition.start();
-        } catch (e) {}
+      // Transient errors on Android — recover silently instead of killing voice mode
+      const recoverableErrors = ['no-speech', 'audio-capture', 'network', 'aborted'];
+      if (recoverableErrors.includes(event.error)) {
+        // If voice mode is still active, attempt restart after a short pause
+        if (isVoiceModeRef.current && isListeningRef.current) {
+          setTimeout(() => {
+            try { rec.start(); } catch(e) {}
+          }, 300);
+        }
+        return;
       }
-    };
-
-    return () => {
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.onend = null;
-    };
-  }, []);
-
-  const toggleDictation = () => {
-    if (isDictating) {
-      recognition.stop();
+      // Non-recoverable errors (e.g. not-allowed, service-not-allowed)
       setIsDictating(false);
-    } else {
-      if (recognition) {
+      isDictatingRef.current = false;
+      setIsListening(false);
+      isListeningRef.current = false;
+      setIsVoiceMode(false);
+      isVoiceModeRef.current = false;
+    };
+
+    rec.onend = () => {
+      if (isDictatingRef.current) {
+        try { rec.start(); } catch (e) {}
+      } else if (isVoiceModeRef.current && isListeningRef.current) {
         try {
-          recognition.start();
-          setIsDictating(true);
+          rec.start();
         } catch (e) {
-          console.warn("Recognition already running:", e);
-          setIsDictating(true); // Sync state if already running
+          setIsListening(false);
+          isListeningRef.current = false;
         }
       } else {
+        setIsListening(false);
+        isListeningRef.current = false;
+      }
+    };
+  };
+
+  const toggleDictation = () => {
+    const rec = recognitionRef.current;
+    if (isDictating) {
+      if (rec) try { rec.stop(); } catch(e) {}
+      setIsDictating(false);
+    } else {
+      if (!SpeechRecognition) {
         alert("Speech recognition is not supported in your browser.");
+        return;
+      }
+      // Create a fresh instance for dictation
+      const newRec = new SpeechRecognition();
+      newRec.continuous = true;
+      newRec.interimResults = true;
+      newRec.lang = 'en-US';
+      newRec.maxAlternatives = 1;
+      recognitionRef.current = newRec;
+      bindRecognitionHandlers(newRec);
+      try {
+        newRec.start();
+        setIsDictating(true);
+      } catch (e) {
+        console.warn("Recognition already running:", e);
+        setIsDictating(true);
       }
     }
   };
 
   const startListeningSession = () => {
-    if (!recognition || !isVoiceModeRef.current) return;
-    
-    // Small delay to let audio hardware settle
-    setTimeout(() => {
-      try {
-        recognition.start();
-        setIsListening(true);
-        isListeningRef.current = true;
-      } catch (e) {
-        // If already started, just ensure state is sync'd
-        setIsListening(true);
-        isListeningRef.current = true;
-      }
-    }, 300);
+    const rec = recognitionRef.current;
+    if (!rec || !isVoiceModeRef.current) return;
+    // No delay — must stay within the user gesture tick on Android Chrome
+    try {
+      rec.start();
+      setIsListening(true);
+      isListeningRef.current = true;
+    } catch (e) {
+      // If already started, sync state
+      setIsListening(true);
+      isListeningRef.current = true;
+    }
   };
 
   const startVisualizer = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
       analyserRef.current = audioContextRef.current.createAnalyser();
       sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
       
@@ -512,17 +571,23 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         if (!analyserRef.current) return;
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
         
-        // Get specific frequency bands for 3 dots
-        // BOOSTED STRETCH: Higher multiplier (3.5) for "long pill" look
-        const v1 = Math.min(dataArrayRef.current[2] / 50, 3.5);
-        const v2 = Math.min(dataArrayRef.current[8] / 50, 3.5);
-        const v3 = Math.min(dataArrayRef.current[15] / 50, 3.5);
+        // Only react to microphone frequencies when mic is actively listening AND AI is silent
+        const isActive = isListeningRef.current && !activeVoiceMessageIdRef.current;
         
-        // DIRECT DOM UPDATE for frequency-specific jiggle
+        const v1 = isActive ? Math.min(dataArrayRef.current[2] / 50, 1.5) : 0;
+        const v2 = isActive ? Math.min(dataArrayRef.current[8] / 50, 1.5) : 0;
+        const v3 = isActive ? Math.min(dataArrayRef.current[15] / 50, 1.5) : 0;
+        
+        // DIRECT DOM UPDATE for frequency-specific dynamic height adjustment
         if (pillRef.current) {
           pillRef.current.style.setProperty('--v1', v1);
           pillRef.current.style.setProperty('--v2', v2);
           pillRef.current.style.setProperty('--v3', v3);
+        }
+        if (orbRef.current) {
+          orbRef.current.style.setProperty('--v1', v1);
+          orbRef.current.style.setProperty('--v2', v2);
+          orbRef.current.style.setProperty('--v3', v3);
         }
         
         animationFrameRef.current = requestAnimationFrame(updateVolume);
@@ -546,23 +611,58 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     analyserRef.current = null;
   };
 
-  const toggleVoiceMode = async () => {
-    if (!recognition) {
+  const startVoiceModeConfirm = async () => {
+    setShowVoiceBetaModal(false);
+    if (!SpeechRecognition) {
       alert("Speech recognition is not supported in your browser.");
       return;
     }
-    
+    // Create a FRESH recognition instance inside user gesture — required for Android Chrome
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 1;
+    recognitionRef.current = rec;
+    bindRecognitionHandlers(rec);
+
+    try {
+      // Start recognition FIRST (within gesture tick) — then init visualizer
+      rec.start();
+      setIsListening(true);
+      isListeningRef.current = true;
+
+      await startVisualizer();
+
+      setIsVoiceMode(true);
+      isVoiceModeRef.current = true;
+
+      setTimeout(() => scrollToBottom(), 100);
+    } catch (err) {
+      console.error("Voice Mode start failed:", err);
+      try { rec.stop(); } catch(e) {}
+      setIsListening(false);
+      isListeningRef.current = false;
+      alert("Microphone access is required for Voice Mode. Please enable it in your browser settings.");
+    }
+  };
+
+  const toggleVoiceMode = () => {
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in your browser.");
+      return;
+    }
+
     if (isVoiceMode) {
       // Stopping Voice Mode
       setIsVoiceMode(false);
       isVoiceModeRef.current = false;
       stopVisualizer();
-      if (recognition) {
-        try { recognition.stop(); } catch(e) {}
-      }
+      const rec = recognitionRef.current;
+      if (rec) try { rec.stop(); } catch(e) {}
       setIsListening(false);
       isListeningRef.current = false;
-      
+
       // STOP AI SPEECH and RESET ANIMATION
       window.speechSynthesis.cancel();
       setActiveVoiceMessageId(null);
@@ -570,37 +670,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     } else {
-      // Starting Voice Mode - REQUEST PERMISSION FIRST
-      try {
-        await startVisualizer();
-        
-        setIsVoiceMode(true);
-        isVoiceModeRef.current = true;
-        setIsListening(false);
-        isListeningRef.current = false;
-
-        // Auto-scroll to bottom as voice UI expands
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-        
-        const lastAiMsg = [...messages].reverse().find(m => m.sender === 'ai');
-        if (lastAiMsg) {
-          const utterance = speakMessage(lastAiMsg.text, lastAiMsg.id);
-          if (utterance) {
-            utterance.onend = () => {
-              if (isVoiceModeRef.current) {
-                startListeningSession();
-              }
-            };
-          }
-        } else {
-          startListeningSession();
-        }
-      } catch (err) {
-        console.error("Microphone access denied:", err);
-        alert("Microphone access is required for Voice Mode. Please enable it in your browser settings.");
-      }
+      // Show Beta Modal — recognition created on confirm (inside gesture)
+      setShowVoiceBetaModal(true);
     }
   };
 
@@ -680,8 +751,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     
     // Stop listening while AI is thinking/speaking
     if (wasInVoiceMode) {
-      recognition.stop();
+      const rec = recognitionRef.current;
+      if (rec) try { rec.stop(); } catch(e) {}
       setIsListening(false);
+      isListeningRef.current = false; // Force instantly to avoid onend race conditions
     }
 
     // Reset streaming speech state
@@ -774,20 +847,31 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       }
       
       setIsStreaming(false);
+      isStreamingRef.current = false; // Sync immediately
 
-      if (wasInVoiceMode && lastProcessedIndex < accumulatedResponse.length) {
-        const remaining = accumulatedResponse.slice(lastProcessedIndex).trim();
-        if (remaining) {
-          speechQueueRef.current.push(remaining);
-          if (!isSpeakingChunkRef.current) {
-            processSpeechQueue(aiMsgId);
+      if (wasInVoiceMode) {
+        if (lastProcessedIndex < accumulatedResponse.length) {
+          const remaining = accumulatedResponse.slice(lastProcessedIndex).trim();
+          if (remaining) {
+            speechQueueRef.current.push(remaining);
           }
+        }
+        
+        // If we have things in the queue but aren't processing, start it!
+        if (speechQueueRef.current.length > 0 && !isSpeakingChunkRef.current) {
+          processSpeechQueue(aiMsgId);
+        } else if (speechQueueRef.current.length === 0 && !isSpeakingChunkRef.current) {
+          // Streaming finished, no remaining text, and AI is not speaking.
+          // Wake up the mic directly!
+          setActiveVoiceMessageId(null);
+          startListeningSession();
         }
       }
     } catch (err) {
       console.error('Streaming error:', err);
       setIsTyping(false);
       setIsStreaming(false);
+      isStreamingRef.current = false;
     }
   };
 
@@ -800,31 +884,64 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
     if (speechQueueRef.current.length === 0) {
       isSpeakingChunkRef.current = false;
-      if (isVoiceModeRef.current) {
+      // Only clear ID and start mic if the AI has fully finished generating
+      if (isVoiceModeRef.current && !isStreamingRef.current) {
+        setActiveVoiceMessageId(null);
         startListeningSession();
       }
       return;
     }
 
     isSpeakingChunkRef.current = true;
-    const sentence = speechQueueRef.current.shift();
+    const rawSentence = speechQueueRef.current.shift();
+    const sentence = stripMarkdown(rawSentence).trim();
+    
+    // Skip empty chunks (e.g. if the chunk was purely markdown formatting that got stripped)
+    if (!sentence) {
+      isSpeakingChunkRef.current = false;
+      processSpeechQueue(messageId);
+      return;
+    }
     
     const utterance = new SpeechSynthesisUtterance(sentence);
-    const voices = window.speechSynthesis.getVoices();
-    const premiumVoice = voices.find(v => 
-      v.name.includes('Neural') || 
-      v.name.includes('Enhanced') || 
-      v.name.includes('Google US English') || 
-      v.name.includes('Samantha') || 
-      v.name.includes('Premium')
-    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    const voices = typeof window !== 'undefined' && window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    const premiumVoice = voices.length > 0 ? (
+      voices.find(v => 
+        v.name.includes('Neural') || 
+        v.name.includes('Enhanced') || 
+        v.name.includes('Google US English') || 
+        v.name.includes('Samantha') || 
+        v.name.includes('Premium')
+      ) || voices.find(v => v.lang.startsWith('en')) || voices[0]
+    ) : null;
     
     if (premiumVoice) utterance.voice = premiumVoice;
     utterance.rate = 1.0;
     utterance.pitch = 0.98;
     
     const wordOffset = totalWordsSpokenRef.current;
+    const wordCount = sentence.trim().split(/\s+/).length;
     setActiveVoiceMessageId(messageId);
+
+    // Watchdog Timer to bypass Safari / Chrome voice freeze states
+    // Expected speech duration calculated at approx 2.5 words per second + 6 seconds safety buffer
+    const maxSpeechDurationMs = (wordCount / 2.5) * 1000 + 6000;
+    let watchdogTimer = setTimeout(() => {
+      console.warn("SpeechSynthesis watchdog fired: recovering frozen voice synthesis.");
+      cleanupAndProcessNext();
+    }, maxSpeechDurationMs);
+
+    const cleanupAndProcessNext = () => {
+      if (watchdogTimer) {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = null;
+      }
+      utterance.onboundary = null;
+      utterance.onend = null;
+      utterance.onerror = null;
+      totalWordsSpokenRef.current += wordCount;
+      processSpeechQueue(messageId);
+    };
     
     utterance.onboundary = (event) => {
       if (event.name === 'word') {
@@ -835,11 +952,19 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     utterance.onend = () => {
-      totalWordsSpokenRef.current += sentence.trim().split(/\s+/).length;
-      processSpeechQueue(messageId);
+      cleanupAndProcessNext();
     };
 
-    window.speechSynthesis.speak(utterance);
+    utterance.onerror = (e) => {
+      console.error("SpeechSynthesis error:", e);
+      cleanupAndProcessNext();
+    };
+
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.speak(utterance);
+    } else {
+      cleanupAndProcessNext();
+    }
   };
 
   // Timer for Hint Nudge (20s inactivity)
@@ -1041,6 +1166,29 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               />
             ))}
             
+            {isVoiceMode && !activeVoiceMessageId && !isTyping && (
+              <div className={`${styles.messageRow} ${styles.aiRow} ${styles.listeningRow}`}>
+                <div className={styles.messageBody}>
+                  <div className={styles.bubbleContainer}>
+                    <div className={`${styles.bubble} ${styles.lyricBubble}`}>
+                      <div className={styles.lyricViewport} ref={orbRef}>
+                        <div className={styles.voiceListeningContainer}>
+                          <div className={styles.voicePillsVisualizer}>
+                            <span className={styles.voicePillBar} />
+                            <span className={styles.voicePillBar} />
+                            <span className={styles.voicePillBar} />
+                          </div>
+                          <p className={styles.voiceListeningSubtitle}>
+                            {inputText.trim() ? inputText : "Ok, I'm listening..."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {isTyping && (
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
                 <div className={styles.messageBody}>
@@ -1076,7 +1224,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   type="button" 
                   className={`${styles.micBtn} ${isDictating ? styles.activeMic : ''} ${isVoiceMode ? styles.micHidden : ''}`}
                   onClick={toggleDictation}
-                  title="Dictate (Speech-to-Text)"
+                  title={SpeechRecognition ? "Dictate (Speech-to-Text)" : "Speech recognition is not supported in your browser"}
+                  disabled={!SpeechRecognition}
+                  style={!SpeechRecognition ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
                 >
                   <span className="material-symbols-outlined">mic</span>
                 </button>
@@ -1108,7 +1258,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                     type="button" 
                     className={styles.voiceModeTrigger} 
                     onClick={toggleVoiceMode}
-                    title="Start Voice Mode"
+                    title={SpeechRecognition ? "Start Voice Mode" : "Speech recognition is not supported in your browser"}
+                    disabled={!SpeechRecognition}
+                    style={!SpeechRecognition ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
                   >
                     <div className={styles.aiIconCircle}>
                       <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
@@ -1182,7 +1334,49 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <span className="material-symbols-outlined">arrow_downward</span>
           </button>
         )}
+
       </main>
+
+      {showVoiceBetaModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeaderVisual}>
+              <div className={styles.pulseRing} />
+              <div className={styles.pulseRing} />
+              <div className={styles.pulseRing} />
+              <div className={styles.glowingOrb}>
+                <div className={styles.glowingOrbInner}>
+                  <span className="material-symbols-outlined">mic</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Introducing Voice Mode</h3>
+              <p className={styles.modalDesc}>
+                This is a Beta version of our interactive Voice Mode, so you might experience some unexpected bugs or browser freezes. 
+                Since speech recognition runs in real-time, minor audio delays or voice transcription glitches may occur depending on your connection. 
+                We are actively tuning the interface to improve stability!
+              </p>
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  className={styles.btnCancel} 
+                  onClick={() => setShowVoiceBetaModal(false)}
+                >
+                  Continue with Chat
+                </button>
+                <button 
+                  type="button" 
+                  className={styles.btnConfirm} 
+                  onClick={startVoiceModeConfirm}
+                >
+                  Try Voice Mode
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
