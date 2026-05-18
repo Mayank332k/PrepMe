@@ -25,8 +25,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   const [historyItems, setHistoryItems] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'completed', 'ongoing'
-  const [chartRange, setChartRange] = useState('all'); // '7d', '1m', 'all'
+  const [statusFilter, setStatusFilter] = useState('all'); 
+  const [chartRange, setChartRange] = useState('all'); 
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
