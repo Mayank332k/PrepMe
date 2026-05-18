@@ -149,7 +149,7 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
     <div className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
       <div className={styles.messageBody}>
         <div className={styles.bubbleContainer}>
-          <div className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ''}`}>
+          <div className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ''} ${msg.isError ? styles.errorBubble : ''}`}>
             <div className={styles.markdownContent}>
               {isSpeaking ? (
                 <div className={styles.lyricViewport}>
@@ -338,6 +338,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const dataArrayRef = useRef(null);
   const sourceRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const visualizerIntervalRef = useRef(null);
   const pillRef = useRef(null); // Ref for direct DOM update
   const orbRef = useRef(null); // Ref for immersive voice listening bubble
   const [micVolume, setMicVolume] = useState(0);
@@ -494,17 +495,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     rec.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      // Transient errors on Android — recover silently instead of killing voice mode
+      console.warn('Speech recognition warning:', event.error);
       const recoverableErrors = ['no-speech', 'audio-capture', 'network', 'aborted'];
       if (recoverableErrors.includes(event.error)) {
-        // If voice mode is still active, attempt restart after a short pause
-        if (isVoiceModeRef.current && isListeningRef.current) {
-          setTimeout(() => {
-            try { rec.start(); } catch(e) {}
-          }, 300);
-        }
-        return;
+        return; // Let onend handle the safe restart
       }
       // Non-recoverable errors (e.g. not-allowed, service-not-allowed)
       setIsDictating(false);
@@ -517,14 +511,22 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
     rec.onend = () => {
       if (isDictatingRef.current) {
-        try { rec.start(); } catch (e) {}
+        setTimeout(() => {
+          if (isDictatingRef.current) {
+            try { rec.start(); } catch (e) {}
+          }
+        }, 400);
       } else if (isVoiceModeRef.current && isListeningRef.current) {
-        try {
-          rec.start();
-        } catch (e) {
-          setIsListening(false);
-          isListeningRef.current = false;
-        }
+        setTimeout(() => {
+          if (isVoiceModeRef.current && isListeningRef.current) {
+            try {
+              rec.start();
+            } catch (e) {
+              setIsListening(false);
+              isListeningRef.current = false;
+            }
+          }
+        }, 400);
       } else {
         setIsListening(false);
         isListeningRef.current = false;
@@ -576,6 +578,29 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const startVisualizer = async () => {
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      // On mobile, bypass AudioContext mic capture to avoid hardware locking conflicts with SpeechRecognition
+      if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+      visualizerIntervalRef.current = setInterval(() => {
+        const isActive = isListeningRef.current && !activeVoiceMessageIdRef.current;
+        const v1 = isActive ? 0.3 + Math.random() * 0.7 : 0;
+        const v2 = isActive ? 0.3 + Math.random() * 0.7 : 0;
+        const v3 = isActive ? 0.3 + Math.random() * 0.7 : 0;
+        if (pillRef.current) {
+          pillRef.current.style.setProperty('--v1', v1);
+          pillRef.current.style.setProperty('--v2', v2);
+          pillRef.current.style.setProperty('--v3', v3);
+        }
+        if (orbRef.current) {
+          orbRef.current.style.setProperty('--v1', v1);
+          orbRef.current.style.setProperty('--v2', v2);
+          orbRef.current.style.setProperty('--v3', v3);
+        }
+      }, 120);
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -623,6 +648,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const stopVisualizer = () => {
+    if (visualizerIntervalRef.current) {
+      clearInterval(visualizerIntervalRef.current);
+      visualizerIntervalRef.current = null;
+    }
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (sourceRef.current) {
       sourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
@@ -654,6 +683,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const startVoiceModeConfirm = async () => {
     setShowVoiceBetaModal(false);
+    localStorage.setItem('hasAcceptedVoiceBeta', 'true');
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in your browser.");
       return;
@@ -662,7 +692,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     const rec = new SpeechRecognition();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = 'en-US';
+    rec.lang = navigator.language || 'en-US';
     rec.maxAlternatives = 1;
     recognitionRef.current = rec;
     bindRecognitionHandlers(rec);
@@ -711,8 +741,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     } else {
-      // Show Beta Modal — recognition created on confirm (inside gesture)
-      setShowVoiceBetaModal(true);
+      // Show Beta Modal if not already accepted on this device
+      const hasAccepted = localStorage.getItem('hasAcceptedVoiceBeta') === 'true';
+      if (hasAccepted) {
+        startVoiceModeConfirm();
+      } else {
+        setShowVoiceBetaModal(true);
+      }
     }
   };
 
@@ -816,6 +851,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         body: JSON.stringify({ message: userText }),
       });
 
+      if (!response.ok) {
+        throw new Error('Out of service for message');
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let lineBuffer = '';
@@ -913,6 +952,21 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       setIsTyping(false);
       setIsStreaming(false);
       isStreamingRef.current = false;
+
+      // Add a red styled error message to the chat
+      setMessages(prev => [...prev, {
+        id: `ai-err-${Date.now()}`,
+        sender: 'ai',
+        text: 'System is currently out of service. Please try again after a while.',
+        isError: true,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: new Date()
+      }]);
+
+      // If voice mode was active, turn it off completely on failure
+      if (wasInVoiceMode) {
+        stopVoiceMode();
+      }
     }
   };
 
@@ -972,19 +1026,60 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       cleanupAndProcessNext();
     }, maxSpeechDurationMs);
 
+    let onBoundaryFired = false;
+    let fallbackInterval = null;
+
     const cleanupAndProcessNext = () => {
       if (watchdogTimer) {
         clearTimeout(watchdogTimer);
         watchdogTimer = null;
       }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+        fallbackInterval = null;
+      }
+      utterance.onstart = null;
       utterance.onboundary = null;
       utterance.onend = null;
       utterance.onerror = null;
       totalWordsSpokenRef.current += wordCount;
       processSpeechQueue(messageId);
     };
+
+    utterance.onstart = () => {
+      // Start a fallback timer to simulate onboundary if it doesn't fire within 400ms on mobile/Android Chrome
+      setTimeout(() => {
+        if (!onBoundaryFired && isSpeakingChunkRef.current) {
+          const words = sentence.trim().split(/\s+/);
+          let currentWordIdx = 0;
+          // Calculate approx reading rate: 2.7 words per second at rate 1.0
+          const msPerWord = 1000 / 2.7;
+          
+          if (fallbackInterval) clearInterval(fallbackInterval);
+          fallbackInterval = setInterval(() => {
+            if (!isSpeakingChunkRef.current) {
+              clearInterval(fallbackInterval);
+              fallbackInterval = null;
+              return;
+            }
+            if (currentWordIdx < words.length) {
+              setCurrentSpokenWordIndex(wordOffset + currentWordIdx);
+              currentWordIdx++;
+            } else {
+              clearInterval(fallbackInterval);
+              fallbackInterval = null;
+            }
+          }, msPerWord);
+        }
+      }, 400);
+    };
     
     utterance.onboundary = (event) => {
+      onBoundaryFired = true;
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+        fallbackInterval = null;
+      }
       if (event.name === 'word') {
         const textUpToChar = sentence.substring(0, event.charIndex);
         const wordsInChunk = textUpToChar.trim() ? textUpToChar.trim().split(/\s+/).length : 0;
@@ -997,7 +1092,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     utterance.onerror = (e) => {
-      console.error("SpeechSynthesis error:", e);
+      if (e.error !== 'interrupted') {
+        console.error("SpeechSynthesis error:", e);
+      }
       cleanupAndProcessNext();
     };
 

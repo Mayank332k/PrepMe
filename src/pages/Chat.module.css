@@ -442,6 +442,13 @@
   border-radius: 0;
 }
 
+.errorBubble,
+.errorBubble p,
+.errorBubble span {
+  color: #dc2626 !important;
+  font-weight: 500 !important;
+}
+
 .userRow .bubble {
   background-color: var(--chat-pill); 
   color: var(--text-primary); 
