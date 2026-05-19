@@ -147,6 +147,7 @@ const CodeBlock = ({ language, value }) => {
         <SyntaxHighlighter
           language={language || 'text'}
           style={oneDark}
+          useInlineStyles={false}
           PreTag="div"
           codeTagProps={{ style: { backgroundColor: 'transparent' } }}
           customStyle={{

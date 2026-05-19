@@ -92,3 +92,78 @@
   .skeleton-content { padding: 32px 20px; }
   .skeleton-grid { grid-template-columns: 1fr; gap: 20px; }
 }
+
+/* ==========================================================================
+   Global Theme-Aware Code Syntax Highlighting (Prism) - Premium Minimalist
+   ========================================================================== */
+pre[class*="language-"],
+code[class*="language-"],
+pre, code {
+  color: var(--code-base);
+  text-shadow: none;
+  font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-weight: 300 !important; /* Ultra-thin premium developer look */
+  letter-spacing: -0.01em;
+}
+
+.token {
+  font-weight: 300 !important; /* Force all dynamic tokens to be thin */
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--code-comment) !important;
+  font-style: italic;
+  font-weight: 300 !important;
+}
+
+.token.punctuation {
+  color: var(--code-punct) !important;
+  font-weight: 300 !important;
+}
+
+.token.keyword,
+.token.atrule {
+  color: var(--code-keyword) !important;
+  font-weight: 300 !important;
+}
+
+.token.string,
+.token.char,
+.token.attr-value,
+.token.regex,
+.token.inserted {
+  color: var(--code-string) !important;
+  font-weight: 300 !important;
+}
+
+.token.number,
+.token.boolean,
+.token.constant,
+.token.symbol {
+  color: var(--code-number) !important;
+  font-weight: 300 !important;
+}
+
+.token.function,
+.token.class-name {
+  color: var(--code-func) !important;
+  font-weight: 300 !important;
+}
+
+.token.property,
+.token.tag,
+.token.deleted {
+  color: var(--code-prop) !important;
+  font-weight: 300 !important;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable {
+  color: var(--code-op) !important;
+  font-weight: 300 !important;
+}

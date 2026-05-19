@@ -325,6 +325,23 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     }
   }, [hintsAllowed]);
   const [showVoiceBetaModal, setShowVoiceBetaModal] = useState(false);
+  const [voiceToast, setVoiceToast] = useState(null);
+  const voiceToastTimeoutRef = useRef(null);
+
+  const triggerVoiceToast = (message) => {
+    if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+    setVoiceToast(message);
+    voiceToastTimeoutRef.current = setTimeout(() => {
+      setVoiceToast(null);
+    }, 6000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+    };
+  }, []);
+
   const [isDictating, setIsDictating] = useState(false);
   // Lazily created per session — avoids Android Chrome gesture-policy violations
   const recognitionRef = useRef(null);
@@ -695,6 +712,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const startVoiceModeConfirm = async () => {
+    // Blur textarea and reset window scroll to collapse virtual keyboard and restore dynamic viewport height on mobile
+    if (textareaRef.current) {
+      textareaRef.current.blur();
+    }
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+
     setShowVoiceBetaModal(false);
     localStorage.setItem('hasAcceptedVoiceBeta', 'true');
     if (!SpeechRecognition) {
@@ -720,6 +744,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       setIsVoiceMode(true);
       isVoiceModeRef.current = true;
+
+      const isMobileDevice = window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobileDevice) {
+        triggerVoiceToast("Mobile browsers may restrict voice accuracy. Try desktop Chrome for a seamless experience!");
+      }
 
       setTimeout(() => scrollToBottom(), 100);
     } catch (err) {
@@ -754,6 +783,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     } else {
+      // Blur textarea and reset window scroll on mobile before proceeding
+      if (textareaRef.current) {
+        textareaRef.current.blur();
+      }
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+
       // Show Beta Modal if not already accepted on this device
       const hasAccepted = localStorage.getItem('hasAcceptedVoiceBeta') === 'true';
       if (hasAccepted) {
@@ -1529,6 +1565,15 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {voiceToast && (
+        <div className={styles.voiceToast}>
+          <span className="material-symbols-outlined">warning</span>
+          <span className={styles.voiceToastText}>{voiceToast}</span>
+          <button className={styles.voiceToastClose} onClick={() => setVoiceToast(null)}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
       )}
     </div>

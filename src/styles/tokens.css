@@ -74,6 +74,17 @@
   --hint-accent    : #e9ddff;
   --shadow-card    : 0 18px 48px rgba(0, 0, 0, 0.32);
   --shadow-card-hover: 0 24px 58px rgba(0, 0, 0, 0.42);
+
+  /* Code Syntax Highlighting (Dark Mode - One Dark) */
+  --code-base      : #d6deeb;
+  --code-comment   : #7f848e;
+  --code-punct     : #abb2bf;
+  --code-keyword   : #c678dd;
+  --code-string    : #98c379;
+  --code-number    : #d19a66;
+  --code-func      : #61afef;
+  --code-prop      : #e06c75;
+  --code-op        : #56b6c2;
 }
 
 /* Light Theme */
@@ -104,6 +115,17 @@
   --hint-accent    : #6C3FC5;
   --shadow-card    : 0 12px 32px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 18px 42px rgba(0, 0, 0, 0.08);
+
+  /* Code Syntax Highlighting (Light Mode - Premium Developer) */
+  --code-base      : #24292e; /* Charcoal black */
+  --code-comment   : #a0a6b2; /* Delicate minimal gray */
+  --code-punct     : #383a42; /* Premium dark slate */
+  --code-keyword   : #a626a4; /* Royal amethyst violet */
+  --code-string    : #50a14f; /* Classy organic olive green */
+  --code-number    : #986801; /* Terracotta deep amber */
+  --code-func      : #4078f2; /* Professional sapphire blue */
+  --code-prop      : #e06c75; /* Premium soft coral red */
+  --code-op        : #0184bc; /* Deep slate teal */
 }
 
 
