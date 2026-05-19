@@ -4,10 +4,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSettings } from '../../context/SettingsContext';
 
 export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const saved = localStorage.getItem('prepme_sidebar_expanded');
-    return saved === 'true';
-  });
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [showSettingsCard, setShowSettingsCard] = useState(false);
   const sidebarRef = React.useRef(null);
@@ -41,13 +38,9 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
     { id: 'history', icon: 'history', label: 'History', alwaysActive: true },
   ];
 
-  const toggleSidebar = () => {
-    setIsExpanded(prev => {
-      const next = !prev;
-      localStorage.setItem('prepme_sidebar_expanded', String(next));
-      return next;
-    });
-  };
+  const handleMouseEnter = () => setIsExpanded(true);
+  const handleMouseLeave = () => setIsExpanded(false);
+  const toggleSidebar = () => setIsExpanded(!isExpanded);
 
   return (
     <aside 
@@ -55,30 +48,18 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
       className={`${styles.sidebar} ${isExpanded ? styles.expanded : ''}`}
     >
       <header className={styles.header}>
-        {isExpanded ? (
-          <div className={styles.logoContainer}>
+        <button 
+          className={styles.sidebarToggleBtn} 
+          onClick={toggleSidebar}
+          title={isExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+        >
+          <span className="material-symbols-outlined">
+            {isExpanded ? "menu_open" : "menu"}
+          </span>
+        </button>
+        {isExpanded && (
+          <div className={styles.logoBadge}>
             <span className={styles.logoText}>PrepMe</span>
-            <button 
-              type="button" 
-              className={styles.toggleBtn} 
-              onClick={toggleSidebar}
-              aria-label="Collapse Sidebar"
-              title="Collapse Sidebar"
-            >
-              <span className="material-symbols-outlined">menu_open</span>
-            </button>
-          </div>
-        ) : (
-          <div className={styles.collapsedHeader}>
-            <button 
-              type="button" 
-              className={styles.toggleBtn} 
-              onClick={toggleSidebar}
-              aria-label="Expand Sidebar"
-              title="Expand Sidebar"
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
           </div>
         )}
       </header>

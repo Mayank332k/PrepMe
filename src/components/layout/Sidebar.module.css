@@ -16,9 +16,6 @@
 
 .expanded {
   width: 250px;
-}
-
-.sidebar:hover {
   box-shadow: 10px 0 30px rgba(0, 0, 0, 0.03);
 }
 
@@ -26,42 +23,30 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
-  margin-bottom: 32px;
+  padding: 4px 0;
+  margin-bottom: 28px;
+  min-height: 44px;
 }
 
-.logoContainer {
+.sidebarToggleBtn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.collapsedHeader {
-  display: flex;
   justify-content: center;
-  width: 100%;
-}
-
-.toggleBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.toggleBtn:hover {
-  background-color: var(--bg-hover);
   color: var(--text-primary);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.toggleBtn span {
+.sidebarToggleBtn:hover {
+  background-color: var(--bg-hover);
+}
+
+.sidebarToggleBtn span {
   font-size: 24px;
 }
 
@@ -70,24 +55,17 @@
   align-items: center;
   justify-content: flex-start;
   flex-shrink: 0;
-  cursor: pointer;
   background: transparent;
-  min-width: 40px;
+  animation: fadeIn 0.2s forwards 0.1s;
+  opacity: 0;
 }
 
 .logoText {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.05em;
-  opacity: 0.3; /* Subtle when collapsed */
-  transition: all 0.3s ease;
-}
-
-.expanded .logoText {
-  opacity: 1;
-  font-size: 24px;
 }
 
 .logoImg {
@@ -114,8 +92,9 @@
 .navLink {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
-  padding: 12px;
+  padding: 12px 0;
   border-radius: 12px;
   color: var(--text-muted);
   transition: all 0.2s ease;
@@ -126,6 +105,7 @@
 
 .expanded .navLink {
   width: auto;
+  justify-content: flex-start;
   padding: 12px 14px;
 }
 
@@ -190,8 +170,9 @@
 .userTrigger {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  padding: 10px;
+  padding: 10px 0;
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.2s ease;
@@ -201,6 +182,8 @@
 
 .expanded .userTrigger {
   width: 100%;
+  justify-content: flex-start;
+  padding: 10px 14px;
 }
 
 .userTrigger:hover { background: var(--bg-hover); }
@@ -379,8 +362,9 @@
 .sidebarActions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
-  padding: 4px 0;
+  padding: 12px 0;
   cursor: pointer;
   border-radius: 12px;
   transition: background 0.2s;
@@ -390,6 +374,8 @@
 
 .expanded .sidebarActions {
   width: 100%;
+  justify-content: flex-start;
+  padding: 12px 14px;
 }
 
 .sidebarActions:hover {
@@ -402,6 +388,11 @@
 
 .sidebarThemeBtn {
   flex-shrink: 0;
+}
+
+.expanded .sidebarThemeBtn {
+  margin-left: -8px;
+  margin-right: -8px;
 }
 
 .logoutBtn {
@@ -502,32 +493,12 @@
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
   z-index: 100;
   padding: 20px;
-  animation: liquidBounce 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: cardPopup 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: bottom left;
 }
 
 .expanded .settingsCard {
   left: 230px;
-}
-
-@keyframes liquidBounce {
-  0% {
-    opacity: 0;
-    transform: translateY(40px) scaleY(0.7) scaleX(1.3);
-  }
-  45% {
-    transform: translateY(-8px) scaleY(1.15) scaleX(0.85);
-  }
-  70% {
-    transform: translateY(3px) scaleY(0.95) scaleX(1.05);
-  }
-  85% {
-    transform: translateY(-1px) scaleY(1.02) scaleX(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .settingsCardHeader {
