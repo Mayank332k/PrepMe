@@ -30,6 +30,41 @@
   margin-bottom: 32px;
 }
 
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.collapsedHeader {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.toggleBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.toggleBtn span {
+  font-size: 24px;
+}
+
 .logoBadge {
   display: flex;
   align-items: center;
