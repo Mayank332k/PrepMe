@@ -5,6 +5,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
+import { useSettings } from '../context/SettingsContext';
 import styles from './Chat.module.css';
 import aiIcon from '../assets/image.png';
 
@@ -310,7 +311,19 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const lastActionTime = useRef(Date.now());
   const hintTimerRef = useRef(null);
 
+  const { hintsEnabled, hintsForVoice, hintsForChat } = useSettings();
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+
+  const hintsAllowed = useMemo(() => {
+    return hintsEnabled && (isVoiceMode ? hintsForVoice : hintsForChat);
+  }, [hintsEnabled, isVoiceMode, hintsForVoice, hintsForChat]);
+
+  useEffect(() => {
+    if (!hintsAllowed) {
+      setShowHintNudge(false);
+      setShowHintBox(false);
+    }
+  }, [hintsAllowed]);
   const [showVoiceBetaModal, setShowVoiceBetaModal] = useState(false);
   const [isDictating, setIsDictating] = useState(false);
   // Lazily created per session — avoids Android Chrome gesture-policy violations
@@ -1108,6 +1121,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   // Timer for Hint Nudge (20s inactivity)
   useEffect(() => {
     const checkInactivity = () => {
+      if (!hintsAllowed) return;
+
       const now = Date.now();
       const diff = now - lastActionTime.current;
       
@@ -1123,7 +1138,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
     const interval = setInterval(checkInactivity, 5000);
     return () => clearInterval(interval);
-  }, [inputText, showHintBox, isStreaming, showHintNudge, messages.length, hintCancelCount]);
+  }, [inputText, showHintBox, isStreaming, showHintNudge, messages.length, hintCancelCount, hintsAllowed]);
 
   const handleKeyDown = (e) => {
     // Reset timer on any key press
@@ -1413,7 +1428,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         </footer>
 
         {/* Unified Morphing Hint Container - Moved outside footer to fix backdrop-filter issues */}
-        {(showHintNudge || showHintBox) && (
+        {hintsAllowed && (showHintNudge || showHintBox) && (
           <div className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill}`}>
             {!showHintBox ? (
               <div className={styles.hintPillContent}>

@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { useSettings } from '../../context/SettingsContext';
 
 export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [showSettingsCard, setShowSettingsCard] = useState(false);
   const sidebarRef = React.useRef(null);
 
-  // Close profile card when clicking outside
+  const { 
+    hintsEnabled, 
+    setHintsEnabled, 
+    hintsForVoice, 
+    setHintsForVoice, 
+    hintsForChat, 
+    setHintsForChat 
+  } = useSettings();
+
+  // Close cards when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setShowProfileCard(false);
+        setShowSettingsCard(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -64,10 +76,21 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
           {isExpanded && <span className={styles.linkLabel}>Switch Theme</span>}
         </div>
 
+        <div 
+          className={styles.sidebarActions} 
+          onClick={() => { setShowSettingsCard(!showSettingsCard); setShowProfileCard(false); }}
+          title="App Settings"
+        >
+          <button className={styles.sidebarSettingsBtn} type="button">
+            <span className="material-symbols-outlined">settings</span>
+          </button>
+          {isExpanded && <span className={styles.linkLabel}>Settings</span>}
+        </div>
+
         <div className={styles.userProfileWrapper}>
           <div 
             className={styles.userTrigger} 
-            onClick={() => setShowProfileCard(!showProfileCard)}
+            onClick={() => { setShowProfileCard(!showProfileCard); setShowSettingsCard(false); }}
           >
             <div className={styles.avatar}>
               {user?.avatar ? (
@@ -144,6 +167,63 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                     </span>
                   </div>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {showSettingsCard && (
+            <div className={styles.settingsCard}>
+              <div className={styles.settingsCardHeader}>
+                <span className="material-symbols-outlined">settings</span>
+                <h3>App Settings</h3>
+              </div>
+
+              <div className={styles.settingsBody}>
+                <div className={styles.settingItem}>
+                  <div className={styles.settingText}>
+                    <span className={styles.settingLabel}>In-App Hints</span>
+                    <span className={styles.settingDesc}>Get mock hints during your sessions</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
+                    onClick={() => setHintsEnabled(!hintsEnabled)}
+                  >
+                    <div className={styles.toggleKnob} />
+                  </button>
+                </div>
+
+                <div className={`${styles.subOptionsContainer} ${hintsEnabled ? styles.visible : ''}`}>
+                  <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                    <div className={styles.settingText}>
+                      <span className={styles.subSettingLabel}>Voice Hints</span>
+                      <span className={styles.settingDesc}>Show hints in Voice Mode</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className={`${styles.toggleSwitch} ${hintsForVoice ? styles.active : ''}`}
+                      onClick={() => hintsEnabled && setHintsForVoice(!hintsForVoice)}
+                      disabled={!hintsEnabled}
+                    >
+                      <div className={styles.toggleKnob} />
+                    </button>
+                  </div>
+
+                  <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                    <div className={styles.settingText}>
+                      <span className={styles.subSettingLabel}>Chat Hints</span>
+                      <span className={styles.settingDesc}>Show hints in Chat Mode</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className={`${styles.toggleSwitch} ${hintsForChat ? styles.active : ''}`}
+                      onClick={() => hintsEnabled && setHintsForChat(!hintsForChat)}
+                      disabled={!hintsEnabled}
+                    >
+                      <div className={styles.toggleKnob} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

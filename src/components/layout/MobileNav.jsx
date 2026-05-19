@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import styles from './MobileNav.module.css';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { useSettings } from '../../context/SettingsContext';
 
 export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [showSettingsCard, setShowSettingsCard] = useState(false);
+  const { 
+    hintsEnabled, 
+    setHintsEnabled, 
+    hintsForVoice, 
+    setHintsForVoice, 
+    hintsForChat, 
+    setHintsForChat 
+  } = useSettings();
+
   const navItems = [
     { id: 'upload', icon: 'cloud_upload', label: 'Upload' },
     { id: 'history', icon: 'history', label: 'History' },
@@ -15,8 +26,12 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
         {navItems.map((item) => (
           <div
             key={item.id}
-            onClick={() => onNavigate && onNavigate(item.id)}
-            className={`${styles.navItem} ${activeTab === item.id ? styles.active : ''}`}
+            onClick={() => {
+              setShowProfileCard(false);
+              setShowSettingsCard(false);
+              onNavigate && onNavigate(item.id);
+            }}
+            className={`${styles.navItem} ${activeTab === item.id && !showProfileCard && !showSettingsCard ? styles.active : ''}`}
             style={{ cursor: 'pointer' }}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
@@ -25,8 +40,11 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
         ))}
         
         <div 
-          className={styles.profileItem}
-          onClick={() => setShowProfileCard(!showProfileCard)}
+          className={`${styles.profileItem} ${showProfileCard ? styles.active : ''}`}
+          onClick={() => {
+            setShowProfileCard(!showProfileCard);
+            setShowSettingsCard(false);
+          }}
         >
           <div className={styles.avatarMini}>
             {user?.avatar ? (
@@ -43,6 +61,19 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
         <div className={styles.mobileOverlay} onClick={() => setShowProfileCard(false)}>
           <div className={styles.mobileProfileCard} onClick={e => e.stopPropagation()}>
             <div className={styles.cardIndicator}></div>
+            
+            <button 
+              type="button"
+              className={styles.profileSettingsTrigger}
+              onClick={() => {
+                setShowProfileCard(false);
+                setShowSettingsCard(true);
+              }}
+              title="Settings"
+            >
+              <span className="material-symbols-outlined">settings</span>
+            </button>
+
             <div className={styles.cardHeader}>
               <div className={styles.largeAvatar}>
                 {user?.avatar ? (
@@ -89,7 +120,6 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
               </div>
               
             <div className={styles.cardActions}>
-              <ThemeToggle className={styles.mobileThemeToggle} />
               <button 
                 className={styles.logoutBtn} 
                 onClick={() => onNavigate && onNavigate('logout')}
@@ -101,6 +131,74 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
                   </span>
                 </div>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSettingsCard && (
+        <div className={styles.mobileOverlay} onClick={() => setShowSettingsCard(false)}>
+          <div className={styles.mobileSettingsCard} onClick={e => e.stopPropagation()}>
+            <div className={styles.cardIndicator}></div>
+            <div className={styles.settingsCardHeader}>
+              <span className="material-symbols-outlined">settings</span>
+              <h3>App Settings</h3>
+            </div>
+
+            <div className={styles.mobileSettingsContent}>
+              <div className={styles.settingItem}>
+                <div className={styles.settingText}>
+                  <span className={styles.settingLabel}>In-App Hints</span>
+                  <span className={styles.settingDesc}>Get mock hints during your sessions</span>
+                </div>
+                <button 
+                  type="button" 
+                  className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
+                  onClick={() => setHintsEnabled(!hintsEnabled)}
+                >
+                  <div className={styles.toggleKnob} />
+                </button>
+              </div>
+
+              <div className={`${styles.subOptionsContainer} ${hintsEnabled ? styles.visible : ''}`}>
+                <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                  <div className={styles.settingText}>
+                    <span className={styles.subSettingLabel}>Voice Hints</span>
+                    <span className={styles.settingDesc}>Show hints in Voice Mode</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    className={`${styles.toggleSwitch} ${hintsForVoice ? styles.active : ''}`}
+                    onClick={() => hintsEnabled && setHintsForVoice(!hintsForVoice)}
+                    disabled={!hintsEnabled}
+                  >
+                    <div className={styles.toggleKnob} />
+                  </button>
+                </div>
+
+                <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                  <div className={styles.settingText}>
+                    <span className={styles.subSettingLabel}>Chat Hints</span>
+                    <span className={styles.settingDesc}>Show hints in Chat Mode</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    className={`${styles.toggleSwitch} ${hintsForChat ? styles.active : ''}`}
+                    onClick={() => hintsEnabled && setHintsForChat(!hintsForChat)}
+                    disabled={!hintsEnabled}
+                  >
+                    <div className={styles.toggleKnob} />
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.themeToggleSection}>
+                <div className={styles.settingText}>
+                  <span className={styles.settingLabel}>Appearance Mode</span>
+                  <span className={styles.settingDesc}>Switch between Dark and Light mode</span>
+                </div>
+                <ThemeToggle className={styles.mobileThemeToggle} />
+              </div>
             </div>
           </div>
         </div>
