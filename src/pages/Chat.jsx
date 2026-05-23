@@ -1226,6 +1226,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       <main className={styles.mainCanvas}>
         <header className={styles.header}>
+          {/* Progressive Cloud Blur Layers */}
+          <div className={styles.headerBlurContainer}>
+            <div className={styles.blurLayer1}></div>
+            <div className={styles.blurLayer2}></div>
+            <div className={styles.blurLayer3}></div>
+          </div>
           <button 
             className={styles.backBtn} 
             onClick={() => setShowBackConfirm(true)}
@@ -1246,7 +1252,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             onClick={() => setShowEndConfirm(true)}
             disabled={isTyping || isStreaming || isEnding}
           >
-            {isEnding ? <div className={styles.dashedSpinner}></div> : "End Session"}
+            <div className={styles.endBtnContent}>
+              {isEnding ? (
+                <div className={styles.dashedSpinner}></div>
+              ) : (
+                <>
+                  <div className={styles.powerIcon}>
+                    <div className={styles.powerLine}></div>
+                  </div>
+                  <span className={styles.endBtnText}>End Session</span>
+                </>
+              )}
+            </div>
           </button>
         </header>
 
@@ -1389,11 +1406,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 </div>
               </div>
             )}
-            <div ref={scrollRef} style={{ height: '20px', flexShrink: 0 }} />
+            <div ref={scrollRef} style={{ height: '1px', paddingBottom: '77px', flexShrink: 0 }} />
           </div>
         </section>
 
         <footer className={styles.footer}>
+          {/* Progressive Cloud Blur Layers for Footer */}
+          <div className={styles.footerBlurContainer}>
+            <div className={styles.footerBlurLayer1}></div>
+            <div className={styles.footerBlurLayer2}></div>
+            <div className={styles.footerBlurLayer3}></div>
+          </div>
           <form onSubmit={handleSendMessage} className={styles.form}>
             <div className={styles.unifiedInputRow}>
               <div className={styles.textPill}>
