@@ -25,7 +25,6 @@ const CodeBlock = ({ language, value }) => {
     <div className={styles.codeBlockContainer}>
       <div className={styles.codeHeader}>
         <div className={styles.codeLang}>
-          <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>code</span>
           {language || 'code'}
         </div>
         <button className={styles.copyBtn} onClick={copyToClipboard} title="Copy code">

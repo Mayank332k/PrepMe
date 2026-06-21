@@ -25,7 +25,8 @@ function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "739328229230-dummy.apps.googleusercontent.com";
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeApp = async () => {
+      // 1. Authenticate user data
       try {
         const response = await api.get('/auth/me');
         if (response.data && response.data.user) {
@@ -43,11 +44,23 @@ function App() {
       } catch (err) {
         console.warn("User not authenticated");
         setCurrentScreen('login');
-      } finally {
+      }
+
+      // 2. Authentically wait for the entire UI to load (fonts, CSS, layout)
+      try {
+        await document.fonts.ready;
+      } catch (e) {
+        console.warn("Font loading error:", e);
+      }
+
+      if (document.readyState === 'complete') {
         setIsInitializing(false);
+      } else {
+        window.addEventListener('load', () => setIsInitializing(false));
       }
     };
-    checkAuth();
+    
+    initializeApp();
   }, []);
 
   const navigateTo = (screen, force = false) => {
