@@ -37,61 +37,86 @@
   }
 }
 
-/* Global Skeleton Loader Styles */
-.skeleton-page-screen {
+/* Global Loading Screen */
+.global-loader-screen {
   height: 100vh;
   width: 100vw;
   background-color: var(--bg-base);
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
 }
 
-.skeleton-nav {
-  height: 72px;
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+.global-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
-.skeleton-content {
-  padding: 48px 80px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+.big-robo-avatar {
+  color: var(--text-muted);
+  filter: drop-shadow(0 0 20px rgba(100, 150, 255, 0.15));
+  animation: bigRoboFloat 3s ease-in-out infinite alternate;
 }
 
-.skeleton-title {
-  height: 40px;
-  width: 300px;
-  background-color: var(--bg-hover);
-  border-radius: 8px;
-  margin-bottom: 48px;
-  animation: pulse 1.5s infinite ease-in-out;
+:global([data-theme='light']) .big-robo-avatar {
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.1));
 }
 
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px;
+@keyframes bigRoboFloat {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-8px) scale(1.05); }
 }
 
-.skeleton-card {
-  height: 200px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  animation: pulse 1.5s infinite ease-in-out;
+.robo-eye {
+  animation: blink 4s infinite;
+  transform-origin: center;
 }
 
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.3; }
-  100% { opacity: 0.6; }
+@keyframes blink {
+  0%, 92%, 96%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
 }
 
-@media (max-width: 768px) {
-  .skeleton-content { padding: 32px 20px; }
-  .skeleton-grid { grid-template-columns: 1fr; gap: 20px; }
+.dash-loader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
 }
+
+.dash-line {
+  width: 16px;
+  height: 4px;
+  border-radius: 4px;
+  background-color: var(--text-muted);
+  opacity: 0.2;
+  animation: dashPulse 1.5s infinite ease-in-out;
+}
+
+.dash-line:nth-child(1) { animation-delay: 0s; }
+.dash-line:nth-child(2) { animation-delay: 0.15s; }
+.dash-line:nth-child(3) { animation-delay: 0.3s; }
+.dash-line:nth-child(4) { animation-delay: 0.45s; }
+.dash-line:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes dashPulse {
+  0%, 100% { 
+    opacity: 0.2; 
+    transform: scaleY(1); 
+    background-color: var(--text-muted); 
+    filter: none; 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scaleY(1.5); 
+    background-color: var(--text-primary); 
+    filter: drop-shadow(0 0 8px rgba(100, 150, 255, 0.6)); 
+  }
+}
+
 
 /* ==========================================================================
    Global Theme-Aware Code Syntax Highlighting (Prism) - Premium Minimalist

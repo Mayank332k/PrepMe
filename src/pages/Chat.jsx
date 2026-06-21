@@ -117,7 +117,20 @@ const stripMarkdown = (text) => {
     .trim();
 };
 
-const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData, activeVoiceMessageId, currentSpokenWordIndex }) => {
+const AiRoboAvatar = ({ isGlowing }) => (
+  <div className={`${styles.aiAvatar} ${isGlowing ? styles.aiAvatarGlowing : styles.aiAvatarSettled}`}>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="8" width="16" height="12" rx="3" strokeDasharray="2 2" />
+      <path d="M8 4v4" />
+      <path d="M16 4v4" />
+      <circle cx="9" cy="14" r="1" fill="currentColor" />
+      <circle cx="15" cy="14" r="1" fill="currentColor" />
+      <path d="M10 18h4" strokeDasharray="1 2" />
+    </svg>
+  </div>
+);
+
+const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData, activeVoiceMessageId, currentSpokenWordIndex, isGlowing }) => {
   const isSpeaking = activeVoiceMessageId === msg.id;
   const lyricContainerRef = useRef(null);
   
@@ -148,7 +161,9 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
   
   return (
     <div className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
-      <div className={styles.messageBody}>
+      <div className={styles.messageRowInner}>
+        {msg.sender === 'ai' && <AiRoboAvatar isGlowing={isGlowing} />}
+        <div className={styles.messageBody}>
         <div className={styles.bubbleContainer}>
           <div className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ''} ${msg.isError ? styles.errorBubble : ''}`}>
             <div className={styles.markdownContent}>
@@ -228,7 +243,8 @@ const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionDat
         )}
       </div>
     </div>
-  );
+  </div>
+);
 });
 
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
@@ -1361,7 +1377,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   <div className={`${styles.skeletonLine} ${styles.short}`}></div>
                 </div>
               </div>
-            ) : messages.map((msg) => (
+            ) : messages.map((msg, index) => (
               <ChatMessage 
                 key={msg.id} 
                 msg={msg} 
@@ -1370,6 +1386,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 sessionData={sessionData} 
                 activeVoiceMessageId={activeVoiceMessageId}
                 currentSpokenWordIndex={currentSpokenWordIndex}
+                isGlowing={isStreaming && index === messages.length - 1}
               />
             ))}
             
@@ -1398,10 +1415,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             
             {isTyping && (
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
-                <div className={styles.messageBody}>
-                  <div className={styles.skeletonContainer}>
-                    <div className={styles.skeletonLine}></div>
-                    <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                <div className={styles.messageRowInner}>
+                  <AiRoboAvatar isGlowing={true} />
+                  <div className={styles.messageBody}>
+                    <div className={styles.skeletonContainer}>
+                      <div className={styles.skeletonLine}></div>
+                      <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                    </div>
                   </div>
                 </div>
               </div>

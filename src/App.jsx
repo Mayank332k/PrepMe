@@ -99,18 +99,32 @@ function App() {
     setCurrentScreen('report');
   };
 
-  if (isInitializing) {
-    return (
-      <div className="skeleton-page-screen">
-        <div className="skeleton-nav"></div>
-        <div className="skeleton-content">
-          <div className="skeleton-title"></div>
-          <div className="skeleton-grid">
-            {[1, 2, 3, 4].map(i => <div key={i} className="skeleton-card"></div>)}
-          </div>
+  const AppLoadingScreen = () => (
+    <div className="global-loader-screen">
+      <div className="global-loader-content">
+        <div className="big-robo-avatar">
+          <svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="8" width="16" height="12" rx="3" strokeDasharray="2 2" />
+            <path d="M8 4v4" />
+            <path d="M16 4v4" />
+            <circle cx="9" cy="14" r="1.5" fill="currentColor" className="robo-eye" />
+            <circle cx="15" cy="14" r="1.5" fill="currentColor" className="robo-eye" />
+            <path d="M10 18h4" strokeDasharray="1 2" />
+          </svg>
+        </div>
+        <div className="dash-loader">
+          <div className="dash-line"></div>
+          <div className="dash-line"></div>
+          <div className="dash-line"></div>
+          <div className="dash-line"></div>
+          <div className="dash-line"></div>
         </div>
       </div>
-    );
+    </div>
+  );
+
+  if (isInitializing) {
+    return <AppLoadingScreen />;
   }
 
   const renderComponent = () => {
