@@ -5,6 +5,7 @@
   --chat-elevated-2: var(--bg-surface);
   --chat-overlay: rgba(0, 0, 0, 0.72);
   --chat-shadow: 0 18px 54px rgba(0, 0, 0, 0.48);
+  --hint-glow-color: rgba(255, 255, 255, 0.45);
   display: flex;
   height: 100vh;
   width: 100vw;
@@ -15,6 +16,7 @@
 
 :global([data-theme='light']) .pageContainer {
   --chat-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --hint-glow-color: rgba(197, 63, 215, 0.35); /* Translucent pinkish violet */
 }
 
 .mainCanvas {
@@ -408,7 +410,7 @@
   padding: 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .messageRow { 
@@ -416,7 +418,6 @@
   flex-direction: column; 
   max-width: 95%; 
   position: relative; 
-  margin-bottom: 8px;
 }
 
 .aiRow { 
@@ -1455,18 +1456,37 @@
 
 .hintContainer {
   position: absolute;
-  background-color: var(--glass-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background-color: transparent; /* Moved to pseudo-element */
   box-shadow: var(--chat-shadow);
   border: 1px solid var(--chat-border);
   z-index: 45;
   overflow: hidden;
-  transition: all 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: width 0.85s cubic-bezier(0.2, 1, 0.2, 1.08), 
+              height 0.85s cubic-bezier(0.2, 1, 0.2, 1.08), 
+              top 0.85s cubic-bezier(0.2, 1, 0.2, 1.08), 
+              transform 0.85s cubic-bezier(0.2, 1, 0.2, 1.08),
+              border-color 0.4s ease;
+}
+
+/* Pseudo-element workaround for Safari/Mobile Chrome backdrop-filter rendering bugs when combined with border-radius + overflow: hidden */
+.hintContainer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  /* Force GPU hardware acceleration layer rendering on mobile */
+  transform: translate3d(0, 0, 0);
+  will-change: backdrop-filter;
 }
 
 .hintPill {
-  bottom: 95px;
+  top: calc(100% - 139px);
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
   width: 140px;
@@ -1476,17 +1496,22 @@
   animation: pillPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.hintPillLoading {
+  width: 64px !important;
+  padding: 0 !important;
+}
+
 @keyframes pillPop {
   from { transform: translateX(-50%) translateY(20px) scale(0.8); opacity: 0; }
   to { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
 }
 
 .hintExpanded {
-  bottom: 80px;
+  top: 88px;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 80px); 
-  max-width: 800px;
+  width: calc(100% - 96px); 
+  max-width: 700px;
   max-height: 280px; /* Max height for long hints */
   overflow-y: auto; /* Enable scrolling */
   scrollbar-width: none; /* Hide scrollbar for Firefox */
@@ -1494,6 +1519,62 @@
   min-height: unset; 
   border-radius: 28px;
   padding: 16px 20px;
+  box-shadow: none !important;
+}
+
+.hintLoaded {
+  border-color: transparent;
+  box-shadow: none !important;
+  animation: restoreBorder 2.5s ease-in forwards;
+}
+
+.borderSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 5;
+  overflow: visible;
+}
+
+.borderRect {
+  fill: none;
+  stroke: var(--hint-glow-color);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  animation: drawBorder 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes drawBorder {
+  0% {
+    stroke-dasharray: 0 100;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  80% {
+    stroke-dasharray: 100 100;
+    opacity: 1;
+  }
+  100% {
+    stroke-dasharray: 100 100;
+    opacity: 0;
+  }
+}
+
+@keyframes restoreBorder {
+  0% {
+    border-color: transparent;
+  }
+  80% {
+    border-color: transparent;
+  }
+  100% {
+    border-color: var(--chat-border);
+  }
 }
 
 .hintExpanded::-webkit-scrollbar {
@@ -1516,6 +1597,31 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.hintLoadingDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 100%;
+  width: 100%;
+}
+
+.hintDot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--hint-accent);
+  border-radius: 50%;
+  animation: hintDotBounce 1.4s infinite ease-in-out both;
+}
+
+.hintDot:nth-child(1) { animation-delay: -0.32s; }
+.hintDot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes hintDotBounce {
+  0%, 80%, 100% { transform: scale(0.3); opacity: 0.3; }
+  40% { transform: scale(1.1); opacity: 1; }
 }
 
 .nudgeBtn {
@@ -1612,9 +1718,10 @@
 }
 
 .hintBody p, .hintBody {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.55;
+  font-weight: 550; /* Slightly bolder for high readability */
+  color: var(--text-primary); /* Brighter contrast */
   margin: 0;
 }
 
@@ -1641,13 +1748,15 @@
     max-height: 250px !important; /* Slightly smaller for mobile */
     left: 50% !important;
     transform: translateX(-50%) !important;
-    bottom: 75px !important;
+    top: 72px !important;
+    bottom: auto !important;
     padding: 14px 18px !important;
     border-radius: 34px !important;
   }
 
   .hintPill {
-    bottom: 75px !important;
+    top: calc(100% - 119px) !important;
+    bottom: auto !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
   }

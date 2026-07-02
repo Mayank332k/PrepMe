@@ -325,6 +325,55 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [hintCancelCount, setHintCancelCount] = useState(0); 
   const lastActionTime = useRef(Date.now());
   const hintTimerRef = useRef(null);
+  const [hintHeight, setHintHeight] = useState('44px');
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const hintContentRef = useRef(null);
+
+  useEffect(() => {
+    if (!showHintBox) {
+      setHintHeight('44px');
+      setDimensions({ width: 0, height: 0 });
+      return;
+    }
+
+    if (!hintContentRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const contentHeight = entry.contentRect.height;
+        const contentWidth = entry.contentRect.width;
+        const isMobile = window.innerWidth <= 768;
+        const paddingY = isMobile ? 28 : 32;
+        const paddingX = isMobile ? 36 : 40;
+        
+        const totalHeight = contentHeight + paddingY;
+        const totalWidth = contentWidth + paddingX;
+        
+        setDimensions({ width: totalWidth, height: totalHeight });
+        setHintHeight(`${totalHeight}px`);
+      }
+    });
+
+    observer.observe(hintContentRef.current);
+    return () => observer.disconnect();
+  }, [showHintBox, isHintLoading, hintText]);
+
+  const getBorderPaths = () => {
+    const isMobile = window.innerWidth <= 768;
+    const r = isMobile ? 34 : 28;
+    const w = dimensions.width;
+    const h = dimensions.height;
+    const offset = 0.5;
+
+    if (w <= 0 || h <= 0) return { left: '', right: '' };
+
+    const left = `M ${w / 2} ${offset} L ${offset + r} ${offset} A ${r} ${r} 0 0 0 ${offset} ${offset + r} L ${offset} ${h - offset - r} A ${r} ${r} 0 0 0 ${offset + r} ${h - offset} L ${w / 2} ${h - offset}`;
+    const right = `M ${w / 2} ${offset} L ${w - offset - r} ${offset} A ${r} ${r} 0 0 1 ${w - offset} ${offset + r} L ${w - offset} ${h - offset - r} A ${r} ${r} 0 0 1 ${w - offset - r} ${h - offset} L ${w / 2} ${h - offset}`;
+
+    return { left, right };
+  };
+
+  const { left: leftPath, right: rightPath } = getBorderPaths();
 
   const { hintsEnabled, hintsForVoice, hintsForChat } = useSettings();
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -1204,8 +1253,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const requestHint = async () => {
-    setShowHintNudge(false);
-    setShowHintBox(true);
     setIsHintLoading(true);
     setHintText('');
 
@@ -1224,12 +1271,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const data = await response.json();
       if (data.success) {
         setHintText(data.hint);
+        setShowHintNudge(false);
+        setShowHintBox(true);
       } else {
         setHintText("I'm sorry, I couldn't generate a hint right now.");
+        setShowHintNudge(false);
+        setShowHintBox(true);
       }
     } catch (err) {
       console.error('Hint Fetch Error:', err);
       setHintText("Failed to connect to the hint service.");
+      setShowHintNudge(false);
+      setShowHintBox(true);
     } finally {
       setIsHintLoading(false);
     }
@@ -1507,23 +1560,36 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         {/* Unified Morphing Hint Container - Moved outside footer to fix backdrop-filter issues */}
         {hintsAllowed && (showHintNudge || showHintBox) && (
-          <div className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill}`}>
+          <div 
+            className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && !isHintLoading && hintText ? styles.hintLoaded : ''} ${!showHintBox && isHintLoading ? styles.hintPillLoading : ''}`}
+            style={{ height: hintHeight }}
+          >
             {!showHintBox ? (
               <div className={styles.hintPillContent}>
-                <button className={styles.nudgeBtn} onClick={requestHint}>
-                  <span className="material-symbols-outlined">lightbulb</span>
-                  Hints
-                </button>
-                <button className={styles.nudgeClose} onClick={() => {
-                  setShowHintNudge(false);
-                  setHintCancelCount(prev => prev + 1); 
-                  lastActionTime.current = Date.now();
-                }}>
-                  <span className="material-symbols-outlined">close</span>
-                </button>
+                {isHintLoading ? (
+                  <div className={styles.hintLoadingDots}>
+                    <div className={styles.hintDot} />
+                    <div className={styles.hintDot} />
+                    <div className={styles.hintDot} />
+                  </div>
+                ) : (
+                  <>
+                    <button className={styles.nudgeBtn} onClick={requestHint}>
+                      <span className="material-symbols-outlined">lightbulb</span>
+                      Hints
+                    </button>
+                    <button className={styles.nudgeClose} onClick={() => {
+                      setShowHintNudge(false);
+                      setHintCancelCount(prev => prev + 1); 
+                      lastActionTime.current = Date.now();
+                    }}>
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
-              <div className={styles.hintExpandedContent}>
+              <div className={styles.hintExpandedContent} ref={hintContentRef}>
                 <div className={styles.hintHeader}>
                   <div className={styles.hintTitle}>
                     <span className="material-symbols-outlined">lightbulb</span>
@@ -1554,6 +1620,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   )}
                 </div>
               </div>
+            )}
+            
+            {showHintBox && !isHintLoading && hintText && dimensions.width > 0 && leftPath && rightPath && (
+              <svg className={styles.borderSvg} width="100%" height="100%">
+                <path className={styles.borderRect} d={leftPath} pathLength="100" />
+                <path className={styles.borderRect} d={rightPath} pathLength="100" />
+              </svg>
             )}
           </div>
         )}
