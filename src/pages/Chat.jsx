@@ -6,6 +6,7 @@ import api from '../api';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import { useSettings } from '../context/SettingsContext';
+import { useTheme } from '../context/ThemeContext';
 import styles from './Chat.module.css';
 import aiIcon from '../assets/image.png';
 
@@ -316,6 +317,27 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [isResumed, setIsResumed] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [showPillMenu, setShowPillMenu] = useState(false);
+  const pillMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (pillMenuRef.current && !pillMenuRef.current.contains(e.target)) {
+        setShowPillMenu(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setShowPillMenu(false);
+    };
+    if (showPillMenu) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('keydown', handleEsc);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showPillMenu]);
   
   // Hint States
   const [showHintNudge, setShowHintNudge] = useState(false);
@@ -375,7 +397,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const { left: leftPath, right: rightPath } = getBorderPaths();
 
-  const { hintsEnabled, hintsForVoice, hintsForChat } = useSettings();
+  const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } = useSettings();
+  const { theme, toggleTheme } = useTheme();
   const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const hintsAllowed = useMemo(() => {
@@ -1315,12 +1338,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           
           <div></div> {/* Spacer for grid symmetry */}
           
-          <button 
-            className={styles.endBtn} 
-            onClick={() => setShowEndConfirm(true)}
-            disabled={isTyping || isStreaming || isEnding}
-          >
-            <div className={styles.endBtnContent}>
+          <div className={styles.endPillWrapper}>
+            <div 
+              className={`${styles.endPill} ${showPillMenu ? styles.menuOpen : ''}`} 
+              ref={pillMenuRef}
+            >
+              <div className={styles.pillBaseContent}>
+            <button 
+              className={styles.endActionBtn} 
+              onClick={() => setShowEndConfirm(true)}
+              disabled={isTyping || isStreaming || isEnding}
+            >
               {isEnding ? (
                 <div className={styles.dashedSpinner}></div>
               ) : (
@@ -1331,8 +1359,43 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   <span className={styles.endBtnText}>End Session</span>
                 </>
               )}
+            </button>
+            <button 
+              className={styles.menuActionBtn}
+              onClick={(e) => { e.stopPropagation(); setShowPillMenu(!showPillMenu); }}
+            >
+              <div className={styles.customDots}>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </button>
             </div>
-          </button>
+            
+            <div className={styles.pillMenuContent}>
+              <div className={styles.settingsRow}>
+                <span>Dark Mode</span>
+                <button 
+                  type="button"
+                  className={`${styles.toggleSwitch} ${theme === 'dark' ? styles.active : ''}`}
+                  onClick={() => toggleTheme()}
+                >
+                  <div className={styles.toggleKnob}></div>
+                </button>
+              </div>
+              <div className={styles.settingsRow}>
+                <span>Hints</span>
+                <button 
+                  type="button"
+                  className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
+                  onClick={() => setHintsEnabled(!hintsEnabled)}
+                >
+                  <div className={styles.toggleKnob}></div>
+                </button>
+              </div>
+              </div>
+            </div>
+          </div>
         </header>
 
         {showBackConfirm && (
