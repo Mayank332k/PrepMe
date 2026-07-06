@@ -27,7 +27,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
   return (
     <>
       <div className={styles.mobileNavWrapper}>
-        <nav className={styles.mainNavPill}>
+        <nav className={`${styles.mainNavPill} ${showProfileCard || showSettingsCard ? styles.navPillHidden : ''}`}>
           <div 
             className={styles.activeBackgroundPill}
             style={{
@@ -54,58 +54,57 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
         ))}
         </nav>
         
-        <div className={styles.profilePill}>
-          <div 
-            className={`${styles.profileItem} ${showProfileCard ? styles.active : ''}`}
-            onClick={() => {
-              setShowProfileCard(!showProfileCard);
-              setShowSettingsCard(false);
-            }}
-          >
-            <div className={styles.avatarMini}>
-              {user?.avatar ? (
-                <img src={user.avatar} alt="P" />
-              ) : (
-                <span>{user?.name?.charAt(0) || 'U'}</span>
-              )}
-            </div>
-            <span className={styles.navLabel}>Me</span>
-          </div>
-        </div>
-      </div>
-
-      {showProfileCard && (
-        <div className={styles.mobileOverlay} onClick={() => setShowProfileCard(false)}>
-          <div className={styles.mobileProfileCard} onClick={e => e.stopPropagation()}>
-            <div className={styles.cardIndicator}></div>
-            
-            <button 
-              type="button"
-              className={styles.profileSettingsTrigger}
+        <div className={`${styles.profilePill} ${showProfileCard || showSettingsCard ? styles.profilePillExpanded : ''}`}>
+          {/* Collapsed state: avatar + label */}
+          {!showProfileCard && !showSettingsCard && (
+            <div 
+              className={`${styles.profileItem} ${showProfileCard ? styles.active : ''}`}
               onClick={() => {
-                setShowProfileCard(false);
-                setShowSettingsCard(true);
+                setShowProfileCard(true);
+                setShowSettingsCard(false);
               }}
-              title="Settings"
             >
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-
-            <div className={styles.cardHeader}>
-              <div className={styles.largeAvatar}>
+              <div className={styles.avatarMini}>
                 {user?.avatar ? (
-                  <img src={user.avatar} alt="User" />
+                  <img src={user.avatar} alt="P" />
                 ) : (
                   <span>{user?.name?.charAt(0) || 'U'}</span>
                 )}
               </div>
-              <div className={styles.cardDetails}>
-                <h3>{user?.name || 'User'}</h3>
-                <p>{user?.email || 'user@example.com'}</p>
-              </div>
+              <span className={styles.navLabel}>Me</span>
             </div>
-            
-            <div className={styles.usageSection}>
+          )}
+
+          {/* Expanded: Profile Card Content */}
+          {showProfileCard && (
+            <div className={styles.morphedCardContent}>
+              <button 
+                type="button"
+                className={styles.profileSettingsTrigger}
+                onClick={() => {
+                  setShowProfileCard(false);
+                  setShowSettingsCard(true);
+                }}
+                title="Settings"
+              >
+                <span className="material-symbols-outlined">settings</span>
+              </button>
+
+              <div className={styles.cardHeader}>
+                <div className={styles.largeAvatar}>
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="User" />
+                  ) : (
+                    <span>{user?.name?.charAt(0) || 'U'}</span>
+                  )}
+                </div>
+                <div className={styles.cardDetails}>
+                  <h3>{user?.name || 'User'}</h3>
+                  <p>{user?.email || 'user@example.com'}</p>
+                </div>
+              </div>
+              
+              <div className={styles.usageSection}>
                 <div className={styles.usageHeader}>
                   <span className={styles.usageLabel}>Monthly Limit</span>
                   <span className={`${styles.usageStats} ${user?.interviewsUsed >= user?.interviewLimit ? styles.limitReached : ''}`}>
@@ -136,95 +135,102 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
                 )}
               </div>
               
-            <div className={styles.cardActions}>
-              <button 
-                className={styles.logoutBtn} 
-                onClick={() => onNavigate && onNavigate('logout')}
-              >
-                <div className={styles.btnContent}>
-                  <span className={styles.btnText}>Logout</span>
-                  <span className={styles.btnArrow}>
-                    <span className="material-symbols-outlined">logout</span>
-                  </span>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showSettingsCard && (
-        <div className={styles.mobileOverlay} onClick={() => setShowSettingsCard(false)}>
-          <div className={styles.mobileSettingsCard} onClick={e => e.stopPropagation()}>
-            <div className={styles.cardIndicator}></div>
-            <div className={styles.settingsCardHeader}>
-              <span className="material-symbols-outlined">settings</span>
-              <h3>App Settings</h3>
-            </div>
-
-            <div className={styles.mobileSettingsContent}>
-              <div className={styles.settingItem}>
-                <div className={styles.settingText}>
-                  <span className={styles.settingLabel}>In-App Hints</span>
-                  <span className={styles.settingDesc}>Get mock hints during your sessions</span>
-                </div>
+              <div className={styles.cardActions}>
                 <button 
-                  type="button" 
-                  className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
-                  onClick={() => setHintsEnabled(!hintsEnabled)}
+                  className={styles.logoutBtn} 
+                  onClick={() => onNavigate && onNavigate('logout')}
                 >
-                  <div className={styles.toggleKnob} />
+                  <div className={styles.btnContent}>
+                    <span className={styles.btnText}>Logout</span>
+                    <span className={styles.btnArrow}>
+                      <span className="material-symbols-outlined">logout</span>
+                    </span>
+                  </div>
                 </button>
               </div>
+            </div>
+          )}
 
-              <div className={`${styles.subOptionsContainer} ${hintsEnabled ? styles.visible : ''}`}>
-                <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+          {/* Expanded: Settings Card Content */}
+          {showSettingsCard && (
+            <div className={styles.morphedCardContent}>
+              <div className={styles.settingsCardHeader}>
+                <span className="material-symbols-outlined">settings</span>
+                <h3>App Settings</h3>
+              </div>
+
+              <div className={styles.mobileSettingsContent}>
+                <div className={styles.settingItem}>
                   <div className={styles.settingText}>
-                    <span className={styles.subSettingLabel}>Voice Hints</span>
-                    <span className={styles.settingDesc}>Show hints in Voice Mode</span>
+                    <span className={styles.settingLabel}>In-App Hints</span>
+                    <span className={styles.settingDesc}>Get mock hints during your sessions</span>
                   </div>
                   <button 
                     type="button" 
-                    className={`${styles.toggleSwitch} ${hintsForVoice ? styles.active : ''}`}
-                    onClick={() => hintsEnabled && setHintsForVoice(!hintsForVoice)}
-                    disabled={!hintsEnabled}
+                    className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
+                    onClick={() => setHintsEnabled(!hintsEnabled)}
                   >
                     <div className={styles.toggleKnob} />
                   </button>
                 </div>
 
-                <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                <div className={`${styles.subOptionsContainer} ${hintsEnabled ? styles.visible : ''}`}>
+                  <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                    <div className={styles.settingText}>
+                      <span className={styles.subSettingLabel}>Voice Hints</span>
+                      <span className={styles.settingDesc}>Show hints in Voice Mode</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className={`${styles.toggleSwitch} ${hintsForVoice ? styles.active : ''}`}
+                      onClick={() => hintsEnabled && setHintsForVoice(!hintsForVoice)}
+                      disabled={!hintsEnabled}
+                    >
+                      <div className={styles.toggleKnob} />
+                    </button>
+                  </div>
+
+                  <div className={`${styles.settingItem} ${!hintsEnabled ? styles.disabled : ''}`}>
+                    <div className={styles.settingText}>
+                      <span className={styles.subSettingLabel}>Chat Hints</span>
+                      <span className={styles.settingDesc}>Show hints in Chat Mode</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className={`${styles.toggleSwitch} ${hintsForChat ? styles.active : ''}`}
+                      onClick={() => hintsEnabled && setHintsForChat(!hintsForChat)}
+                      disabled={!hintsEnabled}
+                    >
+                      <div className={styles.toggleKnob} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.settingItem}>
                   <div className={styles.settingText}>
-                    <span className={styles.subSettingLabel}>Chat Hints</span>
-                    <span className={styles.settingDesc}>Show hints in Chat Mode</span>
+                    <span className={styles.settingLabel}>Dark Mode</span>
+                    <span className={styles.settingDesc}>Switch between Dark and Light mode</span>
                   </div>
                   <button 
                     type="button" 
-                    className={`${styles.toggleSwitch} ${hintsForChat ? styles.active : ''}`}
-                    onClick={() => hintsEnabled && setHintsForChat(!hintsForChat)}
-                    disabled={!hintsEnabled}
+                    className={`${styles.toggleSwitch} ${theme === 'dark' ? styles.active : ''}`}
+                    onClick={toggleTheme}
                   >
                     <div className={styles.toggleKnob} />
                   </button>
                 </div>
               </div>
-
-              <div className={styles.settingItem}>
-                <div className={styles.settingText}>
-                  <span className={styles.settingLabel}>Dark Mode</span>
-                  <span className={styles.settingDesc}>Switch between Dark and Light mode</span>
-                </div>
-                <button 
-                  type="button" 
-                  className={`${styles.toggleSwitch} ${theme === 'dark' ? styles.active : ''}`}
-                  onClick={toggleTheme}
-                >
-                  <div className={styles.toggleKnob} />
-                </button>
-              </div>
             </div>
-          </div>
+          )}
         </div>
+      </div>
+
+      {/* Backdrop overlay for click-to-close */}
+      {(showProfileCard || showSettingsCard) && (
+        <div 
+          className={styles.morphedBackdrop} 
+          onClick={() => { setShowProfileCard(false); setShowSettingsCard(false); }} 
+        />
       )}
     </>
   );
