@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import styles from './MobileNav.module.css';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSettings } from '../../context/SettingsContext';
+import { useTheme } from '../../context/ThemeContext';
 
-export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
+export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = false }) => {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [showSettingsCard, setShowSettingsCard] = useState(false);
   const { 
@@ -14,16 +15,27 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
     hintsForChat, 
     setHintsForChat 
   } = useSettings();
+  const { theme, toggleTheme } = useTheme();
 
   const navItems = [
     { id: 'upload', icon: 'cloud_upload', label: 'Upload' },
     { id: 'history', icon: 'history', label: 'History' },
   ];
 
+  const activeIndex = navItems.findIndex(item => item.id === activeTab);
+
   return (
     <>
-      <nav className={styles.mobileNav}>
-        {navItems.map((item) => (
+      <div className={styles.mobileNavWrapper}>
+        <nav className={styles.mainNavPill}>
+          <div 
+            className={styles.activeBackgroundPill}
+            style={{
+              '--active-index': activeIndex !== -1 ? activeIndex : 0,
+              opacity: activeIndex === -1 || showProfileCard || showSettingsCard ? 0 : 1
+            }}
+          />
+          {navItems.map((item) => (
           <div
             key={item.id}
             onClick={() => {
@@ -34,28 +46,33 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
             className={`${styles.navItem} ${activeTab === item.id && !showProfileCard && !showSettingsCard ? styles.active : ''}`}
             style={{ cursor: 'pointer' }}
           >
-            <span className="material-symbols-outlined">{item.icon}</span>
+            <span className={`material-symbols-outlined ${(activeTab === item.id && isLoading) ? styles.skeletonIcon : ''}`}>
+              {item.icon}
+            </span>
             <span className={styles.navLabel}>{item.label}</span>
           </div>
         ))}
+        </nav>
         
-        <div 
-          className={`${styles.profileItem} ${showProfileCard ? styles.active : ''}`}
-          onClick={() => {
-            setShowProfileCard(!showProfileCard);
-            setShowSettingsCard(false);
-          }}
-        >
-          <div className={styles.avatarMini}>
-            {user?.avatar ? (
-              <img src={user.avatar} alt="P" />
-            ) : (
-              <span>{user?.name?.charAt(0) || 'U'}</span>
-            )}
+        <div className={styles.profilePill}>
+          <div 
+            className={`${styles.profileItem} ${showProfileCard ? styles.active : ''}`}
+            onClick={() => {
+              setShowProfileCard(!showProfileCard);
+              setShowSettingsCard(false);
+            }}
+          >
+            <div className={styles.avatarMini}>
+              {user?.avatar ? (
+                <img src={user.avatar} alt="P" />
+              ) : (
+                <span>{user?.name?.charAt(0) || 'U'}</span>
+              )}
+            </div>
+            <span className={styles.navLabel}>Me</span>
           </div>
-          <span className={styles.navLabel}>Me</span>
         </div>
-      </nav>
+      </div>
 
       {showProfileCard && (
         <div className={styles.mobileOverlay} onClick={() => setShowProfileCard(false)}>
@@ -192,12 +209,18 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate }) => {
                 </div>
               </div>
 
-              <div className={styles.themeToggleSection}>
+              <div className={styles.settingItem}>
                 <div className={styles.settingText}>
-                  <span className={styles.settingLabel}>Appearance Mode</span>
+                  <span className={styles.settingLabel}>Dark Mode</span>
                   <span className={styles.settingDesc}>Switch between Dark and Light mode</span>
                 </div>
-                <ThemeToggle className={styles.mobileThemeToggle} />
+                <button 
+                  type="button" 
+                  className={`${styles.toggleSwitch} ${theme === 'dark' ? styles.active : ''}`}
+                  onClick={toggleTheme}
+                >
+                  <div className={styles.toggleKnob} />
+                </button>
               </div>
             </div>
           </div>

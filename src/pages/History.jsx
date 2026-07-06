@@ -196,7 +196,7 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   return (
     <div className={styles.pageContainer}>
       <Sidebar user={user} activeTab="history" onNavigate={onNavigate} sessionActive={sessionActive} />
-      <MobileNav user={user} activeTab="history" onNavigate={onNavigate} sessionActive={sessionActive} />
+      <MobileNav user={user} activeTab="history" onNavigate={onNavigate} sessionActive={sessionActive} isLoading={loading} />
 
       <main className={styles.mainCanvas}>
         <header className={styles.topBar}>
