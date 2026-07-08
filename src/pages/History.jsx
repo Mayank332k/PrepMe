@@ -36,12 +36,24 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
   const filterRef = useRef(null);
+  const scrollRef = useRef(null);
+  const rightPillRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeRightPillMenu, setActiveRightPillMenu] = useState(null); // 'options', 'filter', or null
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+    const handleScroll = () => setIsScrolled(scrollEl.scrollTop > 30);
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -73,6 +85,9 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
       if (filterRef.current && !filterRef.current.contains(e.target)) {
         setFilterDropdownOpen(false);
       }
+      if (rightPillRef.current && !rightPillRef.current.contains(e.target)) {
+        setActiveRightPillMenu(null);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -102,6 +117,23 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   const handleClearAll = () => {
     setHeaderMenuOpen(false);
     setShowConfirm({ show: true, type: 'all', id: null });
+  };
+
+  const handleDeleteOngoing = async () => {
+    const ongoingItems = historyItems.filter(item => item.status !== 'completed');
+    if (ongoingItems.length === 0) return;
+    
+    const originalItems = [...historyItems];
+    setHistoryItems(historyItems.filter(item => item.status === 'completed'));
+    
+    try {
+      await Promise.all(
+        ongoingItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
+      );
+    } catch (err) {
+      console.error("Failed to delete ongoing sessions:", err);
+      setHistoryItems(originalItems);
+    }
   };
 
   const confirmAction = async () => {
@@ -200,7 +232,15 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
 
       <main className={styles.mainCanvas}>
         <header className={styles.topBar}>
+          {/* Progressive blur layers — content blurs gradually as it scrolls under */}
+          <div className={styles.headerBlurContainer}>
+            <div className={styles.blurLayer1}></div>
+            <div className={styles.blurLayer2}></div>
+            <div className={styles.blurLayer3}></div>
+          </div>
+
           <div className={styles.topLeftSection}>
+            {/* Desktop: show plain title */}
             <h1 className={styles.compactTitle}>History</h1>
           </div>
 
@@ -226,7 +266,98 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
           </div>
         </header>
 
-        <section className={styles.scrollArea}>
+        {/* Mobile floating back pill — only visible on mobile */}
+        <button 
+          className={`${styles.mobileHistoryPill} ${isScrolled ? styles.pillScrolled : ''}`}
+          onClick={() => onNavigate && onNavigate('upload')}
+          aria-label={isScrolled ? "History" : "Go Back"}
+        >
+          <div className={styles.pillArrow}>
+            <div className={styles.pillArrowHead}></div>
+            <div className={styles.pillArrowShaft}></div>
+          </div>
+          <span className={styles.pillText}>History</span>
+        </button>
+
+        {/* Mobile floating action/filter pill — only visible on mobile */}
+        {historyItems.length > 0 && (
+          <div 
+            className={`${styles.mobileActionPill} ${activeRightPillMenu ? styles.rightMenuOpen : ''} ${activeRightPillMenu === 'filter' ? styles.menuFilter : activeRightPillMenu === 'options' ? styles.menuOptions : ''}`}
+            ref={rightPillRef}
+          >
+            {/* Base state: Filter and More actions */}
+            <div className={styles.rightPillBaseContent}>
+              <button 
+                className={styles.rightPillBtn}
+                onClick={() => setActiveRightPillMenu('filter')}
+                aria-label="Filter"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18M6 12h12M10 18h4" />
+                </svg>
+              </button>
+              <button 
+                className={styles.rightPillBtn}
+                onClick={() => setActiveRightPillMenu('options')}
+                aria-label="Actions"
+              >
+                <div className={styles.customHorizontalDots}>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </button>
+            </div>
+
+            {/* Menu state: Shows dynamic options depending on clicked action */}
+            <div className={styles.rightPillMenuContent}>
+              {activeRightPillMenu === 'options' && (
+                <div className={styles.menuOptionsGroup}>
+                  <button 
+                    onClick={() => {
+                      handleClearAll();
+                      setActiveRightPillMenu(null);
+                    }}
+                    className={styles.menuOptionItem}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                    </svg>
+                    Delete All
+                  </button>
+                </div>
+              )}
+
+              {activeRightPillMenu === 'filter' && (
+                <div className={styles.menuOptionsGroup}>
+                  <button 
+                    onClick={() => {
+                      setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed');
+                      setActiveRightPillMenu(null);
+                    }}
+                    className={`${styles.menuOptionItem} ${statusFilter === 'completed' ? styles.menuOptionActive : ''}`}
+                  >
+                    <span className={styles.statusDot} style={{ background: '#22c55e', display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%' }}></span>
+                    Completed
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setStatusFilter(statusFilter === 'ongoing' ? 'all' : 'ongoing');
+                      setActiveRightPillMenu(null);
+                    }}
+                    className={`${styles.menuOptionItem} ${statusFilter === 'ongoing' ? styles.menuOptionActive : ''}`}
+                  >
+                    <span className={styles.statusDot} style={{ background: '#3b82f6', display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%' }}></span>
+                    Ongoing
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
+        <section className={styles.scrollArea} ref={scrollRef}>
           <div className={styles.historyContainer}>
             <div className={styles.pageHeader}>
               <div className={styles.headerTitleRow}>
@@ -235,46 +366,6 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                   <p className={styles.pageSubtitle}>Review past sessions and track your progress over time.</p>
                 </div>
                   
-                {historyItems.length > 0 && (
-                  <div className={styles.filterWrapper} ref={filterRef}>
-                    <button 
-                      className={styles.filterDropdownBtn}
-                      onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>filter_alt</span>
-                      {statusFilter === 'all' ? 'All Sessions' : 
-                        statusFilter === 'completed' ? 'Completed' : 'Ongoing'}
-                      <span className={`material-symbols-outlined ${styles.chevron} ${filterDropdownOpen ? styles.open : ''}`}>
-                        expand_more
-                      </span>
-                    </button>
-                    
-                    {filterDropdownOpen && (
-                      <div className={styles.filterMenu}>
-                        <button 
-                          className={`${styles.filterOption} ${statusFilter === 'all' ? styles.activeOption : ''}`}
-                          onClick={() => { setStatusFilter('all'); setFilterDropdownOpen(false); }}
-                        >
-                          All Sessions
-                        </button>
-                        <button 
-                          className={`${styles.filterOption} ${statusFilter === 'completed' ? styles.activeOption : ''}`}
-                          onClick={() => { setStatusFilter('completed'); setFilterDropdownOpen(false); }}
-                        >
-                          <span className={styles.dot} style={{ background: '#22c55e' }}></span>
-                          Completed
-                        </button>
-                        <button 
-                          className={`${styles.filterOption} ${statusFilter === 'ongoing' ? styles.activeOption : ''}`}
-                          onClick={() => { setStatusFilter('ongoing'); setFilterDropdownOpen(false); }}
-                        >
-                          <span className={styles.dot} style={{ background: '#3b82f6' }}></span>
-                          Ongoing
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -462,7 +553,11 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
             ) : (
               <div className={styles.historyGrid}>
                 {historyItems
-                  .filter(item => statusFilter === 'all' || item.status === statusFilter)
+                  .filter(item => {
+                    if (statusFilter === 'completed') return item.status === 'completed';
+                    if (statusFilter === 'ongoing') return item.status !== 'completed';
+                    return true;
+                  })
                   .map((item) => {
                     const isCompleted = item.status === 'completed';
                     const date = new Date(item.createdAt);

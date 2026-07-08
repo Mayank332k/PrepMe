@@ -27,7 +27,10 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
   return (
     <>
       <div className={styles.mobileNavWrapper}>
-        <nav className={`${styles.mainNavPill} ${showProfileCard || showSettingsCard ? styles.navPillHidden : ''}`}>
+        <nav 
+          className={`${styles.mainNavPill} ${showProfileCard || showSettingsCard ? styles.navPillHidden : ''}`}
+          style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)', willChange: 'transform, backdrop-filter' }}
+        >
           <div 
             className={styles.activeBackgroundPill}
             style={{
@@ -54,7 +57,14 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
         ))}
         </nav>
         
-        <div className={`${styles.profilePill} ${showProfileCard || showSettingsCard ? styles.profilePillExpanded : ''}`}>
+        <div 
+          className={`${styles.profilePill} ${showProfileCard || showSettingsCard ? styles.profilePillExpanded : ''}`}
+          style={{ 
+            WebkitBackdropFilter: (showProfileCard || showSettingsCard) ? 'none' : 'blur(24px)', 
+            backdropFilter: (showProfileCard || showSettingsCard) ? 'none' : 'blur(24px)', 
+            willChange: 'transform, backdrop-filter' 
+          }}
+        >
           {/* Collapsed state: avatar + label */}
           {!showProfileCard && !showSettingsCard && (
             <div 
@@ -230,6 +240,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
         <div 
           className={styles.morphedBackdrop} 
           onClick={() => { setShowProfileCard(false); setShowSettingsCard(false); }} 
+          style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', willChange: 'transform, backdrop-filter' }}
         />
       )}
     </>

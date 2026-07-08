@@ -31,6 +31,94 @@
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   z-index: 10;
+  position: relative; /* needed for blur layers */
+  overflow: visible;
+}
+
+/* ── Progressive Cloud Blur — same technique as Chat header ── */
+.headerBlurContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: -60px; /* extends 60px below topBar so blur bleeds into content */
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+/* Layer 1 — wide, shallow blur that fades out far down */
+.blurLayer1 {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  background: linear-gradient(to bottom,
+    var(--bg-base) 0%,
+    rgba(0,0,0,0.06) 60%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  transform: translateZ(0);
+  will-change: transform;
+}
+:global([data-theme='light']) .blurLayer1 {
+  background: linear-gradient(to bottom,
+    var(--bg-base) 0%,
+    rgba(255,255,255,0.06) 60%,
+    transparent 100%
+  );
+}
+
+/* Layer 2 — medium blur, tighter mask — fades out sooner */
+.blurLayer2 {
+  position: absolute;
+  inset: 0;
+  height: 80%;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.55) 0%,
+    rgba(0,0,0,0.2) 65%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+  transform: translateZ(0);
+  will-change: transform;
+}
+:global([data-theme='light']) .blurLayer2 {
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.55) 0%,
+    rgba(255,255,255,0.2) 65%,
+    transparent 100%
+  );
+}
+
+/* Layer 3 — strongest blur, only at the very top edge */
+.blurLayer3 {
+  position: absolute;
+  inset: 0;
+  height: 55%;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  background: linear-gradient(to bottom,
+    var(--bg-base) 0%,
+    rgba(0,0,0,0.75) 75%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  transform: translateZ(0);
+  will-change: transform;
+}
+:global([data-theme='light']) .blurLayer3 {
+  background: linear-gradient(to bottom,
+    var(--bg-base) 0%,
+    rgba(255,255,255,0.75) 75%,
+    transparent 100%
+  );
 }
 
 .topLeftSection {
@@ -780,15 +868,31 @@
 /* Top Nav Mobile Fixes */
 @media (max-width: 768px) {
   .topBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     padding: 0 16px 0 20px;
     height: 72px;
-    background-color: var(--bg-surface); /* Pure solid for mobile header */
+    background-color: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    border-bottom: none;
+    /* Hide the text title on mobile since pill takes over */
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .topBar .compactTitle {
+    display: none;
+  }
+
+  .topBar .headerActions {
+    pointer-events: auto;
   }
   
   .headerActions {
-    gap: 12px;
+    display: none !important;
   }
   
   /* Make the button compact on mobile */
@@ -803,7 +907,12 @@
   }
   
   .scrollArea {
-    padding: 24px 20px 100px; /* Added 100px bottom padding to clear MobileNav */
+    padding: 100px 20px 100px; /* 100px top padding to clear blur overlay + pill */
+  }
+
+  /* Extend blur further down on mobile — content starts right at the top */
+  .headerBlurContainer {
+    bottom: -80px;
   }
   
   .historyGrid {
@@ -817,6 +926,325 @@
 
   .pageTitle {
     font-size: 28px;
+  }
+}
+
+/* =====================================================
+   Mobile Floating History Pill (scroll-driven)
+   ===================================================== */
+.mobileHistoryPill {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .mobileHistoryPill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 10000;
+
+    /* Pill shell — matches Chat backBtn style exactly */
+    height: 45px;
+    width: 65px; /* Matches Chat mobile backBtn width */
+    border-radius: 30px;
+    background-color: rgba(18, 18, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    color: var(--text-primary);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+
+    /* Bouncy liquid spring animation transitions (Matches Chat backBtn) */
+    transition: 
+      width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.2s ease;
+  }
+
+  .mobileHistoryPill:active {
+    transform: scale(0.94);
+  }
+
+  :global([data-theme='light']) .mobileHistoryPill {
+    background-color: rgba(255, 255, 255, 0.826);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    color: #000000;
+    border: none !important;
+  }
+
+  /* Scrolled state: Back button morphs into History text */
+  .mobileHistoryPill.pillScrolled {
+    width: 100px;
+  }
+
+  /* The arrow container — matches Chat back button arrow style on mobile */
+  .pillArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    transition: 
+      opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2),
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2);
+  }
+
+  .pillScrolled .pillArrow {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) translateX(-20px);
+    pointer-events: none;
+  }
+
+  .pillArrowShaft {
+    width: 12px;
+    height: 2.2px; /* Matches Chat mobile shaft thickness */
+    background-color: currentColor;
+    border-radius: 2px;
+    transform-origin: left center;
+  }
+
+  .pillArrowHead {
+    width: 9px;
+    height: 9px;
+    border-top: 2.2px solid currentColor; /* Matches Chat mobile head thickness */
+    border-left: 2.2px solid currentColor;
+    transform: rotate(-45deg);
+    margin-right: -3px;
+    flex-shrink: 0;
+  }
+
+  /* Text — hidden initially, springs in bouncy-liquid style when scrolled */
+  .pillText {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.6) translateX(15px);
+    opacity: 0;
+    filter: blur(3px);
+    transition:
+      opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1.2) 0.05s,
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.2),
+      filter 0.4s ease 0.05s;
+  }
+
+  .pillScrolled .pillText {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateX(0);
+    filter: blur(0);
+  }
+
+  /* =====================================================
+     Mobile Action / Filter Pill (Morphing, Chat-Style)
+     ===================================================== */
+  .mobileActionPill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+
+    /* Base Pill Shell — matches Chat endPill size/look exactly */
+    height: 45px;
+    width: 95px;
+    border-radius: 30px;
+    background-color: rgba(18, 18, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    color: var(--text-primary);
+    overflow: hidden;
+
+    /* Elastic morph transitions — matches Chat endPill */
+    transition: 
+      width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      border-radius 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.2s ease;
+  }
+
+  .mobileActionPill:active:not(.rightMenuOpen) {
+    transform: scale(0.96);
+  }
+
+  :global([data-theme='light']) .mobileActionPill {
+    background-color: rgba(255, 255, 255, 0.826);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    color: #000000;
+    border: none !important;
+  }
+
+  /* Morphing Menu State — matches Chat endPill menuOpen exactly */
+  .mobileActionPill.rightMenuOpen {
+    border-radius: 20px;
+    background-color: rgba(18, 18, 18, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.48);
+  }
+
+  /* Dynamic sizing based on content (filter has 2 options, delete options has 1) */
+  .mobileActionPill.rightMenuOpen.menuFilter {
+    width: 140px;
+    height: 86px;
+  }
+
+  .mobileActionPill.rightMenuOpen.menuOptions {
+    width: 124px;
+    height: 50px;
+  }
+
+  :global([data-theme='light']) .mobileActionPill.rightMenuOpen {
+    background-color: rgba(255, 255, 255, 0.826);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 0 10px 10px rgba(245, 243, 243, 0.597);
+  }
+
+  /* Base contents (Filter icon + Horizontal 3-Dots) */
+  .rightPillBaseContent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .mobileActionPill.rightMenuOpen .rightPillBaseContent {
+    opacity: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+  }
+
+  /* Action buttons inside base content */
+  .rightPillBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+
+  .rightPillBtn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :global([data-theme='light']) .rightPillBtn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Horizontal dots */
+  .customHorizontalDots {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .customHorizontalDots span {
+    width: 4.5px;
+    height: 4.5px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  /* Expanded Menu contents wrapper */
+  .rightPillMenuContent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px;
+    opacity: 0;
+    transform: scale(0.92);
+    pointer-events: none;
+    transition: opacity 0.3s ease 0.1s, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s;
+  }
+
+  .mobileActionPill.rightMenuOpen .rightPillMenuContent {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  .menuOptionsGroup {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 4px;
+  }
+
+  /* Option Items styling */
+  .menuOptionItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 32px; /* reduced height to fit 3 options in 120px */
+    padding: 0 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .menuOptionItem:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
+
+  :global([data-theme='light']) .menuOptionItem:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #000000;
+  }
+
+  .menuOptionActive {
+    color: var(--accent) !important;
+    font-weight: 600;
+    background-color: rgba(90, 158, 63, 0.1);
+  }
+
+  :global([data-theme='light']) .menuOptionActive {
+    background-color: rgba(90, 158, 63, 0.08);
   }
 }
 
@@ -1127,13 +1555,10 @@
 }
 
 @media (max-width: 768px) {
-  .topBar {
-    height: 60px;
-    padding: 0 16px;
-  }
+  /* topBar styles are handled in the primary 768px block above */
 
   .scrollArea {
-    padding: 12px 16px; /* slightly tighter padding */
+    padding: 68px 16px 100px; /* shift down to clear blur overlay + pill */
   }
 
   .pageHeader {
