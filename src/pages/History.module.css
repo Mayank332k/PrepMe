@@ -457,6 +457,85 @@
 
 
 
+/* Desktop Session Filter — segmented control (same as chart 7d/1m/All tabs) */
+.desktopFilterRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.desktopFilterTabs {
+  display: flex;
+  background: var(--bg-hover);
+  padding: 3px;
+  border-radius: 100px;
+  gap: 0;
+  position: relative;
+  width: fit-content;
+}
+
+.desktopFilterIndicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  background: var(--bg-surface);
+  border-radius: 100px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.desktopFilterTab {
+  padding: 6px 0;
+  border-radius: 100px;
+  border: none;
+  background: transparent !important;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  z-index: 1;
+  width: 90px;
+  justify-content: center;
+  user-select: none;
+  position: relative;
+}
+
+.desktopFilterTab:active {
+  transform: scale(0.88);
+  transition: transform 0.1s ease;
+}
+
+.desktopFilterTab:hover {
+  color: var(--text-primary);
+}
+
+.desktopFilterTabActive {
+  color: var(--text-primary);
+}
+
+.filterDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Hide desktop filter on mobile — mobile pill handles it */
+@media (max-width: 768px) {
+  .desktopFilterRow {
+    display: none;
+  }
+}
+
 /* Professional History Grid Redesign */
 .historyGrid {
   display: grid;
@@ -932,7 +1011,7 @@
 /* =====================================================
    Mobile Floating History Pill (scroll-driven)
    ===================================================== */
-.mobileHistoryPill {
+.mobileHistoryPill, .mobileActionPill {
   display: none; /* hidden on desktop */
 }
 

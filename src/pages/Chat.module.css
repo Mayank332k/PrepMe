@@ -3038,10 +3038,10 @@
 
 .toggleKnob {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 28px;
-  height: 18px;
+  top: 1.3px;
+  left: 1.3px;
+  width: 29.4px;
+  height: 19.4px;
   background-color: #ffffff;
   border-radius: 100px;
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
@@ -3050,17 +3050,17 @@
 }
 
 .toggleSwitch.active .toggleKnob {
-  transform: translateX(16px);
+  transform: translateX(14px);
   background-color: #ffffff;
 }
 
 .toggleSwitch:active .toggleKnob {
-  width: 34px;
+  width: 35.4px;
   transition: width 0.08s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .toggleSwitch.active:active .toggleKnob {
-  width: 34px;
-  transform: translateX(10px);
+  width: 35.4px;
+  transform: translateX(8px);
   transition: width 0.08s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }

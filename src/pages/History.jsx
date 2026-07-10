@@ -551,7 +551,40 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                 <p>You haven't completed any interviews. Start a new session to see your progress here.</p>
               </div>
             ) : (
-              <div className={styles.historyGrid}>
+              <>
+                {/* Desktop filter row — segmented control, same as chart 7d/1m/All tabs */}
+                <div className={styles.desktopFilterRow}>
+                  <div className={styles.desktopFilterTabs}>
+                    <div
+                      className={styles.desktopFilterIndicator}
+                      style={{
+                        transform: `translateX(${statusFilter === 'all' ? '0%' : statusFilter === 'completed' ? '100%' : '200%'})`
+                      }}
+                    />
+                    <button
+                      className={`${styles.desktopFilterTab} ${statusFilter === 'all' ? styles.desktopFilterTabActive : ''}`}
+                      onClick={() => setStatusFilter('all')}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`${styles.desktopFilterTab} ${statusFilter === 'completed' ? styles.desktopFilterTabActive : ''}`}
+                      onClick={() => setStatusFilter('completed')}
+                    >
+                      <span className={styles.filterDot} style={{ background: '#22c55e' }}></span>
+                      Completed
+                    </button>
+                    <button
+                      className={`${styles.desktopFilterTab} ${statusFilter === 'ongoing' ? styles.desktopFilterTabActive : ''}`}
+                      onClick={() => setStatusFilter('ongoing')}
+                    >
+                      <span className={styles.filterDot} style={{ background: '#3b82f6' }}></span>
+                      Ongoing
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.historyGrid}>
                 {historyItems
                   .filter(item => {
                     if (statusFilter === 'completed') return item.status === 'completed';
@@ -715,6 +748,7 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                     );
                   })}
               </div>
+              </>
             )}
           </div>
         </section>

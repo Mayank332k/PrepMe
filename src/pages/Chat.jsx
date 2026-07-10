@@ -1656,7 +1656,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 <div className={styles.hintHeader}>
                   <div className={styles.hintTitle}>
                     <span className="material-symbols-outlined">lightbulb</span>
-                    AI Hint
+                    Hint
                   </div>
                   <div className={styles.hintActions}>
                     <button 
