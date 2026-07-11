@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import api from '../api';
 import { Card } from '../components/ui/Card';
@@ -10,12 +10,47 @@ import logo from '../assets/logo.png';
 export const Login = ({ onNavigate, onAuthSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [emailError, setEmailError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [usernameStatus, setUsernameStatus] = useState('idle'); // 'idle' | 'checking' | 'available' | 'taken'
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (!isSignUp) {
+      setUsernameStatus('idle');
+      setSuggestions([]);
+      return;
+    }
+
+    if (!username || username.trim().length < 3) {
+      setUsernameStatus('idle');
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setUsernameStatus('checking');
+      try {
+        const { data } = await api.get(`/auth/check-username?username=${username}`);
+        if (data.available) {
+          setUsernameStatus('available');
+          setSuggestions([]);
+        } else {
+          setUsernameStatus('taken');
+          setSuggestions(data.suggestions || []);
+        }
+      } catch (err) {
+        setUsernameStatus('idle');
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [username, isSignUp]);
 
   const rotatingMessages = [
     "Enhance your journey for free.",
@@ -53,7 +88,7 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
   const handleLoginSuccess = async (credentialResponse) => {
     try {
       setIsLoading(true);
-      setEmailError('');
+      setUsernameError('');
       setPasswordError('');
       // Post to /auth/google - the browser now handles HttpOnly Cookie automatcially
       const response = await api.post('/auth/google', {
@@ -74,25 +109,25 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
     } catch (error) {
       console.error("Auth Error:", error.response?.data || error.message);
       const msg = error.response?.data?.message || "Google Authentication failed.";
-      setEmailError(msg); // Google errors are usually account/email related
+      setUsernameError(msg); // Google errors are usually account/email related
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLoginError = () => {
-    setEmailError("Google Login was unsuccessful. Please check your account.");
+    setUsernameError("Google Login was unsuccessful. Please check your account.");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setEmailError('');
+    setUsernameError('');
     setPasswordError('');
     
     try {
       const endpoint = isSignUp ? '/auth/register' : '/auth/login';
-      const payload = isSignUp ? { name, email, password } : { email, password };
+      const payload = isSignUp ? { name, username, password } : { username, password };
       
       const response = await api.post(endpoint, payload);
       const { user, accessToken } = response.data;
@@ -108,10 +143,10 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
       
       if (msg.toLowerCase().includes('password')) {
         setPasswordError(msg);
-      } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user') || msg.toLowerCase().includes('exist')) {
-        setEmailError(msg);
+      } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('username') || msg.toLowerCase().includes('user') || msg.toLowerCase().includes('exist')) {
+        setUsernameError(msg);
       } else {
-        setEmailError(msg);
+        setUsernameError(msg);
       }
     } finally {
       setIsLoading(false);
@@ -272,13 +307,13 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
             <div className={styles.cardNav}>
               <button 
                 className={`${styles.navTab} ${!isSignUp ? styles.activeTab : ''}`}
-                onClick={() => { setIsSignUp(false); setEmailError(''); setPasswordError(''); }}
+                onClick={() => { setIsSignUp(false); setUsernameError(''); setPasswordError(''); }}
               >
                 Sign In
               </button>
               <button 
                 className={`${styles.navTab} ${isSignUp ? styles.activeTab : ''}`}
-                onClick={() => { setIsSignUp(true); setEmailError(''); setPasswordError(''); }}
+                onClick={() => { setIsSignUp(true); setUsernameError(''); setPasswordError(''); }}
               >
                 Sign Up
               </button>
@@ -316,15 +351,45 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
 
               <div className={styles.formGroup}>
                 <Input 
-                  label="Email address"
-                  id="email"
-                  type="email"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
-                  error={emailError}
+                  label="Username"
+                  id="username"
+                  type="text"
+                  placeholder="e.g. mayank2026"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setUsernameError(''); }}
+                  error={usernameError}
                   required
                 />
+                
+                {isSignUp && usernameStatus !== 'idle' && (
+                  <div className={styles.usernameStatusContainer}>
+                    {usernameStatus === 'checking' && (
+                      <span className={styles.checkingText}>
+                        <span className="material-symbols-outlined">sync</span> Checking...
+                      </span>
+                    )}
+                    {usernameStatus === 'available' && (
+                       <div className={styles.availableBadge}>
+                          <span className="material-symbols-outlined">check_circle</span>
+                          Available
+                       </div>
+                    )}
+                    {usernameStatus === 'taken' && (
+                      <div className={styles.takenContainer}>
+                         <span className={styles.takenText}>
+                           <span className="material-symbols-outlined">cancel</span> Not available. Try:
+                         </span>
+                         <div className={styles.suggestionsList}>
+                           {suggestions.map(s => (
+                              <button key={s} type="button" onClick={() => setUsername(s)} className={styles.suggestionBtn}>
+                                {s}
+                              </button>
+                           ))}
+                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className={styles.formGroup}>

@@ -703,6 +703,90 @@
   flex-direction: column;
 }
 
+.usernameStatusContainer {
+  margin-top: 8px;
+  font-size: 13px;
+  animation: pageEnter 0.3s ease-out;
+}
+
+.checkingText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+.checkingText span {
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.availableBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-green);
+  font-weight: 500;
+  background: rgba(46, 213, 115, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.availableBadge span {
+  font-size: 16px;
+}
+
+.takenContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.takenText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-red, #ff4757);
+  font-weight: 500;
+}
+.takenText span {
+  font-size: 16px;
+}
+
+.suggestionsList {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+.suggestionsList::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.suggestionBtn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.suggestionBtn:hover {
+  background: var(--color-blue);
+  color: white;
+  border-color: var(--color-blue);
+}
+
 .eyeBtn {
   background: none;
   border: none;
