@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import api from '../api';
-import { Sidebar } from '../components/layout/Sidebar';
-import { MobileNav } from '../components/layout/MobileNav';
-import { useSettings } from '../context/SettingsContext';
-import { useTheme } from '../context/ThemeContext';
-import styles from './Chat.module.css';
-import aiIcon from '../assets/image.png';
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
+import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import api from "../api";
+import { Sidebar } from "../components/layout/Sidebar";
+import { MobileNav } from "../components/layout/MobileNav";
+import { useSettings } from "../context/SettingsContext";
+import { useTheme } from "../context/ThemeContext";
+import styles from "./Chat.module.css";
+import aiIcon from "../assets/image.png";
 
 // Detect browser support — actual instance is created lazily per session
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const CodeBlock = ({ language, value }) => {
   const [copied, setCopied] = useState(false);
@@ -25,35 +26,58 @@ const CodeBlock = ({ language, value }) => {
   return (
     <div className={styles.codeBlockContainer}>
       <div className={styles.codeHeader}>
-        <div className={styles.codeLang}>
-          {language || 'code'}
-        </div>
-        <button className={styles.copyBtn} onClick={copyToClipboard} title="Copy code">
+        <div className={styles.codeLang}>{language || "code"}</div>
+        <button
+          className={styles.copyBtn}
+          onClick={copyToClipboard}
+          title="Copy code"
+        >
           {copied ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="8" y="8" width="12" height="12" rx="3.5" ry="3.5"></rect>
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" opacity="0.5"></path>
+              <path
+                d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                opacity="0.5"
+              ></path>
             </svg>
           )}
         </button>
       </div>
       <div className={styles.codeContent}>
         <SyntaxHighlighter
-          language={language || 'text'}
+          language={language || "text"}
           style={oneDark}
           useInlineStyles={false}
           PreTag="div"
-          codeTagProps={{ style: { backgroundColor: 'transparent' } }}
+          codeTagProps={{ style: { backgroundColor: "transparent" } }}
           customStyle={{
             margin: 0,
-            padding: '16px 20px',
-            backgroundColor: 'transparent',
-            fontSize: '14.5px',
-            lineHeight: '1.6',
+            padding: "16px 20px",
+            backgroundColor: "transparent",
+            fontSize: "14.5px",
+            lineHeight: "1.6",
           }}
         >
           {value}
@@ -64,27 +88,27 @@ const CodeBlock = ({ language, value }) => {
 };
 
 const languageAliases = {
-  js: 'javascript',
-  node: 'javascript',
-  ts: 'typescript',
-  py: 'python',
-  sh: 'bash',
-  shell: 'bash',
-  zsh: 'bash',
-  cplusplus: 'cpp',
-  'c++': 'cpp',
-  cs: 'csharp',
-  yml: 'yaml',
+  js: "javascript",
+  node: "javascript",
+  ts: "typescript",
+  py: "python",
+  sh: "bash",
+  shell: "bash",
+  zsh: "bash",
+  cplusplus: "cpp",
+  "c++": "cpp",
+  cs: "csharp",
+  yml: "yaml",
 };
 
-const getCodeLanguage = (className = '') => {
+const getCodeLanguage = (className = "") => {
   const languageClass = className
     .split(/\s+/)
-    .find((name) => name.startsWith('language-'));
+    .find((name) => name.startsWith("language-"));
 
-  if (!languageClass) return '';
+  if (!languageClass) return "";
 
-  const language = languageClass.replace('language-', '').toLowerCase();
+  const language = languageClass.replace("language-", "").toLowerCase();
   return languageAliases[language] || language;
 };
 
@@ -92,34 +116,45 @@ const MarkdownComponents = {
   code({ node, inline, className, children, ...props }) {
     const language = getCodeLanguage(className);
     return !inline && language ? (
-      <CodeBlock 
-        language={language} 
-        value={String(children).replace(/\n$/, '')} 
+      <CodeBlock
+        language={language}
+        value={String(children).replace(/\n$/, "")}
       />
     ) : (
       <code className={className} {...props}>
         {children}
       </code>
     );
-  }
+  },
 };
 
 // Helper to clean markdown for Voice Mode
 const stripMarkdown = (text) => {
   return text
-    .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
-    .replace(/\*(.*?)\*/g, '$1')     // Italic
-    .replace(/__(.*?)__/g, '$1')     // Bold underscore
-    .replace(/_(.*?)_/g, '$1')       // Italic underscore
-    .replace(/`(.*?)`/g, '$1')       // Inline code
-    .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
-    .replace(/#+\s/g, '')            // Headers
+    .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
+    .replace(/\*(.*?)\*/g, "$1") // Italic
+    .replace(/__(.*?)__/g, "$1") // Bold underscore
+    .replace(/_(.*?)_/g, "$1") // Italic underscore
+    .replace(/`(.*?)`/g, "$1") // Inline code
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Links
+    .replace(/#+\s/g, "") // Headers
     .trim();
 };
 
 const AiRoboAvatar = ({ isGlowing }) => (
-  <div className={`${styles.aiAvatar} ${isGlowing ? styles.aiAvatarGlowing : styles.aiAvatarSettled}`}>
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <div
+    className={`${styles.aiAvatar} ${isGlowing ? styles.aiAvatarGlowing : styles.aiAvatarSettled}`}
+  >
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="4" y="8" width="16" height="12" rx="3" strokeDasharray="2 2" />
       <path d="M8 4v4" />
       <path d="M16 4v4" />
@@ -130,122 +165,166 @@ const AiRoboAvatar = ({ isGlowing }) => (
   </div>
 );
 
-const ChatMessage = React.memo(({ msg, activeMenuId, setActiveMenuId, sessionData, activeVoiceMessageId, currentSpokenWordIndex, isGlowing }) => {
-  const isSpeaking = activeVoiceMessageId === msg.id;
-  const lyricContainerRef = useRef(null);
-  
-  // Memoize cleaned words to prevent re-splitting on every render
-  const words = useMemo(() => {
-    const cleanText = isSpeaking ? stripMarkdown(msg.text) : msg.text;
-    return cleanText.split(/\s+/);
-  }, [msg.text, isSpeaking]);
+const ChatMessage = React.memo(
+  ({
+    msg,
+    activeMenuId,
+    setActiveMenuId,
+    sessionData,
+    activeVoiceMessageId,
+    currentSpokenWordIndex,
+    isGlowing,
+  }) => {
+    const isSpeaking = activeVoiceMessageId === msg.id;
+    const lyricContainerRef = useRef(null);
 
-  // Adjust scroll position to keep active word centered
-  useEffect(() => {
-    if (isSpeaking && lyricContainerRef.current) {
-      const activeWord = lyricContainerRef.current.querySelector(`.${styles.wordActive}`);
-      const viewport = lyricContainerRef.current.closest(`.${styles.lyricViewport}`);
-      
-      if (activeWord && viewport) {
-        const viewportHeight = viewport.offsetHeight;
-        const wordOffset = activeWord.offsetTop;
-        const wordHeight = activeWord.offsetHeight;
-        
-        // Calculate the translation needed to put the active word at the center of the viewport
-        // Use translate3d for hardware acceleration and sub-pixel accuracy
-        const targetScroll = wordOffset - (viewportHeight / 2) + (wordHeight / 2);
-        lyricContainerRef.current.style.transform = `translate3d(0, ${-targetScroll}px, 0)`;
+    // Memoize cleaned words to prevent re-splitting on every render
+    const words = useMemo(() => {
+      const cleanText = isSpeaking ? stripMarkdown(msg.text) : msg.text;
+      return cleanText.split(/\s+/);
+    }, [msg.text, isSpeaking]);
+
+    // Adjust scroll position to keep active word centered
+    useEffect(() => {
+      if (isSpeaking && lyricContainerRef.current) {
+        const activeWord = lyricContainerRef.current.querySelector(
+          `.${styles.wordActive}`,
+        );
+        const viewport = lyricContainerRef.current.closest(
+          `.${styles.lyricViewport}`,
+        );
+
+        if (activeWord && viewport) {
+          const viewportHeight = viewport.offsetHeight;
+          const wordOffset = activeWord.offsetTop;
+          const wordHeight = activeWord.offsetHeight;
+
+          // Calculate the translation needed to put the active word at the center of the viewport
+          // Use translate3d for hardware acceleration and sub-pixel accuracy
+          const targetScroll = wordOffset - viewportHeight / 2 + wordHeight / 2;
+          lyricContainerRef.current.style.transform = `translate3d(0, ${-targetScroll}px, 0)`;
+        }
       }
-    }
-  }, [currentSpokenWordIndex, isSpeaking]);
-  
-  return (
-    <div className={`${styles.messageRow} ${msg.sender === 'user' ? styles.userRow : styles.aiRow}`}>
-      <div className={styles.messageRowInner}>
-        {msg.sender === 'ai' && <AiRoboAvatar isGlowing={isGlowing} />}
-        <div className={styles.messageBody}>
-        <div className={styles.bubbleContainer}>
-          <div className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ''} ${msg.isError ? styles.errorBubble : ''}`}>
-            <div className={styles.markdownContent}>
-              {isSpeaking ? (
-                <div className={styles.lyricViewport}>
-                  <div className={styles.lyricText} ref={lyricContainerRef}>
-                    {words.map((word, wIdx) => {
-                      const isPast = wIdx < currentSpokenWordIndex;
-                      const isActive = wIdx === currentSpokenWordIndex;
-                      const isFuture = wIdx > currentSpokenWordIndex;
-                      
-                      return (
-                        <span 
-                          key={wIdx} 
-                          className={`${styles.lyricWord} ${
-                            isActive ? styles.wordActive : 
-                            isPast ? styles.wordPast : styles.wordFuture
-                          }`}
-                        >
-                          {word.split('').map((char, cIdx) => (
-                            <span 
-                              key={cIdx} 
-                              className={styles.lyricChar}
-                              style={{ transitionDelay: isActive ? `${cIdx * 0.06}s` : '0s' }}
+    }, [currentSpokenWordIndex, isSpeaking]);
+
+    return (
+      <div
+        className={`${styles.messageRow} ${msg.sender === "user" ? styles.userRow : styles.aiRow}`}
+      >
+        <div className={styles.messageRowInner}>
+          {msg.sender === "ai" && <AiRoboAvatar isGlowing={isGlowing} />}
+          <div className={styles.messageBody}>
+            <div className={styles.bubbleContainer}>
+              <div
+                className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ""} ${msg.isError ? styles.errorBubble : ""}`}
+              >
+                <div className={styles.markdownContent}>
+                  {isSpeaking ? (
+                    <div className={styles.lyricViewport}>
+                      <div className={styles.lyricText} ref={lyricContainerRef}>
+                        {words.map((word, wIdx) => {
+                          const isPast = wIdx < currentSpokenWordIndex;
+                          const isActive = wIdx === currentSpokenWordIndex;
+                          const isFuture = wIdx > currentSpokenWordIndex;
+
+                          return (
+                            <span
+                              key={wIdx}
+                              className={`${styles.lyricWord} ${
+                                isActive
+                                  ? styles.wordActive
+                                  : isPast
+                                    ? styles.wordPast
+                                    : styles.wordFuture
+                              }`}
                             >
-                              {char}
+                              {word.split("").map((char, cIdx) => (
+                                <span
+                                  key={cIdx}
+                                  className={styles.lyricChar}
+                                  style={{
+                                    transitionDelay: isActive
+                                      ? `${cIdx * 0.06}s`
+                                      : "0s",
+                                  }}
+                                >
+                                  {char}
+                                </span>
+                              ))}
+                              <span className={styles.lyricChar}>&nbsp;</span>
                             </span>
-                          ))}
-                          <span className={styles.lyricChar}>&nbsp;</span>
-                        </span>
-                      );
-                    })}
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <ReactMarkdown components={MarkdownComponents}>
+                      {msg.text.replace(/\n(?!\n)/g, "  \n")}
+                    </ReactMarkdown>
+                  )}
                 </div>
-              ) : (
-                <ReactMarkdown components={MarkdownComponents}>
-                  {msg.text.replace(/\n(?!\n)/g, '  \n')}
-                </ReactMarkdown>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {msg.sender === 'ai' && (
-          <div className={styles.messageMetadata}>
-            <button 
-              className={styles.menuTrigger} 
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
-              }}
-            >
-              <span className="material-symbols-outlined">more_horiz</span>
-            </button>
+            {msg.sender === "ai" && (
+              <div className={styles.messageMetadata}>
+                <button
+                  className={styles.menuTrigger}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
+                  }}
+                >
+                  <span className="material-symbols-outlined">more_horiz</span>
+                </button>
 
-            {activeMenuId === msg.id && (
-              <div className={styles.infoDropdown} onClick={(e) => e.stopPropagation()}>
-                <span className={styles.infoLabel}>
-                  {(() => {
-                    const msgDate = msg.date || new Date();
-                    const today = new Date();
-                    const isToday = msgDate.getDate() === today.getDate() && 
-                                   msgDate.getMonth() === today.getMonth() && 
-                                   msgDate.getFullYear() === today.getFullYear();
-                    
-                    return isToday ? 'Today' : msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                  })()}, {msg.timestamp}
-                </span>
-                
-                <div className={styles.infoItem}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#666' }}>fingerprint</span>
-                  <span className={styles.infoValue}>Session #{sessionData?.sessionId?.slice(-6).toUpperCase() || 'N/A'}</span>
-                </div>
+                {activeMenuId === msg.id && (
+                  <div
+                    className={styles.infoDropdown}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className={styles.infoLabel}>
+                      {(() => {
+                        const msgDate = msg.date || new Date();
+                        const today = new Date();
+                        const isToday =
+                          msgDate.getDate() === today.getDate() &&
+                          msgDate.getMonth() === today.getMonth() &&
+                          msgDate.getFullYear() === today.getFullYear();
+
+                        return isToday
+                          ? "Today"
+                          : msgDate.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            });
+                      })()}
+                      , {msg.timestamp}
+                    </span>
+
+                    <div className={styles.infoItem}>
+                      <span
+                        className="material-symbols-outlined"
+                        style={{ fontSize: "20px", color: "#666" }}
+                      >
+                        fingerprint
+                      </span>
+                      <span className={styles.infoValue}>
+                        Session #
+                        {sessionData?.sessionId?.slice(-6).toUpperCase() ||
+                          "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
-  </div>
+    );
+  },
 );
-});
 
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const [messages, setMessages] = useState([]);
@@ -259,24 +338,33 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       setIsInitialLoading(true);
       try {
         const { data } = await api.get(`/interview/session/${sessionId}`);
-        
+
         // Handle completed session by redirecting back
-        if (data.success && data.message === "Interview completed successfully!") {
-          localStorage.removeItem('activeSessionId');
-          onNavigate('upload');
+        if (
+          data.success &&
+          data.message === "Interview completed successfully!"
+        ) {
+          localStorage.removeItem("activeSessionId");
+          onNavigate("upload");
           return;
         }
 
         if (data.success && data.session.transcript.length > 0) {
           const formattedMessages = data.session.transcript.map((m, idx) => ({
             id: m._id || `msg-${idx}-${Date.now()}`,
-            sender: m.role === 'assistant' ? 'ai' : 'user',
+            sender: m.role === "assistant" ? "ai" : "user",
             text: m.content,
-            timestamp: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : 'Earlier',
-            date: m.timestamp ? new Date(m.timestamp) : new Date()
+            timestamp: m.timestamp
+              ? new Date(m.timestamp).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+              : "Earlier",
+            date: m.timestamp ? new Date(m.timestamp) : new Date(),
           }));
           setMessages(formattedMessages);
-          
+
           if (!sessionData?.firstMessage) {
             setIsResumed(true);
             setTimeout(() => {
@@ -291,10 +379,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           setMessages([
             {
               id: Date.now(),
-              sender: 'ai',
+              sender: "ai",
               text: sessionData.firstMessage,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
           ]);
         }
       } catch (err) {
@@ -307,7 +398,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     restoreSession();
   }, [sessionData, messages.length]);
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
@@ -327,33 +418,33 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       }
     };
     const handleEsc = (e) => {
-      if (e.key === 'Escape') setShowPillMenu(false);
+      if (e.key === "Escape") setShowPillMenu(false);
     };
     if (showPillMenu) {
-      document.addEventListener('mousedown', handleOutsideClick);
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEsc);
     }
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEsc);
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEsc);
     };
   }, [showPillMenu]);
-  
+
   // Hint States
   const [showHintNudge, setShowHintNudge] = useState(false);
   const [showHintBox, setShowHintBox] = useState(false);
   const [isHintLoading, setIsHintLoading] = useState(false);
-  const [hintText, setHintText] = useState('');
-  const [hintCancelCount, setHintCancelCount] = useState(0); 
+  const [hintText, setHintText] = useState("");
+  const [hintCancelCount, setHintCancelCount] = useState(0);
   const lastActionTime = useRef(Date.now());
   const hintTimerRef = useRef(null);
-  const [hintHeight, setHintHeight] = useState('44px');
+  const [hintHeight, setHintHeight] = useState("44px");
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const hintContentRef = useRef(null);
 
   useEffect(() => {
     if (!showHintBox) {
-      setHintHeight('44px');
+      setHintHeight("44px");
       setDimensions({ width: 0, height: 0 });
       return;
     }
@@ -367,10 +458,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         const isMobile = window.innerWidth <= 768;
         const paddingY = isMobile ? 28 : 32;
         const paddingX = isMobile ? 36 : 40;
-        
+
         const totalHeight = contentHeight + paddingY;
         const totalWidth = contentWidth + paddingX;
-        
+
         setDimensions({ width: totalWidth, height: totalHeight });
         setHintHeight(`${totalHeight}px`);
       }
@@ -387,7 +478,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     const h = dimensions.height;
     const offset = 0.5;
 
-    if (w <= 0 || h <= 0) return { left: '', right: '' };
+    if (w <= 0 || h <= 0) return { left: "", right: "" };
 
     const left = `M ${w / 2} ${offset} L ${offset + r} ${offset} A ${r} ${r} 0 0 0 ${offset} ${offset + r} L ${offset} ${h - offset - r} A ${r} ${r} 0 0 0 ${offset + r} ${h - offset} L ${w / 2} ${h - offset}`;
     const right = `M ${w / 2} ${offset} L ${w - offset - r} ${offset} A ${r} ${r} 0 0 1 ${w - offset} ${offset + r} L ${w - offset} ${h - offset - r} A ${r} ${r} 0 0 1 ${w - offset - r} ${h - offset} L ${w / 2} ${h - offset}`;
@@ -397,7 +488,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const { left: leftPath, right: rightPath } = getBorderPaths();
 
-  const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } = useSettings();
+  const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } =
+    useSettings();
   const { theme, toggleTheme } = useTheme();
   const [isVoiceMode, setIsVoiceMode] = useState(false);
 
@@ -416,7 +508,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const voiceToastTimeoutRef = useRef(null);
 
   const triggerVoiceToast = (message) => {
-    if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+    if (voiceToastTimeoutRef.current)
+      clearTimeout(voiceToastTimeoutRef.current);
     setVoiceToast(message);
     voiceToastTimeoutRef.current = setTimeout(() => {
       setVoiceToast(null);
@@ -425,7 +518,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   useEffect(() => {
     return () => {
-      if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+      if (voiceToastTimeoutRef.current)
+        clearTimeout(voiceToastTimeoutRef.current);
     };
   }, []);
 
@@ -443,12 +537,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const sendMessageRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const [voiceWave, setVoiceWave] = useState(false);
-  const recognitionBaseTextRef = useRef('');
+  const recognitionBaseTextRef = useRef("");
   const inputTextRef = useRef(inputText);
   const speechQueueRef = useRef([]);
   const isSpeakingChunkRef = useRef(false);
   const totalWordsSpokenRef = useRef(0);
-  
+
   // Audio Visualizer Refs
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -468,12 +562,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   // Lock body scroll when Beta Modal is open to prevent mobile scroll shifts
   useEffect(() => {
     if (showVoiceBetaModal) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [showVoiceBetaModal]);
 
@@ -499,14 +593,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     if (textarea) {
       // 1. Save current height
       const startHeight = textarea.style.height;
-      
+
       // 2. Measure new height
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       const targetHeight = `${Math.min(textarea.scrollHeight, 150)}px`;
-      
+
       // 3. Restore start height immediately
       textarea.style.height = startHeight;
-      
+
       // 4. In the next frame, apply target height to trigger transition
       requestAnimationFrame(() => {
         textarea.style.height = targetHeight;
@@ -515,32 +609,40 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   }, [inputText]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: isStreaming ? 'auto' : 'smooth' });
+    scrollRef.current?.scrollIntoView({
+      behavior: isStreaming ? "auto" : "smooth",
+    });
   }, [messages, isStreaming]);
 
   // Keep Voice Mode components fully pinned inside the viewport
   useEffect(() => {
     if (isVoiceMode) {
-      scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [isVoiceMode, activeVoiceMessageId, isTyping, inputText]);
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   // Warm up SpeechSynthesis voices to avoid Chrome/Safari lazy-load race condition
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.getVoices();
       const handleVoicesChanged = () => {
         window.speechSynthesis.getVoices();
       };
-      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      window.speechSynthesis.addEventListener(
+        "voiceschanged",
+        handleVoicesChanged,
+      );
       return () => {
-        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+        window.speechSynthesis.removeEventListener(
+          "voiceschanged",
+          handleVoicesChanged,
+        );
       };
     }
   }, []);
@@ -554,19 +656,26 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       isListeningRef.current = false;
       isDictatingRef.current = false;
       const rec = recognitionRef.current;
-      if (rec) try { rec.stop(); } catch(e) {}
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      if (rec)
+        try {
+          rec.stop();
+        } catch (e) {}
+      if (animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
       if (sourceRef.current) {
-        try { sourceRef.current.mediaStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+        try {
+          sourceRef.current.mediaStream.getTracks().forEach((t) => t.stop());
+        } catch (e) {}
       }
-      if (audioContextRef.current?.state !== 'closed') {
-        try { audioContextRef.current?.close(); } catch(e) {}
+      if (audioContextRef.current?.state !== "closed") {
+        try {
+          audioContextRef.current?.close();
+        } catch (e) {}
       }
       window.speechSynthesis.cancel();
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
   }, []);
-
 
   // Sync refs with state
   useEffect(() => {
@@ -584,8 +693,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     rec.onresult = (event) => {
-      let currentSessionFinal = '';
-      let currentSessionInterim = '';
+      let currentSessionFinal = "";
+      let currentSessionInterim = "";
 
       for (let i = 0; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
@@ -597,7 +706,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       if (isDictatingRef.current || isListeningRef.current) {
         const base = recognitionBaseTextRef.current;
-        const newText = base + (base && !base.endsWith(' ') ? ' ' : '') + currentSessionFinal + currentSessionInterim;
+        const newText =
+          base +
+          (base && !base.endsWith(" ") ? " " : "") +
+          currentSessionFinal +
+          currentSessionInterim;
         setInputText(newText);
 
         if (isVoiceModeRef.current && currentSessionFinal.trim().length > 0) {
@@ -612,9 +725,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     rec.onerror = (event) => {
-      console.warn('Speech recognition warning:', event.error);
-      const recoverableErrors = ['no-speech', 'audio-capture', 'network', 'aborted'];
+      const recoverableErrors = [
+        "no-speech",
+        "audio-capture",
+        "network",
+        "aborted",
+      ];
       if (recoverableErrors.includes(event.error)) {
+        // Suppress console warnings for recoverable network errors (common in Web Speech API)
+        if (event.error !== "network") {
+          console.warn("Speech recognition warning:", event.error);
+        }
         return; // Let onend handle the safe restart
       }
       // Non-recoverable errors (e.g. not-allowed, service-not-allowed)
@@ -630,7 +751,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       if (isDictatingRef.current) {
         setTimeout(() => {
           if (isDictatingRef.current) {
-            try { rec.start(); } catch (e) {}
+            try {
+              rec.start();
+            } catch (e) {}
           }
         }, 400);
       } else if (isVoiceModeRef.current && isListeningRef.current) {
@@ -654,7 +777,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   const toggleDictation = () => {
     const rec = recognitionRef.current;
     if (isDictating) {
-      if (rec) try { rec.stop(); } catch(e) {}
+      if (rec)
+        try {
+          rec.stop();
+        } catch (e) {}
       setIsDictating(false);
     } else {
       if (!SpeechRecognition) {
@@ -665,7 +791,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const newRec = new SpeechRecognition();
       newRec.continuous = true;
       newRec.interimResults = true;
-      newRec.lang = 'en-US';
+      newRec.lang = "en-US";
       newRec.maxAlternatives = 1;
       recognitionRef.current = newRec;
       bindRecognitionHandlers(newRec);
@@ -695,24 +821,28 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const startVisualizer = async () => {
-    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(
+      navigator.userAgent,
+    );
     if (isMobileDevice) {
       // On mobile, bypass AudioContext mic capture to avoid hardware locking conflicts with SpeechRecognition
-      if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+      if (visualizerIntervalRef.current)
+        clearInterval(visualizerIntervalRef.current);
       visualizerIntervalRef.current = setInterval(() => {
-        const isActive = isListeningRef.current && !activeVoiceMessageIdRef.current;
+        const isActive =
+          isListeningRef.current && !activeVoiceMessageIdRef.current;
         const v1 = isActive ? 0.3 + Math.random() * 0.7 : 0;
         const v2 = isActive ? 0.3 + Math.random() * 0.7 : 0;
         const v3 = isActive ? 0.3 + Math.random() * 0.7 : 0;
         if (pillRef.current) {
-          pillRef.current.style.setProperty('--v1', v1);
-          pillRef.current.style.setProperty('--v2', v2);
-          pillRef.current.style.setProperty('--v3', v3);
+          pillRef.current.style.setProperty("--v1", v1);
+          pillRef.current.style.setProperty("--v2", v2);
+          pillRef.current.style.setProperty("--v3", v3);
         }
         if (orbRef.current) {
-          orbRef.current.style.setProperty('--v1', v1);
-          orbRef.current.style.setProperty('--v2', v2);
-          orbRef.current.style.setProperty('--v3', v3);
+          orbRef.current.style.setProperty("--v1", v1);
+          orbRef.current.style.setProperty("--v2", v2);
+          orbRef.current.style.setProperty("--v3", v3);
         }
       }, 120);
       return;
@@ -720,13 +850,16 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
+      if (audioContextRef.current.state === "suspended") {
         await audioContextRef.current.resume();
       }
       analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-      
+      sourceRef.current =
+        audioContextRef.current.createMediaStreamSource(stream);
+
       sourceRef.current.connect(analyserRef.current);
       analyserRef.current.fftSize = 64;
       const bufferLength = analyserRef.current.frequencyBinCount;
@@ -735,29 +868,30 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const updateVolume = () => {
         if (!analyserRef.current) return;
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-        
+
         // Only react to microphone frequencies when mic is actively listening AND AI is silent
-        const isActive = isListeningRef.current && !activeVoiceMessageIdRef.current;
-        
+        const isActive =
+          isListeningRef.current && !activeVoiceMessageIdRef.current;
+
         const v1 = isActive ? Math.min(dataArrayRef.current[2] / 50, 1.5) : 0;
         const v2 = isActive ? Math.min(dataArrayRef.current[8] / 50, 1.5) : 0;
         const v3 = isActive ? Math.min(dataArrayRef.current[15] / 50, 1.5) : 0;
-        
+
         // DIRECT DOM UPDATE for frequency-specific dynamic height adjustment
         if (pillRef.current) {
-          pillRef.current.style.setProperty('--v1', v1);
-          pillRef.current.style.setProperty('--v2', v2);
-          pillRef.current.style.setProperty('--v3', v3);
+          pillRef.current.style.setProperty("--v1", v1);
+          pillRef.current.style.setProperty("--v2", v2);
+          pillRef.current.style.setProperty("--v3", v3);
         }
         if (orbRef.current) {
-          orbRef.current.style.setProperty('--v1', v1);
-          orbRef.current.style.setProperty('--v2', v2);
-          orbRef.current.style.setProperty('--v3', v3);
+          orbRef.current.style.setProperty("--v1", v1);
+          orbRef.current.style.setProperty("--v2", v2);
+          orbRef.current.style.setProperty("--v3", v3);
         }
-        
+
         animationFrameRef.current = requestAnimationFrame(updateVolume);
       };
-      
+
       updateVolume();
     } catch (err) {
       console.error("Visualizer failed:", err);
@@ -769,11 +903,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       clearInterval(visualizerIntervalRef.current);
       visualizerIntervalRef.current = null;
     }
-    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    if (animationFrameRef.current)
+      cancelAnimationFrame(animationFrameRef.current);
     if (sourceRef.current) {
-      sourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
+      sourceRef.current.mediaStream
+        .getTracks()
+        .forEach((track) => track.stop());
     }
-    if (audioContextRef.current?.state !== 'closed') {
+    if (audioContextRef.current?.state !== "closed") {
       audioContextRef.current?.close();
     }
     setMicVolume(0);
@@ -792,7 +929,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     setActiveVoiceMessageId(null);
     setCurrentSpokenWordIndex(-1);
     const rec = recognitionRef.current;
-    if (rec) try { rec.stop(); } catch(e) {}
+    if (rec)
+      try {
+        rec.stop();
+      } catch (e) {}
     stopVisualizer();
     window.speechSynthesis.cancel();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -807,7 +947,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     document.body.scrollTop = 0;
 
     setShowVoiceBetaModal(false);
-    localStorage.setItem('hasAcceptedVoiceBeta', 'true');
+    localStorage.setItem("hasAcceptedVoiceBeta", "true");
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in your browser.");
       return;
@@ -816,7 +956,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     const rec = new SpeechRecognition();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = navigator.language || 'en-US';
+    rec.lang = navigator.language || "en-US";
     rec.maxAlternatives = 1;
     recognitionRef.current = rec;
     bindRecognitionHandlers(rec);
@@ -832,18 +972,26 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       setIsVoiceMode(true);
       isVoiceModeRef.current = true;
 
-      const isMobileDevice = window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMobileDevice =
+        window.innerWidth <= 768 ||
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobileDevice) {
-        triggerVoiceToast("Mobile browsers may restrict voice accuracy. Try desktop Chrome for a seamless experience!");
+        triggerVoiceToast(
+          "Mobile browsers may restrict voice accuracy. Try desktop Chrome for a seamless experience!",
+        );
       }
 
       setTimeout(() => scrollToBottom(), 100);
     } catch (err) {
       console.error("Voice Mode start failed:", err);
-      try { rec.stop(); } catch(e) {}
+      try {
+        rec.stop();
+      } catch (e) {}
       setIsListening(false);
       isListeningRef.current = false;
-      alert("Microphone access is required for Voice Mode. Please enable it in your browser settings.");
+      alert(
+        "Microphone access is required for Voice Mode. Please enable it in your browser settings.",
+      );
     }
   };
 
@@ -859,7 +1007,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       isVoiceModeRef.current = false;
       stopVisualizer();
       const rec = recognitionRef.current;
-      if (rec) try { rec.stop(); } catch(e) {}
+      if (rec)
+        try {
+          rec.stop();
+        } catch (e) {}
       setIsListening(false);
       isListeningRef.current = false;
 
@@ -878,7 +1029,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       document.body.scrollTop = 0;
 
       // Show Beta Modal if not already accepted on this device
-      const hasAccepted = localStorage.getItem('hasAcceptedVoiceBeta') === 'true';
+      const hasAccepted =
+        localStorage.getItem("hasAcceptedVoiceBeta") === "true";
       if (hasAccepted) {
         startVoiceModeConfirm();
       } else {
@@ -888,26 +1040,30 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
   };
 
   const speakMessage = (text, messageId) => {
-    if (!('speechSynthesis' in window)) return null;
-    
+    if (!("speechSynthesis" in window)) return null;
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    
+
     // HUMAN VOICE SELECTION
     const voices = window.speechSynthesis.getVoices();
     // Prioritize "Neural", "Enhanced", or high-quality specific voices
-    const premiumVoice = voices.find(v => 
-      v.name.includes('Neural') || 
-      v.name.includes('Enhanced') || 
-      v.name.includes('Google US English') || 
-      v.name.includes('Samantha') || 
-      v.name.includes('Premium')
-    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-    
+    const premiumVoice =
+      voices.find(
+        (v) =>
+          v.name.includes("Neural") ||
+          v.name.includes("Enhanced") ||
+          v.name.includes("Google US English") ||
+          v.name.includes("Samantha") ||
+          v.name.includes("Premium"),
+      ) ||
+      voices.find((v) => v.lang.startsWith("en")) ||
+      voices[0];
+
     if (premiumVoice) utterance.voice = premiumVoice;
-    
+
     // Natural conversational settings
-    utterance.rate = 1.0;  // Natural human speed
+    utterance.rate = 1.0; // Natural human speed
     utterance.pitch = 0.98; // Slightly warmer/deeper tone
     utterance.volume = 1.0;
 
@@ -915,12 +1071,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     if (messageId) {
       setActiveVoiceMessageId(messageId);
       setCurrentSpokenWordIndex(-1);
-      
+
       utterance.onboundary = (event) => {
-        if (event.name === 'word') {
+        if (event.name === "word") {
           const textUpToBoundary = text.substring(0, event.charIndex);
           const words = textUpToBoundary.trim().split(/\s+/);
-          const wordIndex = textUpToBoundary.trim() === '' ? 0 : words.length;
+          const wordIndex = textUpToBoundary.trim() === "" ? 0 : words.length;
           setCurrentSpokenWordIndex(wordIndex);
         }
       };
@@ -930,41 +1086,47 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         setCurrentSpokenWordIndex(-1);
       };
     }
-    
+
     window.speechSynthesis.speak(utterance);
     return utterance;
   };
 
   const scrollToBottom = () => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    
+
     const userText = inputText.trim();
     if (!userText || isTyping || isStreaming) return;
 
     const sessionId = sessionData?.sessionId;
-    const wasInVoiceMode = isVoiceMode; 
+    const wasInVoiceMode = isVoiceMode;
 
     const newUserMsg = {
       id: `user-${Date.now()}`,
-      sender: 'user',
+      sender: "user",
       text: userText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: new Date()
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      date: new Date(),
     };
 
-    setMessages(prev => [...prev, newUserMsg]);
-    setInputText('');
+    setMessages((prev) => [...prev, newUserMsg]);
+    setInputText("");
     setIsTyping(true);
-    
+
     // Stop listening while AI is thinking/speaking
     if (wasInVoiceMode) {
       const rec = recognitionRef.current;
-      if (rec) try { rec.stop(); } catch(e) {}
+      if (rec)
+        try {
+          rec.stop();
+        } catch (e) {}
       setIsListening(false);
       isListeningRef.current = false; // Force instantly to avoid onend race conditions
     }
@@ -974,39 +1136,48 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     isSpeakingChunkRef.current = false;
     totalWordsSpokenRef.current = 0;
     let lastProcessedIndex = 0;
-    let accumulatedResponse = '';
+    let accumulatedResponse = "";
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/interview/chat/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/interview/chat/${sessionId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ message: userText }),
         },
-        body: JSON.stringify({ message: userText }),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Out of service for message');
+        throw new Error("Out of service for message");
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let lineBuffer = '';
+      let lineBuffer = "";
 
-      setIsTyping(false); 
-      setIsStreaming(true); 
+      setIsTyping(false);
+      setIsStreaming(true);
 
       // Initialize empty AI message
       const aiMsgId = `ai-${Date.now()}`;
-      setMessages(prev => [...prev, {
-        id: aiMsgId,
-        sender: 'ai',
-        text: '',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: new Date()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: aiMsgId,
+          sender: "ai",
+          text: "",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          date: new Date(),
+        },
+      ]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -1014,27 +1185,30 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         const chunk = decoder.decode(value, { stream: true });
         lineBuffer += chunk;
-        
-        const lines = lineBuffer.split('\n');
+
+        const lines = lineBuffer.split("\n");
         lineBuffer = lines.pop();
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-          
+          if (!trimmedLine || !trimmedLine.startsWith("data: ")) continue;
+
           const dataStr = trimmedLine.substring(6).trim();
-          if (dataStr === '[DONE]') break;
+          if (dataStr === "[DONE]") break;
 
           try {
             const parsed = JSON.parse(dataStr);
             if (parsed.content) {
               accumulatedResponse += parsed.content;
-              
-              setMessages(prev => {
+
+              setMessages((prev) => {
                 const newMessages = [...prev];
                 const lastIndex = newMessages.length - 1;
-                if (newMessages[lastIndex]?.sender === 'ai') {
-                  newMessages[lastIndex] = { ...newMessages[lastIndex], text: accumulatedResponse };
+                if (newMessages[lastIndex]?.sender === "ai") {
+                  newMessages[lastIndex] = {
+                    ...newMessages[lastIndex],
+                    text: accumulatedResponse,
+                  };
                 }
                 return newMessages;
               });
@@ -1042,10 +1216,17 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               if (wasInVoiceMode) {
                 const sentenceEndRegex = /[.!?](\s+|\n|$)/g;
                 let match;
-                while ((match = sentenceEndRegex.exec(accumulatedResponse.slice(lastProcessedIndex))) !== null) {
-                  const endPos = lastProcessedIndex + match.index + match[0].length;
-                  const sentence = accumulatedResponse.slice(lastProcessedIndex, endPos).trim();
-                  
+                while (
+                  (match = sentenceEndRegex.exec(
+                    accumulatedResponse.slice(lastProcessedIndex),
+                  )) !== null
+                ) {
+                  const endPos =
+                    lastProcessedIndex + match.index + match[0].length;
+                  const sentence = accumulatedResponse
+                    .slice(lastProcessedIndex, endPos)
+                    .trim();
+
                   if (sentence) {
                     speechQueueRef.current.push(sentence);
                     if (!isSpeakingChunkRef.current) {
@@ -1056,27 +1237,32 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 }
               }
 
-              await new Promise(resolve => setTimeout(resolve, 15));
+              await new Promise((resolve) => setTimeout(resolve, 15));
             }
           } catch (err) {}
         }
       }
-      
+
       setIsStreaming(false);
       isStreamingRef.current = false; // Sync immediately
 
       if (wasInVoiceMode) {
         if (lastProcessedIndex < accumulatedResponse.length) {
-          const remaining = accumulatedResponse.slice(lastProcessedIndex).trim();
+          const remaining = accumulatedResponse
+            .slice(lastProcessedIndex)
+            .trim();
           if (remaining) {
             speechQueueRef.current.push(remaining);
           }
         }
-        
+
         // If we have things in the queue but aren't processing, start it!
         if (speechQueueRef.current.length > 0 && !isSpeakingChunkRef.current) {
           processSpeechQueue(aiMsgId);
-        } else if (speechQueueRef.current.length === 0 && !isSpeakingChunkRef.current) {
+        } else if (
+          speechQueueRef.current.length === 0 &&
+          !isSpeakingChunkRef.current
+        ) {
           // Streaming finished, no remaining text, and AI is not speaking.
           // Wake up the mic directly!
           setActiveVoiceMessageId(null);
@@ -1084,20 +1270,26 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         }
       }
     } catch (err) {
-      console.error('Streaming error:', err);
+      console.error("Streaming error:", err);
       setIsTyping(false);
       setIsStreaming(false);
       isStreamingRef.current = false;
 
       // Add a red styled error message to the chat
-      setMessages(prev => [...prev, {
-        id: `ai-err-${Date.now()}`,
-        sender: 'ai',
-        text: 'System is currently out of service. Please try again after a while.',
-        isError: true,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: new Date()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-err-${Date.now()}`,
+          sender: "ai",
+          text: "System is currently out of service. Please try again after a while.",
+          isError: true,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          date: new Date(),
+        },
+      ]);
 
       // If voice mode was active, turn it off completely on failure
       if (wasInVoiceMode) {
@@ -1126,30 +1318,37 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     isSpeakingChunkRef.current = true;
     const rawSentence = speechQueueRef.current.shift();
     const sentence = stripMarkdown(rawSentence).trim();
-    
+
     // Skip empty chunks (e.g. if the chunk was purely markdown formatting that got stripped)
     if (!sentence) {
       isSpeakingChunkRef.current = false;
       processSpeechQueue(messageId);
       return;
     }
-    
+
     const utterance = new SpeechSynthesisUtterance(sentence);
-    const voices = typeof window !== 'undefined' && window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-    const premiumVoice = voices.length > 0 ? (
-      voices.find(v => 
-        v.name.includes('Neural') || 
-        v.name.includes('Enhanced') || 
-        v.name.includes('Google US English') || 
-        v.name.includes('Samantha') || 
-        v.name.includes('Premium')
-      ) || voices.find(v => v.lang.startsWith('en')) || voices[0]
-    ) : null;
-    
+    const voices =
+      typeof window !== "undefined" && window.speechSynthesis
+        ? window.speechSynthesis.getVoices()
+        : [];
+    const premiumVoice =
+      voices.length > 0
+        ? voices.find(
+            (v) =>
+              v.name.includes("Neural") ||
+              v.name.includes("Enhanced") ||
+              v.name.includes("Google US English") ||
+              v.name.includes("Samantha") ||
+              v.name.includes("Premium"),
+          ) ||
+          voices.find((v) => v.lang.startsWith("en")) ||
+          voices[0]
+        : null;
+
     if (premiumVoice) utterance.voice = premiumVoice;
     utterance.rate = 1.0;
     utterance.pitch = 0.98;
-    
+
     const wordOffset = totalWordsSpokenRef.current;
     const wordCount = sentence.trim().split(/\s+/).length;
     setActiveVoiceMessageId(messageId);
@@ -1158,7 +1357,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     // Expected speech duration calculated at approx 2.5 words per second + 6 seconds safety buffer
     const maxSpeechDurationMs = (wordCount / 2.5) * 1000 + 6000;
     let watchdogTimer = setTimeout(() => {
-      console.warn("SpeechSynthesis watchdog fired: recovering frozen voice synthesis.");
+      console.warn(
+        "SpeechSynthesis watchdog fired: recovering frozen voice synthesis.",
+      );
       cleanupAndProcessNext();
     }, maxSpeechDurationMs);
 
@@ -1190,7 +1391,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           let currentWordIdx = 0;
           // Calculate approx reading rate: 2.7 words per second at rate 1.0
           const msPerWord = 1000 / 2.7;
-          
+
           if (fallbackInterval) clearInterval(fallbackInterval);
           fallbackInterval = setInterval(() => {
             if (!isSpeakingChunkRef.current) {
@@ -1209,16 +1410,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         }
       }, 400);
     };
-    
+
     utterance.onboundary = (event) => {
       onBoundaryFired = true;
       if (fallbackInterval) {
         clearInterval(fallbackInterval);
         fallbackInterval = null;
       }
-      if (event.name === 'word') {
+      if (event.name === "word") {
         const textUpToChar = sentence.substring(0, event.charIndex);
-        const wordsInChunk = textUpToChar.trim() ? textUpToChar.trim().split(/\s+/).length : 0;
+        const wordsInChunk = textUpToChar.trim()
+          ? textUpToChar.trim().split(/\s+/).length
+          : 0;
         setCurrentSpokenWordIndex(wordOffset + wordsInChunk);
       }
     };
@@ -1228,13 +1431,13 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     };
 
     utterance.onerror = (e) => {
-      if (e.error !== 'interrupted') {
+      if (e.error !== "interrupted") {
         console.error("SpeechSynthesis error:", e);
       }
       cleanupAndProcessNext();
     };
 
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.speak(utterance);
     } else {
       cleanupAndProcessNext();
@@ -1248,20 +1451,35 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
       const now = Date.now();
       const diff = now - lastActionTime.current;
-      
+
       // Dynamic Delay: 20s -> 40s -> 60s
       let threshold = 20000;
       if (hintCancelCount === 1) threshold = 40000;
       else if (hintCancelCount >= 2) threshold = 60000;
 
-      if (diff >= threshold && !inputText.trim() && !showHintBox && !isStreaming && !showHintNudge && messages.length > 0) {
+      if (
+        diff >= threshold &&
+        !inputText.trim() &&
+        !showHintBox &&
+        !isStreaming &&
+        !showHintNudge &&
+        messages.length > 0
+      ) {
         setShowHintNudge(true);
       }
     };
 
     const interval = setInterval(checkInactivity, 5000);
     return () => clearInterval(interval);
-  }, [inputText, showHintBox, isStreaming, showHintNudge, messages.length, hintCancelCount, hintsAllowed]);
+  }, [
+    inputText,
+    showHintBox,
+    isStreaming,
+    showHintNudge,
+    messages.length,
+    hintCancelCount,
+    hintsAllowed,
+  ]);
 
   const handleKeyDown = (e) => {
     // Reset timer on any key press
@@ -1269,7 +1487,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     if (showHintNudge) setShowHintNudge(false);
 
     // Send on Cmd+Enter or Ctrl+Enter, while plain Enter goes to next line
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSendMessage(e);
     }
@@ -1277,19 +1495,22 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const requestHint = async () => {
     setIsHintLoading(true);
-    setHintText('');
+    setHintText("");
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const sessionId = sessionData?.sessionId;
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/interview/hint/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/interview/hint/${sessionId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ messageHistory: [] }),
         },
-        body: JSON.stringify({ messageHistory: [] })
-      });
+      );
 
       const data = await response.json();
       if (data.success) {
@@ -1302,7 +1523,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         setShowHintBox(true);
       }
     } catch (err) {
-      console.error('Hint Fetch Error:', err);
+      console.error("Hint Fetch Error:", err);
       setHintText("Failed to connect to the hint service.");
       setShowHintNudge(false);
       setShowHintBox(true);
@@ -1323,8 +1544,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <div className={styles.blurLayer2}></div>
             <div className={styles.blurLayer3}></div>
           </div>
-          <button 
-            className={styles.backBtn} 
+          <button
+            className={styles.backBtn}
             onClick={() => setShowBackConfirm(true)}
           >
             <div className={styles.backBtnContent}>
@@ -1335,90 +1556,99 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               <span className={styles.backBtnText}>Back</span>
             </div>
           </button>
-          
           <div></div> {/* Spacer for grid symmetry */}
-          
           <div className={styles.endPillWrapper}>
-            <div 
-              className={`${styles.endPill} ${showPillMenu ? styles.menuOpen : ''}`} 
+            <div
+              className={`${styles.endPill} ${showPillMenu ? styles.menuOpen : ""}`}
               ref={pillMenuRef}
             >
               <div className={styles.pillBaseContent}>
-            <button 
-              className={styles.endActionBtn} 
-              onClick={() => setShowEndConfirm(true)}
-              disabled={isTyping || isStreaming || isEnding}
-            >
-              {isEnding ? (
-                <div className={styles.dashedSpinner}></div>
-              ) : (
-                <>
-                  <div className={styles.powerIcon}>
-                    <div className={styles.powerLine}></div>
+                <button
+                  className={styles.endActionBtn}
+                  onClick={() => setShowEndConfirm(true)}
+                  disabled={isTyping || isStreaming || isEnding}
+                >
+                  {isEnding ? (
+                    <div className={styles.dashedSpinner}></div>
+                  ) : (
+                    <>
+                      <div className={styles.powerIcon}>
+                        <div className={styles.powerLine}></div>
+                      </div>
+                      <span className={styles.endBtnText}>End Session</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  className={styles.menuActionBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPillMenu(!showPillMenu);
+                  }}
+                >
+                  <div className={styles.customDots}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
                   </div>
-                  <span className={styles.endBtnText}>End Session</span>
-                </>
-              )}
-            </button>
-            <button 
-              className={styles.menuActionBtn}
-              onClick={(e) => { e.stopPropagation(); setShowPillMenu(!showPillMenu); }}
-            >
-              <div className={styles.customDots}>
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </button>
-            </div>
-            
-            <div className={styles.pillMenuContent}>
-              <div className={styles.settingsRow}>
-                <span>Dark Mode</span>
-                <button 
-                  type="button"
-                  className={`${styles.toggleSwitch} ${theme === 'dark' ? styles.active : ''}`}
-                  onClick={() => toggleTheme()}
-                >
-                  <div className={styles.toggleKnob}></div>
                 </button>
               </div>
-              <div className={styles.settingsRow}>
-                <span>Hints</span>
-                <button 
-                  type="button"
-                  className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ''}`}
-                  onClick={() => setHintsEnabled(!hintsEnabled)}
-                >
-                  <div className={styles.toggleKnob}></div>
-                </button>
-              </div>
+
+              <div className={styles.pillMenuContent}>
+                <div className={styles.settingsRow}>
+                  <span>Dark Mode</span>
+                  <button
+                    type="button"
+                    className={`${styles.toggleSwitch} ${theme === "dark" ? styles.active : ""}`}
+                    onClick={() => toggleTheme()}
+                  >
+                    <div className={styles.toggleKnob}></div>
+                  </button>
+                </div>
+                <div className={styles.settingsRow}>
+                  <span>Hints</span>
+                  <button
+                    type="button"
+                    className={`${styles.toggleSwitch} ${hintsEnabled ? styles.active : ""}`}
+                    onClick={() => setHintsEnabled(!hintsEnabled)}
+                  >
+                    <div className={styles.toggleKnob}></div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </header>
 
         {showBackConfirm && (
-          <div className={styles.modalOverlay} onClick={() => setShowBackConfirm(false)}>
-            <div className={styles.confirmCardMinimal} onClick={e => e.stopPropagation()}>
+          <div
+            className={styles.modalOverlay}
+            onClick={() => setShowBackConfirm(false)}
+          >
+            <div
+              className={styles.confirmCardMinimal}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className={styles.minimalHeader}>
                 <h3 className={styles.minimalTitle}>Leave Interview?</h3>
-                <p className={styles.minimalSubtext}>Progress in this session will not be saved.</p>
+                <p className={styles.minimalSubtext}>
+                  Progress in this session will not be saved.
+                </p>
               </div>
-              
+
               <div className={styles.minimalActions}>
-                <button 
+                <button
                   className={styles.minimalCancelBtn}
                   onClick={() => setShowBackConfirm(false)}
                 >
                   Continue
                 </button>
-                
-                <button 
+
+                <button
                   className={styles.minimalLeaveBtn}
                   onClick={() => {
-                    localStorage.removeItem('activeSessionId');
-                    onNavigate('history', true);
+                    localStorage.removeItem("activeSessionId");
+                    onNavigate("history", true);
                   }}
                 >
                   Leave
@@ -1428,25 +1658,33 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
         )}
         {showEndConfirm && (
-          <div className={styles.modalOverlay} onClick={() => !isEnding && setShowEndConfirm(false)}>
-            <div className={styles.confirmCardMinimal} onClick={e => e.stopPropagation()}>
+          <div
+            className={styles.modalOverlay}
+            onClick={() => !isEnding && setShowEndConfirm(false)}
+          >
+            <div
+              className={styles.confirmCardMinimal}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className={styles.minimalHeader}>
                 <h3 className={styles.minimalTitle}>End Session?</h3>
-                <p className={styles.minimalSubtext}>this will eval the final result of this interview</p>
+                <p className={styles.minimalSubtext}>
+                  this will eval the final result of this interview
+                </p>
               </div>
-              
+
               <div className={styles.minimalActions}>
                 {!isEnding && (
-                  <button 
+                  <button
                     className={styles.minimalCancelBtn}
                     onClick={() => setShowEndConfirm(false)}
                   >
                     Continue
                   </button>
                 )}
-                
-                <button 
-                  className={`${styles.minimalEndBtn} ${isEnding ? styles.centeredEnd : ''}`}
+
+                <button
+                  className={`${styles.minimalEndBtn} ${isEnding ? styles.centeredEnd : ""}`}
                   onClick={async () => {
                     stopVoiceMode(); // Kill voice before ending session
                     setIsEnding(true);
@@ -1460,7 +1698,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 >
                   {isEnding ? (
                     <div className={styles.iosSpinner}>
-                      {[...Array(8)].map((_, i) => <div key={i} className={styles.iosBar}></div>)}
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className={styles.iosBar}></div>
+                      ))}
                     </div>
                   ) : (
                     "End"
@@ -1471,42 +1711,54 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
         )}
 
-        <section 
-          className={styles.chatCanvas} 
+        <section
+          className={styles.chatCanvas}
           ref={chatCanvasRef}
           onScroll={handleScroll}
         >
           <div className={styles.messageScroll}>
             {isResumed && (
-              <div className={`${styles.resumedPill} ${isExiting ? styles.pillExiting : ''}`}>
-                <span className={`material-symbols-outlined ${styles.resumedIcon}`}>check_circle</span>
+              <div
+                className={`${styles.resumedPill} ${isExiting ? styles.pillExiting : ""}`}
+              >
+                <span
+                  className={`material-symbols-outlined ${styles.resumedIcon}`}
+                >
+                  check_circle
+                </span>
                 <span className={styles.resumedText}>Session Resumed</span>
               </div>
             )}
 
             {isInitialLoading && messages.length === 0 ? (
-              <div style={{ padding: '20px' }}>
+              <div style={{ padding: "20px" }}>
                 <div className={styles.skeletonContainer}>
                   <div className={styles.skeletonLine}></div>
                   <div className={styles.skeletonLine}></div>
-                  <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                  <div
+                    className={`${styles.skeletonLine} ${styles.short}`}
+                  ></div>
                 </div>
               </div>
-            ) : messages.map((msg, index) => (
-              <ChatMessage 
-                key={msg.id} 
-                msg={msg} 
-                activeMenuId={activeMenuId} 
-                setActiveMenuId={setActiveMenuId} 
-                sessionData={sessionData} 
-                activeVoiceMessageId={activeVoiceMessageId}
-                currentSpokenWordIndex={currentSpokenWordIndex}
-                isGlowing={isStreaming && index === messages.length - 1}
-              />
-            ))}
-            
+            ) : (
+              messages.map((msg, index) => (
+                <ChatMessage
+                  key={msg.id}
+                  msg={msg}
+                  activeMenuId={activeMenuId}
+                  setActiveMenuId={setActiveMenuId}
+                  sessionData={sessionData}
+                  activeVoiceMessageId={activeVoiceMessageId}
+                  currentSpokenWordIndex={currentSpokenWordIndex}
+                  isGlowing={isStreaming && index === messages.length - 1}
+                />
+              ))
+            )}
+
             {isVoiceMode && !activeVoiceMessageId && !isTyping && (
-              <div className={`${styles.messageRow} ${styles.aiRow} ${styles.listeningRow}`}>
+              <div
+                className={`${styles.messageRow} ${styles.aiRow} ${styles.listeningRow}`}
+              >
                 <div className={styles.messageBody}>
                   <div className={styles.bubbleContainer}>
                     <div className={`${styles.bubble} ${styles.lyricBubble}`}>
@@ -1518,7 +1770,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                             <span className={styles.voicePillBar} />
                           </div>
                           <p className={styles.voiceListeningSubtitle}>
-                            {inputText.trim() ? inputText : "Ok, I'm listening..."}
+                            {inputText.trim()
+                              ? inputText
+                              : "Ok, I'm listening..."}
                           </p>
                         </div>
                       </div>
@@ -1527,7 +1781,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 </div>
               </div>
             )}
-            
+
             {isTyping && (
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
                 <div className={styles.messageRowInner}>
@@ -1535,13 +1789,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   <div className={styles.messageBody}>
                     <div className={styles.skeletonContainer}>
                       <div className={styles.skeletonLine}></div>
-                      <div className={`${styles.skeletonLine} ${styles.short}`}></div>
+                      <div
+                        className={`${styles.skeletonLine} ${styles.short}`}
+                      ></div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-            <div ref={scrollRef} style={{ height: '1px', paddingBottom: '77px', flexShrink: 0 }} />
+            <div
+              ref={scrollRef}
+              style={{ height: "1px", paddingBottom: "77px", flexShrink: 0 }}
+            />
           </div>
         </section>
 
@@ -1555,9 +1814,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           <form onSubmit={handleSendMessage} className={styles.form}>
             <div className={styles.unifiedInputRow}>
               <div className={styles.textPill}>
-                <textarea 
+                <textarea
                   ref={textareaRef}
-                  placeholder={isVoiceMode ? "Listening..." : "Reply to Prep AI..."} 
+                  placeholder={
+                    isVoiceMode ? "Listening..." : "Reply to Prep AI..."
+                  }
                   className={styles.textarea}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
@@ -1568,24 +1829,32 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               </div>
 
               <div className={styles.actionPill}>
-                <button 
-                  type="button" 
-                  className={`${styles.micBtn} ${isDictating ? styles.activeMic : ''} ${isVoiceMode ? styles.micHidden : ''}`}
+                <button
+                  type="button"
+                  className={`${styles.micBtn} ${isDictating ? styles.activeMic : ""} ${isVoiceMode ? styles.micHidden : ""}`}
                   onClick={toggleDictation}
-                  title={SpeechRecognition ? "Dictate (Speech-to-Text)" : "Speech recognition is not supported in your browser"}
+                  title={
+                    SpeechRecognition
+                      ? "Dictate (Speech-to-Text)"
+                      : "Speech recognition is not supported in your browser"
+                  }
                   disabled={!SpeechRecognition}
-                  style={!SpeechRecognition ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                  style={
+                    !SpeechRecognition
+                      ? { opacity: 0.4, cursor: "not-allowed" }
+                      : {}
+                  }
                 >
                   <span className="material-symbols-outlined">mic</span>
                 </button>
-                
+
                 {isVoiceMode ? (
-                  <button 
+                  <button
                     ref={pillRef}
                     type="button"
-                    className={styles.voicePillBlue} 
+                    className={styles.voicePillBlue}
                     onClick={toggleVoiceMode}
-                    style={{ '--volume': micVolume }}
+                    style={{ "--volume": micVolume }}
                   >
                     <div className={styles.bouncingDots}>
                       <div className={styles.dot} />
@@ -1597,18 +1866,33 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 ) : inputText.trim() ? (
                   <button type="submit" className={styles.sendIcon}>
                     <div className={styles.sendIconContent}>
-                      <span className="material-symbols-outlined">arrow_upward</span>
-                      <span className="material-symbols-outlined" id={styles.sendIconSecond}>arrow_upward</span>
+                      <span className="material-symbols-outlined">
+                        arrow_upward
+                      </span>
+                      <span
+                        className="material-symbols-outlined"
+                        id={styles.sendIconSecond}
+                      >
+                        arrow_upward
+                      </span>
                     </div>
                   </button>
                 ) : (
-                  <button 
-                    type="button" 
-                    className={styles.voiceModeTrigger} 
+                  <button
+                    type="button"
+                    className={styles.voiceModeTrigger}
                     onClick={toggleVoiceMode}
-                    title={SpeechRecognition ? "Start Voice Mode" : "Speech recognition is not supported in your browser"}
+                    title={
+                      SpeechRecognition
+                        ? "Start Voice Mode"
+                        : "Speech recognition is not supported in your browser"
+                    }
                     disabled={!SpeechRecognition}
-                    style={!SpeechRecognition ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                    style={
+                      !SpeechRecognition
+                        ? { opacity: 0.4, cursor: "not-allowed" }
+                        : {}
+                    }
                   >
                     <div className={styles.aiIconCircle}>
                       <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
@@ -1623,8 +1907,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
         {/* Unified Morphing Hint Container - Moved outside footer to fix backdrop-filter issues */}
         {hintsAllowed && (showHintNudge || showHintBox) && (
-          <div 
-            className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && !isHintLoading && hintText ? styles.hintLoaded : ''} ${!showHintBox && isHintLoading ? styles.hintPillLoading : ''}`}
+          <div
+            className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && !isHintLoading && hintText ? styles.hintLoaded : ""} ${!showHintBox && isHintLoading ? styles.hintPillLoading : ""}`}
             style={{ height: hintHeight }}
           >
             {!showHintBox ? (
@@ -1638,14 +1922,19 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 ) : (
                   <>
                     <button className={styles.nudgeBtn} onClick={requestHint}>
-                      <span className="material-symbols-outlined">lightbulb</span>
+                      <span className="material-symbols-outlined">
+                        lightbulb
+                      </span>
                       Hints
                     </button>
-                    <button className={styles.nudgeClose} onClick={() => {
-                      setShowHintNudge(false);
-                      setHintCancelCount(prev => prev + 1); 
-                      lastActionTime.current = Date.now();
-                    }}>
+                    <button
+                      className={styles.nudgeClose}
+                      onClick={() => {
+                        setShowHintNudge(false);
+                        setHintCancelCount((prev) => prev + 1);
+                        lastActionTime.current = Date.now();
+                      }}
+                    >
                       <span className="material-symbols-outlined">close</span>
                     </button>
                   </>
@@ -1659,15 +1948,18 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                     Hint
                   </div>
                   <div className={styles.hintActions}>
-                    <button 
-                      className={styles.hintRegen} 
+                    <button
+                      className={styles.hintRegen}
                       onClick={requestHint}
                       disabled={isHintLoading}
                       title="Regenerate Hint"
                     >
                       <span className="material-symbols-outlined">refresh</span>
                     </button>
-                    <button className={styles.hintClose} onClick={() => setShowHintBox(false)}>
+                    <button
+                      className={styles.hintClose}
+                      onClick={() => setShowHintBox(false)}
+                    >
                       <span className="material-symbols-outlined">close</span>
                     </button>
                   </div>
@@ -1676,7 +1968,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   {isHintLoading ? (
                     <div className={styles.hintSkeleton}>
                       <div className={styles.hintSkeletonLine}></div>
-                      <div className={styles.hintSkeletonLine} style={{ width: '80%' }}></div>
+                      <div
+                        className={styles.hintSkeletonLine}
+                        style={{ width: "80%" }}
+                      ></div>
                     </div>
                   ) : (
                     <ReactMarkdown>{hintText}</ReactMarkdown>
@@ -1684,25 +1979,37 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 </div>
               </div>
             )}
-            
-            {showHintBox && !isHintLoading && hintText && dimensions.width > 0 && leftPath && rightPath && (
-              <svg className={styles.borderSvg} width="100%" height="100%">
-                <path className={styles.borderRect} d={leftPath} pathLength="100" />
-                <path className={styles.borderRect} d={rightPath} pathLength="100" />
-              </svg>
-            )}
+
+            {showHintBox &&
+              !isHintLoading &&
+              hintText &&
+              dimensions.width > 0 &&
+              leftPath &&
+              rightPath && (
+                <svg className={styles.borderSvg} width="100%" height="100%">
+                  <path
+                    className={styles.borderRect}
+                    d={leftPath}
+                    pathLength="100"
+                  />
+                  <path
+                    className={styles.borderRect}
+                    d={rightPath}
+                    pathLength="100"
+                  />
+                </svg>
+              )}
           </div>
         )}
         {showScrollBtn && (
-          <button 
-            className={styles.scrollDownBtn} 
+          <button
+            className={styles.scrollDownBtn}
             onClick={scrollToBottom}
             title="Scroll to bottom"
           >
             <span className="material-symbols-outlined">arrow_downward</span>
           </button>
         )}
-
       </main>
 
       {showVoiceBetaModal && (
@@ -1721,21 +2028,24 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <div className={styles.modalContent}>
               <h3 className={styles.modalTitle}>Introducing Voice Mode</h3>
               <p className={styles.modalDesc}>
-                This is a Beta version of our interactive Voice Mode, so you might experience some unexpected bugs or browser freezes. 
-                Since speech recognition runs in real-time, minor audio delays or voice transcription glitches may occur depending on your connection. 
-                We are actively tuning the interface to improve stability!
+                This is a Beta version of our interactive Voice Mode, so you
+                might experience some unexpected bugs or browser freezes. Since
+                speech recognition runs in real-time, minor audio delays or
+                voice transcription glitches may occur depending on your
+                connection. We are actively tuning the interface to improve
+                stability!
               </p>
               <div className={styles.modalActions}>
-                <button 
-                  type="button" 
-                  className={styles.btnCancel} 
+                <button
+                  type="button"
+                  className={styles.btnCancel}
                   onClick={() => setShowVoiceBetaModal(false)}
                 >
                   Continue with Chat
                 </button>
-                <button 
-                  type="button" 
-                  className={styles.btnConfirm} 
+                <button
+                  type="button"
+                  className={styles.btnConfirm}
                   onClick={startVoiceModeConfirm}
                 >
                   Try Voice Mode
@@ -1749,7 +2059,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         <div className={styles.voiceToast}>
           <span className="material-symbols-outlined">warning</span>
           <span className={styles.voiceToastText}>{voiceToast}</span>
-          <button className={styles.voiceToastClose} onClick={() => setVoiceToast(null)}>
+          <button
+            className={styles.voiceToastClose}
+            onClick={() => setVoiceToast(null)}
+          >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
