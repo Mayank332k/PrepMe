@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import api from './api';
 import { Login } from './pages/Login';
-import { Upload } from './pages/Upload';
-import { Analyzing } from './pages/Analyzing';
-import { Chat } from './pages/Chat';
-import { Report } from './pages/Report';
-import { History } from './pages/History';
 import { SessionWarningModal } from './components/ui/SessionWarningModal';
 import './index.css';
+
+const Upload = lazy(() => import('./pages/Upload').then(m => ({ default: m.Upload })));
+const Analyzing = lazy(() => import('./pages/Analyzing').then(m => ({ default: m.Analyzing })));
+const Chat = lazy(() => import('./pages/Chat').then(m => ({ default: m.Chat })));
+const Report = lazy(() => import('./pages/Report').then(m => ({ default: m.Report })));
+const History = lazy(() => import('./pages/History').then(m => ({ default: m.History })));
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
@@ -112,29 +113,19 @@ function App() {
     setCurrentScreen('report');
   };
 
-  const AppLoadingScreen = () => (
-    <div className="global-loader-screen">
-      <div className="global-loader-content">
-        <div className="big-robo-avatar">
-          <svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="8" width="16" height="12" rx="3" strokeDasharray="2 2" />
-            <path d="M8 4v4" />
-            <path d="M16 4v4" />
-            <circle cx="9" cy="14" r="1.5" fill="currentColor" className="robo-eye" />
-            <circle cx="15" cy="14" r="1.5" fill="currentColor" className="robo-eye" />
-            <path d="M10 18h4" strokeDasharray="1 2" />
-          </svg>
-        </div>
-        <div className="dash-loader">
-          <div className="dash-line"></div>
-          <div className="dash-line"></div>
-          <div className="dash-line"></div>
-          <div className="dash-line"></div>
-          <div className="dash-line"></div>
-        </div>
+  const FallbackLoader = () => (
+    <div className="global-loader-screen" style={{ background: 'transparent' }}>
+      <div className="dash-loader">
+        <div className="dash-line"></div>
+        <div className="dash-line"></div>
+        <div className="dash-line"></div>
+        <div className="dash-line"></div>
+        <div className="dash-line"></div>
       </div>
     </div>
   );
+
+  const AppLoadingScreen = () => null;
 
   if (isInitializing) {
     return <AppLoadingScreen />;
@@ -225,7 +216,9 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <div className="App">
-         {renderComponent()}
+         <Suspense fallback={<FallbackLoader />}>
+           {renderComponent()}
+         </Suspense>
          {showSessionWarning && (
            <SessionWarningModal
              onContinue={handleSessionWarningContinue}

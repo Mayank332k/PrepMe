@@ -6,5 +6,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: true
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          markdown: ['react-markdown']
+        }
+      }
+    }
   }
 })

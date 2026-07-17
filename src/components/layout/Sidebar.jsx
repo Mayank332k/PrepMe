@@ -177,9 +177,17 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                     {[...Array(4)].map((_, i) => {
                       const limit = user?.interviewLimit || 20;
                       const used = user?.interviewsUsed || 0;
-                      const remaining = limit - used;
-                      const chunkRemaining = Math.max(0, Math.min(5, remaining - (i * 5)));
-                      const fillWidth = (chunkRemaining / 5) * 100;
+                      const remaining = Math.max(0, limit - used);
+                      const globalFillPercentage = limit > 0 ? (remaining / limit) * 100 : 0;
+                      const blockStart = i * 25;
+                      const blockEnd = (i + 1) * 25;
+                      
+                      let fillWidth = 0;
+                      if (globalFillPercentage >= blockEnd) fillWidth = 100;
+                      else if (globalFillPercentage > blockStart) {
+                        fillWidth = ((globalFillPercentage - blockStart) / 25) * 100;
+                      }
+                      
                       const isWarning = remaining <= 5;
                       
                       return (

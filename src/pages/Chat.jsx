@@ -16,6 +16,13 @@ const SpeechRecognition =
 
 const CodeBlock = ({ language, value }) => {
   const [copied, setCopied] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [value]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(value);
@@ -65,7 +72,7 @@ const CodeBlock = ({ language, value }) => {
           )}
         </button>
       </div>
-      <div className={styles.codeContent}>
+      <div className={styles.codeContent} ref={scrollRef}>
         <SyntaxHighlighter
           language={language || "text"}
           style={oneDark}
@@ -175,6 +182,10 @@ const ChatMessage = React.memo(
     currentSpokenWordIndex,
     isGlowing,
   }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const MAX_LENGTH = 150;
+    const isLongUserMsg = msg.sender === "user" && msg.text.length > MAX_LENGTH;
+    
     const isSpeaking = activeVoiceMessageId === msg.id;
     const lyricContainerRef = useRef(null);
 
@@ -258,9 +269,26 @@ const ChatMessage = React.memo(
                       </div>
                     </div>
                   ) : (
-                    <ReactMarkdown components={MarkdownComponents}>
-                      {msg.text.replace(/\n(?!\n)/g, "  \n")}
-                    </ReactMarkdown>
+                    <>
+                      <ReactMarkdown components={MarkdownComponents}>
+                        {isLongUserMsg && !isExpanded
+                          ? (msg.text.substring(0, MAX_LENGTH) + "...").replace(/\n(?!\n)/g, "  \n")
+                          : msg.text.replace(/\n(?!\n)/g, "  \n")}
+                      </ReactMarkdown>
+                      {isLongUserMsg && (
+                        <button
+                          className={styles.expandButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsExpanded(!isExpanded);
+                          }}
+                        >
+                          <span className="material-symbols-outlined">
+                            {isExpanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}
+                          </span>
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1119,6 +1147,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     setMessages((prev) => [...prev, newUserMsg]);
     setInputText("");
     setIsTyping(true);
+    
+    // Auto scroll down to show the new message
+    setTimeout(() => scrollToBottom(), 100);
 
     // Stop listening while AI is thinking/speaking
     if (wasInVoiceMode) {
