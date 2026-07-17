@@ -10,9 +10,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          markdown: ['react-markdown']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react/') || id.includes('react-dom/')) {
+              return 'vendor';
+            }
+            if (id.includes('react-markdown')) {
+              return 'markdown';
+            }
+          }
         }
       }
     }
