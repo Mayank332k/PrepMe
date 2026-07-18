@@ -668,6 +668,7 @@
 .messageBody {
   display: flex; flex-direction: column; gap: 6px;
   max-width: 100%;
+  min-width: 0;
 }
 
 .userRow .messageBody {
@@ -675,14 +676,21 @@
 }
 
 .bubble {
-  padding: 16px 20px; font-size: 1.1rem; line-height: 1; border-radius: 12px;
-  font-weight: 420;
-  overflow-wrap: break-word;
+    padding: 16px 20px;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 12px;
+    font-weight: 420;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .bubbleContainer {
   position: relative;
   width: 100%;
+  min-width: 0;
 }
 
 .messageMetadata {
@@ -799,9 +807,26 @@
 }
 
 /* Markdown Styles inside Bubbles */
+.markdownContent {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.markdownContent pre {
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+  padding: 0;
+}
+
+.markdownContent code {
+  word-break: break-word;
+  white-space: pre-wrap;
+}
 .markdownContent p {
-  margin-bottom: 1.5rem;
-  line-height: 1.7;
+    margin-bottom: 1.1rem;
+    line-height: 1.4;
 }
 
 .markdownContent p:last-child {
@@ -1775,11 +1800,15 @@
 }
 
 .hintDot {
-  width: 6px;
-  height: 6px;
-  background-color: var(--hint-accent);
+  width: 5px;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.6);
   border-radius: 50%;
   animation: hintDotBounce 1.4s infinite ease-in-out both;
+}
+
+:global([data-theme='light']) .hintDot {
+  background-color: rgba(0, 0, 0, 0.264);
 }
 
 .hintDot:nth-child(1) { animation-delay: -0.32s; }

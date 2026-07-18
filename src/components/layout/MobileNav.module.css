@@ -655,8 +655,75 @@
   color: var(--text-primary);
 }
 
-.profileSettingsTrigger span {
+.profileSettingsTrigger span, .profileDeveloperTrigger span {
   font-size: 18px;
+}
+
+.profileDeveloperTrigger {
+  position: absolute;
+  top: -2px;
+  right: 40px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  outline: none;
+  z-index: 10;
+}
+
+.profileDeveloperTrigger:active {
+  transform: scale(0.9);
+  background-color: var(--border);
+  color: var(--text-primary);
+}
+
+.developerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: var(--bg-hover);
+  border-radius: 20px;
+  margin-top: 20px;
+}
+
+.devLink {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--text-primary);
+  padding: 8px;
+  border-radius: 16px;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s;
+}
+
+.devLink:hover {
+  background-color: var(--bg-surface);
+  transform: translateX(4px);
+}
+
+.devIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.devLinkText {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 

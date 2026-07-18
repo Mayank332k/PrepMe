@@ -318,6 +318,17 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                     <span className={styles.devLinkText}>GitHub: Mayank332k</span>
                   </a>
 
+                  <a href="https://portfolio-mayank-gamma.vercel.app/" className={styles.devLink} target="_blank" rel="noopener noreferrer">
+                    <div className={styles.devIconWrapper} style={{ color: '#10B981' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                      </svg>
+                    </div>
+                    <span className={styles.devLinkText}>Portfolio</span>
+                  </a>
+
                   <a href="https://www.instagram.com/_mayvnk.ug?igsh=ZTIwa3VjdDJkZTY4" className={styles.devLink} target="_blank" rel="noopener noreferrer">
                     <div className={styles.devIconWrapper}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="url(#instagram-gradient)">

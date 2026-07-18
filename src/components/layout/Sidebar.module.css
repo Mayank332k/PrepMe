@@ -189,13 +189,14 @@
 .userTrigger:hover { background: var(--bg-hover); }
 
 .avatar {
-  width: 24px; height: 24px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   background: var(--accent);
   color: var(--bg-surface);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 11px;
+  font-weight: 700; font-size: 13px;
   overflow: hidden; flex-shrink: 0;
+  border: 3px solid #c4bebec6;
 }
 
 .avatar img { width: 100%; height: 100%; object-fit: cover; }

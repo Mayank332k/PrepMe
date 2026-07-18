@@ -1578,6 +1578,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           <button
             className={styles.backBtn}
             onClick={() => setShowBackConfirm(true)}
+            style={{ WebkitBackdropFilter: 'blur(5.5px)', backdropFilter: 'blur(5.5px)', willChange: 'transform, backdrop-filter' }}
           >
             <div className={styles.backBtnContent}>
               <div className={styles.customArrow}>
@@ -1592,6 +1593,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <div
               className={`${styles.endPill} ${showPillMenu ? styles.menuOpen : ""}`}
               ref={pillMenuRef}
+              style={{ WebkitBackdropFilter: 'blur(5.5px)', backdropFilter: 'blur(5.5px)', willChange: 'transform, backdrop-filter' }}
             >
               <div className={styles.pillBaseContent}>
                 <button
@@ -1844,7 +1846,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
           <form onSubmit={handleSendMessage} className={styles.form}>
             <div className={styles.unifiedInputRow}>
-              <div className={styles.textPill}>
+              <div className={styles.textPill} style={{ WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}>
                 <textarea
                   ref={textareaRef}
                   placeholder={
@@ -1859,7 +1861,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                 />
               </div>
 
-              <div className={styles.actionPill}>
+              <div className={styles.actionPill} style={{ WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}>
                 <button
                   type="button"
                   className={`${styles.micBtn} ${isDictating ? styles.activeMic : ""} ${isVoiceMode ? styles.micHidden : ""}`}
@@ -1940,7 +1942,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         {hintsAllowed && (showHintNudge || showHintBox) && (
           <div
             className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && !isHintLoading && hintText ? styles.hintLoaded : ""} ${!showHintBox && isHintLoading ? styles.hintPillLoading : ""}`}
-            style={{ height: hintHeight }}
+            style={{ height: hintHeight, WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}
           >
             {!showHintBox ? (
               <div className={styles.hintPillContent}>
@@ -2037,6 +2039,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             className={styles.scrollDownBtn}
             onClick={scrollToBottom}
             title="Scroll to bottom"
+            style={{ WebkitBackdropFilter: 'blur(4px) saturate(200%)', backdropFilter: 'blur(4px) saturate(200%)', willChange: 'transform, backdrop-filter' }}
           >
             <span className="material-symbols-outlined">arrow_downward</span>
           </button>
