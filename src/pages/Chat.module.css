@@ -113,8 +113,8 @@
   align-items: center;
   justify-content: center;
   background-color: rgba(18, 18, 18, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   will-change: transform, backdrop-filter;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -252,8 +252,8 @@
   width: 95px; /* Compact width for icons only */
   border-radius: 50px;
   background-color: rgba(18, 18, 18, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   will-change: transform, backdrop-filter;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -272,7 +272,9 @@
   width: 190px;
   height: 88px;
   border-radius: 25px;
-  background-color: #121212;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(5px) saturate(180%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%);
   box-shadow: 0 18px 54px rgba(0, 0, 0, 0.48);
 }
 
@@ -284,7 +286,9 @@
 }
 
 :global([data-theme='light']) .endPill.menuOpen {
-  background-color: #ffffff;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(5px) saturate(180%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%);
   box-shadow: 0 0 10px 10px rgba(245, 243, 243, 0.597);
 }
 
@@ -739,7 +743,9 @@
   bottom: 100%;
   left: 0;
   margin-bottom: 8px;
-  background-color: var(--chat-elevated-2);
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(5px) saturate(180%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%);
   border: 1px solid var(--chat-border);
   border-radius: 25px;
   padding: 10px 12px;
@@ -1083,8 +1089,8 @@
   padding: 6px 10px 6px 20px;
   display: flex;
   align-items: center;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   will-change: transform, backdrop-filter;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1445,34 +1451,31 @@
 .skeletonLine {
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    var(--shimmer-from) 0%,
-    var(--shimmer-mid) 50%,
-    var(--shimmer-from) 100%
-  );
-  background-size: 200% 100%;
-  /* Combine shimmer with a one-time growth animation */
+  background-color: rgba(211, 166, 241, 0.254);
+  /* Combine pulse with a one-time growth animation */
   animation: 
-    shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1),
-    growHorizontal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    pulseColorWave 1.2s infinite ease-in-out,
+    growWave 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   transform-origin: left;
-  will-change: transform, background-position;
+  will-change: transform, background-color;
 }
+
+.skeletonLine:nth-child(1) { animation-delay: 0.3s, 0.3s; }
+.skeletonLine:nth-child(2) { animation-delay: 0.15s, 0.15s; }
+.skeletonLine:nth-child(3) { animation-delay: 0s, 0s; }
 
 .skeletonLine.short {
   width: 65%;
-  animation-delay: 0.1s; /* Slight stagger for more "organic" feel */
 }
 
-@keyframes growHorizontal {
+@keyframes growWave {
   from { transform: scaleX(0); opacity: 0; }
   to { transform: scaleX(1); opacity: 1; }
 }
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+@keyframes pulseColorWave {
+  0%, 100% { background-color: rgba(211, 166, 241, 0.05); }
+  50% { background-color: rgba(211, 166, 241, 0.25); }
 }
 
 
@@ -1665,8 +1668,8 @@
   position: absolute;
   inset: 0;
   background-color: var(--glass-bg);
-  backdrop-filter: blur(6px) saturate(180%);
-  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  backdrop-filter: blur(5px) saturate(180%);
+  -webkit-backdrop-filter: blur(5px) saturate(180%);
   border-radius: inherit;
   z-index: -1;
   pointer-events: none;

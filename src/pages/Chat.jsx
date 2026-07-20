@@ -1679,7 +1679,23 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
                 <button
                   className={styles.minimalLeaveBtn}
-                  onClick={() => {
+                  onClick={async () => {
+                    const sessionId = sessionData?.sessionId;
+                    if (sessionId) {
+                      try {
+                        const token = localStorage.getItem("token");
+                        await fetch(`${import.meta.env.VITE_API_URL}/interview/session/${sessionId}`, {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { Authorization: `Bearer ${token}` } : {})
+                          },
+                          body: JSON.stringify({ status: 'abandoned' })
+                        });
+                      } catch (error) {
+                        console.error("Failed to abandon session:", error);
+                      }
+                    }
                     localStorage.removeItem("activeSessionId");
                     onNavigate("history", true);
                   }}

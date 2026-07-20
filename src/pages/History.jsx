@@ -120,18 +120,18 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   };
 
   const handleDeleteOngoing = async () => {
-    const ongoingItems = historyItems.filter(item => item.status !== 'completed');
-    if (ongoingItems.length === 0) return;
+    const abandonedItems = historyItems.filter(item => item.status === 'abandoned');
+    if (abandonedItems.length === 0) return;
     
     const originalItems = [...historyItems];
-    setHistoryItems(historyItems.filter(item => item.status === 'completed'));
+    setHistoryItems(historyItems.filter(item => item.status !== 'abandoned'));
     
     try {
       await Promise.all(
-        ongoingItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
+        abandonedItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
       );
     } catch (err) {
-      console.error("Failed to delete ongoing sessions:", err);
+      console.error("Failed to delete abandoned sessions:", err);
       setHistoryItems(originalItems);
     }
   };
@@ -342,13 +342,13 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                   </button>
                   <button 
                     onClick={() => {
-                      setStatusFilter(statusFilter === 'ongoing' ? 'all' : 'ongoing');
+                      setStatusFilter(statusFilter === 'abandoned' ? 'all' : 'abandoned');
                       setActiveRightPillMenu(null);
                     }}
-                    className={`${styles.menuOptionItem} ${statusFilter === 'ongoing' ? styles.menuOptionActive : ''}`}
+                    className={`${styles.menuOptionItem} ${statusFilter === 'abandoned' ? styles.menuOptionActive : ''}`}
                   >
-                    <span className={styles.statusDot} style={{ background: '#3b82f6', display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%' }}></span>
-                    Ongoing
+                    <span className={styles.statusDot} style={{ background: '#8b8d91', display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%' }}></span>
+                    Abandoned
                   </button>
                 </div>
               )}
@@ -575,11 +575,11 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                       Completed
                     </button>
                     <button
-                      className={`${styles.desktopFilterTab} ${statusFilter === 'ongoing' ? styles.desktopFilterTabActive : ''}`}
-                      onClick={() => setStatusFilter('ongoing')}
+                      className={`${styles.desktopFilterTab} ${statusFilter === 'abandoned' ? styles.desktopFilterTabActive : ''}`}
+                      onClick={() => setStatusFilter('abandoned')}
                     >
-                      <span className={styles.filterDot} style={{ background: '#3b82f6' }}></span>
-                      Ongoing
+                      <span className={styles.filterDot} style={{ background: '#8b8d91' }}></span>
+                      Abandoned
                     </button>
                   </div>
                 </div>
@@ -588,7 +588,7 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                 {historyItems
                   .filter(item => {
                     if (statusFilter === 'completed') return item.status === 'completed';
-                    if (statusFilter === 'ongoing') return item.status !== 'completed';
+                    if (statusFilter === 'abandoned') return item.status === 'abandoned';
                     return true;
                   })
                   .map((item) => {
@@ -606,7 +606,7 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                     return (
                       <div 
                         key={item._id} 
-                        className={`${styles.historyCard} ${isConfirming ? styles.confirming : ''}`}
+                        className={`${styles.historyCard} ${isConfirming ? styles.confirming : ''} ${item.status === 'abandoned' ? styles.abandonedCard : ''}`}
                         onClick={() => !isConfirming && handleCardClick(item)}
                       >
                         {isConfirming ? (
