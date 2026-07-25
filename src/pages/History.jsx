@@ -158,6 +158,23 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
         console.error("Clear history failed", err);
         setHistoryItems(originalItems);
       }
+    } else if (type === 'abandoned' || type === 'completed') {
+      const targetItems = historyItems.filter(item => item.status === type);
+      if (targetItems.length === 0) {
+        return;
+      }
+      
+      const originalItems = [...historyItems];
+      setHistoryItems(historyItems.filter(item => item.status !== type));
+      
+      try {
+        await Promise.all(
+          targetItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
+        );
+      } catch (err) {
+        console.error(`Delete ${type} failed`, err);
+        setHistoryItems(originalItems);
+      }
     }
   };
 
@@ -255,8 +272,28 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                 </button>
                 {headerMenuOpen && (
                   <div className={styles.headerDropdown}>
-                    <button onClick={handleClearAll} className={styles.deleteOption}>
+                    <button 
+                      onClick={() => {
+                        setShowConfirm({ show: true, type: 'abandoned', id: null });
+                        setHeaderMenuOpen(false);
+                      }} 
+                      className={styles.deleteOption}
+                    >
                       <span className="material-symbols-outlined">delete_sweep</span>
+                      Clear Abandoned
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowConfirm({ show: true, type: 'completed', id: null });
+                        setHeaderMenuOpen(false);
+                      }} 
+                      className={styles.deleteOption}
+                    >
+                      <span className="material-symbols-outlined">task_alt</span>
+                      Clear Completed
+                    </button>
+                    <button onClick={handleClearAll} className={styles.deleteOption}>
+                      <span className="material-symbols-outlined">delete_forever</span>
                       Clear All History
                     </button>
                   </div>
@@ -313,6 +350,26 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
             <div className={styles.rightPillMenuContent}>
               {activeRightPillMenu === 'options' && (
                 <div className={styles.menuOptionsGroup}>
+                  <button 
+                    onClick={() => {
+                      setShowConfirm({ show: true, type: 'abandoned', id: null });
+                      setActiveRightPillMenu(null);
+                    }}
+                    className={styles.menuOptionItem}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete_sweep</span>
+                    Delete Abandoned
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowConfirm({ show: true, type: 'completed', id: null });
+                      setActiveRightPillMenu(null);
+                    }}
+                    className={styles.menuOptionItem}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>task_alt</span>
+                    Delete Completed
+                  </button>
                   <button 
                     onClick={() => {
                       handleClearAll();
@@ -754,20 +811,20 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
         </section>
       </main>
 
-      {showConfirm.show && showConfirm.type === 'all' && (
+      {showConfirm.show && ['all', 'abandoned', 'completed'].includes(showConfirm.type) && (
         <div className={styles.modalOverlay} onClick={() => setShowConfirm({ show: false, type: null, id: null })}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalIcon}>
-              <span className="material-symbols-outlined">delete_forever</span>
-            </div>
-            <h3>Clear all history?</h3>
-            <p>This will permanently remove all your past sessions. This action is irreversible.</p>
+            <p className={styles.modalText}>
+              {showConfirm.type === 'all' ? 'Delete all history?' : 
+               showConfirm.type === 'abandoned' ? 'Delete abandoned sessions?' : 
+               'Delete completed sessions?'} This is irreversible.
+            </p>
             <div className={styles.modalActions}>
               <button className={styles.cancelBtn} onClick={() => setShowConfirm({ show: false, type: null, id: null })}>
-                Go Back
+                Cancel
               </button>
               <button className={styles.confirmBtn} onClick={confirmAction}>
-                Yes, Clear All
+                Delete
               </button>
             </div>
           </div>
