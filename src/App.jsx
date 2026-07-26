@@ -27,7 +27,15 @@ function App() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      // 1. Authenticate user data
+      // 0. Instant fast-path for unauthenticated / first-time visitors
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setCurrentScreen('login');
+        setIsInitializing(false);
+        return;
+      }
+
+      // 1. Authenticate existing user session
       try {
         const response = await api.get('/auth/me');
         if (response.data && response.data.user) {
@@ -44,20 +52,10 @@ function App() {
         }
       } catch (err) {
         console.warn("User not authenticated");
+        localStorage.removeItem('token');
         setCurrentScreen('login');
-      }
-
-      // 2. Authentically wait for the entire UI to load (fonts, CSS, layout)
-      try {
-        await document.fonts.ready;
-      } catch (e) {
-        console.warn("Font loading error:", e);
-      }
-
-      if (document.readyState === 'complete') {
+      } finally {
         setIsInitializing(false);
-      } else {
-        window.addEventListener('load', () => setIsInitializing(false));
       }
     };
     

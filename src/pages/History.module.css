@@ -26,8 +26,9 @@
   justify-content: space-between;
   padding: 0 40px;
   background-color: var(--bg-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  transform: translate3d(0, 0, 0);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   z-index: 10;
@@ -927,7 +928,9 @@
   justify-content: center;
   height: 350px;
   background: var(--bg-surface);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
+  transform: translate3d(0, 0, 0);
   border: 2px dashed var(--border);
   border-radius: 24px;
   text-align: center;
@@ -939,6 +942,31 @@
   color: var(--text-muted);
   margin-bottom: 20px;
   opacity: 0.4;
+}
+
+.emptySvgWrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.emptySvg {
+  width: 34px;
+  height: 34px;
+  color: var(--text-secondary);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.emptyState:hover .emptySvg {
+  transform: scale(1.1);
 }
 
 .emptyState h3 {
@@ -1156,8 +1184,9 @@
     width: 95px;
     border-radius: 30px;
     background-color: rgba(18, 18, 18, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+    transform: translate3d(0, 0, 0);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     color: var(--text-primary);
@@ -1417,8 +1446,9 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  transform: translate3d(0, 0, 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1428,8 +1458,9 @@
 
 .modalContent {
   background: rgba(25, 25, 25, 0.45);
-  backdrop-filter: blur(6px) saturate(150%);
-  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%);
+  transform: translate3d(0, 0, 0);
   width: 100%;
   max-width: 269px;
   padding: 23px 24px;
@@ -1512,6 +1543,100 @@
 @keyframes modalPop {
   from { opacity: 0; transform: scale(0.95) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* iOS style dashed loading spinner in modalContent */
+.spinnerContainer,
+.successContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 80px;
+  padding: 8px 0;
+  animation: fadeIn 0.3s ease;
+}
+
+.spinner {
+  font-size: 28px;
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+.spinnerBlade {
+  position: absolute;
+  left: 0.4629em;
+  top: 0.05em;
+  width: 0.074em;
+  height: 0.2777em;
+  border-radius: 0.0555em;
+  background-color: transparent;
+  transform-origin: 50% 0.45em;
+  animation: spinnerFade 1s infinite linear;
+}
+
+.spinnerBlade:nth-child(1) { animation-delay: 0s; transform: rotate(0deg); }
+.spinnerBlade:nth-child(2) { animation-delay: 0.083s; transform: rotate(30deg); }
+.spinnerBlade:nth-child(3) { animation-delay: 0.166s; transform: rotate(60deg); }
+.spinnerBlade:nth-child(4) { animation-delay: 0.249s; transform: rotate(90deg); }
+.spinnerBlade:nth-child(5) { animation-delay: 0.332s; transform: rotate(120deg); }
+.spinnerBlade:nth-child(6) { animation-delay: 0.415s; transform: rotate(150deg); }
+.spinnerBlade:nth-child(7) { animation-delay: 0.498s; transform: rotate(180deg); }
+.spinnerBlade:nth-child(8) { animation-delay: 0.581s; transform: rotate(210deg); }
+.spinnerBlade:nth-child(9) { animation-delay: 0.664s; transform: rotate(240deg); }
+.spinnerBlade:nth-child(10) { animation-delay: 0.747s; transform: rotate(270deg); }
+.spinnerBlade:nth-child(11) { animation-delay: 0.830s; transform: rotate(300deg); }
+.spinnerBlade:nth-child(12) { animation-delay: 0.913s; transform: rotate(330deg); }
+
+@keyframes spinnerFade {
+  0% { background-color: var(--text-primary, #69717d); }
+  100% { background-color: transparent; }
+}
+
+.spinnerLabel {
+  color: var(--text-primary, #ffffff);
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Success Check Animation in modalContent */
+.checkIconWrapper {
+  width: 28px;
+  height: 28px;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scaleUpCheck 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.checkIcon {
+  width: 28px;
+  height: 28px;
+  color: #22c55e;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: drawCheck 0.5s ease-out forwards 0.15s;
+}
+
+@keyframes scaleUpCheck {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+.successText {
+  color: var(--text-primary, #ffffff);
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* Chart Styles */
@@ -2048,7 +2173,9 @@
   padding: 12px 16px;
   border-radius: 14px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
+  transform: translate3d(0, 0, 0);
   min-width: 140px;
 }
 

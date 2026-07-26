@@ -33,6 +33,7 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
   const [activeMenu, setActiveMenu] = useState(null); 
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState({ show: false, type: null, id: null });
+  const [bulkDeleteState, setBulkDeleteState] = useState(null); // null | 'loading' | 'success'
   const menuRef = useRef(null);
   const headerMenuRef = useRef(null);
   const filterRef = useRef(null);
@@ -138,9 +139,9 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
 
   const confirmAction = async () => {
     const { type, id } = showConfirm;
-    setShowConfirm({ show: false, type: null, id: null });
 
     if (type === 'single') {
+      setShowConfirm({ show: false, type: null, id: null });
       const originalItems = [...historyItems];
       setHistoryItems(historyItems.filter(item => (item.sessionId || item._id) !== id));
       try {
@@ -149,31 +150,34 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
         console.error("Delete failed", err);
         setHistoryItems(originalItems);
       }
-    } else if (type === 'all') {
+    } else if (['all', 'abandoned', 'completed'].includes(type)) {
+      setBulkDeleteState('loading');
       const originalItems = [...historyItems];
-      setHistoryItems([]);
+
       try {
-        await api.delete('/interview/history');
-      } catch (err) {
-        console.error("Clear history failed", err);
-        setHistoryItems(originalItems);
-      }
-    } else if (type === 'abandoned' || type === 'completed') {
-      const targetItems = historyItems.filter(item => item.status === type);
-      if (targetItems.length === 0) {
-        return;
-      }
-      
-      const originalItems = [...historyItems];
-      setHistoryItems(historyItems.filter(item => item.status !== type));
-      
-      try {
-        await Promise.all(
-          targetItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
-        );
+        if (type === 'all') {
+          await api.delete('/interview/history');
+          setHistoryItems([]);
+        } else {
+          const targetItems = historyItems.filter(item => item.status === type);
+          if (targetItems.length > 0) {
+            await Promise.all(
+              targetItems.map(item => api.delete(`/interview/history/${item.sessionId || item._id}`))
+            );
+          }
+          setHistoryItems(historyItems.filter(item => item.status !== type));
+        }
+
+        setBulkDeleteState('success');
+        setTimeout(() => {
+          setShowConfirm({ show: false, type: null, id: null });
+          setBulkDeleteState(null);
+        }, 1200);
       } catch (err) {
         console.error(`Delete ${type} failed`, err);
         setHistoryItems(originalItems);
+        setBulkDeleteState(null);
+        setShowConfirm({ show: false, type: null, id: null });
       }
     }
   };
@@ -603,7 +607,12 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
               </div>
             ) : historyItems.length === 0 ? (
               <div className={styles.emptyState}>
-                <span className="material-symbols-outlined">history_toggle_off</span>
+                <div className={styles.emptySvgWrapper}>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={styles.emptySvg}>
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
                 <h3>No interviews yet</h3>
                 <p>You haven't completed any interviews. Start a new session to see your progress here.</p>
               </div>
@@ -641,14 +650,62 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                   </div>
                 </div>
 
-                <div className={styles.historyGrid}>
-                {historyItems
-                  .filter(item => {
+                {(() => {
+                  const filteredItems = historyItems.filter(item => {
                     if (statusFilter === 'completed') return item.status === 'completed';
                     if (statusFilter === 'abandoned') return item.status === 'abandoned';
                     return true;
-                  })
-                  .map((item) => {
+                  });
+
+                  if (filteredItems.length === 0) {
+                    return (
+                      <div className={styles.emptyState}>
+                        {statusFilter === 'abandoned' ? (
+                          <>
+                            <div className={styles.emptySvgWrapper}>
+                              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={styles.emptySvg}>
+                                <path d="M22 12h-6l-2 3h-4l-2-3H2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-8Z"/>
+                                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                              </svg>
+                            </div>
+                            <h3>No abandoned sessions</h3>
+                            <p>Great job! All of your interview sessions were completed successfully.</p>
+                          </>
+                        ) : statusFilter === 'completed' ? (
+                          <>
+                            <div className={styles.emptySvgWrapper}>
+                              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={styles.emptySvg}>
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                              </svg>
+                            </div>
+                            <h3>No completed sessions</h3>
+                            <p>You don't have any completed sessions yet. Finish an interview to see your report and score here.</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className={styles.emptySvgWrapper}>
+                              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={styles.emptySvg}>
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                            </div>
+                            <h3>No interviews found</h3>
+                            <p>We couldn't find any sessions matching your criteria.</p>
+                          </>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className={styles.historyGrid}>
+                      {filteredItems.map((item) => {
                     const isCompleted = item.status === 'completed';
                     const date = new Date(item.createdAt);
                     const dateString = date.toLocaleDateString('en-US', { 
@@ -803,8 +860,10 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
                         )}
                       </div>
                     );
-                  })}
-              </div>
+                      })}
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
@@ -812,21 +871,65 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
       </main>
 
       {showConfirm.show && ['all', 'abandoned', 'completed'].includes(showConfirm.type) && (
-        <div className={styles.modalOverlay} onClick={() => setShowConfirm({ show: false, type: null, id: null })}>
+        <div 
+          className={styles.modalOverlay} 
+          onClick={() => {
+            if (bulkDeleteState) return;
+            setShowConfirm({ show: false, type: null, id: null });
+            setBulkDeleteState(null);
+          }}
+        >
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <p className={styles.modalText}>
-              {showConfirm.type === 'all' ? 'Delete all history?' : 
-               showConfirm.type === 'abandoned' ? 'Delete abandoned sessions?' : 
-               'Delete completed sessions?'} This is irreversible.
-            </p>
-            <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={() => setShowConfirm({ show: false, type: null, id: null })}>
-                Cancel
-              </button>
-              <button className={styles.confirmBtn} onClick={confirmAction}>
-                Delete
-              </button>
-            </div>
+            {bulkDeleteState === 'loading' ? (
+              <div className={styles.spinnerContainer}>
+                <div className={styles.spinner}>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                  <div className={styles.spinnerBlade}></div>
+                </div>
+                <p className={styles.spinnerLabel}>Deleting sessions...</p>
+              </div>
+            ) : bulkDeleteState === 'success' ? (
+              <div className={styles.successContainer}>
+                <div className={styles.checkIconWrapper}>
+                  <svg className={styles.checkIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="4 12 9 17 20 6"></polyline>
+                  </svg>
+                </div>
+                <p className={styles.successText}>Successfully deleted</p>
+              </div>
+            ) : (
+              <>
+                <p className={styles.modalText}>
+                  {showConfirm.type === 'all' ? 'Delete all history?' : 
+                   showConfirm.type === 'abandoned' ? 'Delete abandoned sessions?' : 
+                   'Delete completed sessions?'} This is irreversible.
+                </p>
+                <div className={styles.modalActions}>
+                  <button 
+                    className={styles.cancelBtn} 
+                    onClick={() => {
+                      setShowConfirm({ show: false, type: null, id: null });
+                      setBulkDeleteState(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button className={styles.confirmBtn} onClick={confirmAction}>
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

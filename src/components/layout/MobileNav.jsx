@@ -30,7 +30,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
       <div className={styles.mobileNavWrapper}>
         <nav 
           className={`${styles.mainNavPill} ${showProfileCard || showSettingsCard || showDeveloperCard ? styles.navPillHidden : ''}`}
-          style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)', willChange: 'transform, backdrop-filter' }}
+          style={{ WebkitBackdropFilter: 'blur(8px) saturate(180%)', backdropFilter: 'blur(8px) saturate(180%)', transform: 'translate3d(0, 0, 0)' }}
         >
           <div 
             className={styles.activeBackgroundPill}
@@ -62,9 +62,9 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
         <div 
           className={`${styles.profilePill} ${showProfileCard || showSettingsCard || showDeveloperCard ? styles.profilePillExpanded : ''}`}
           style={{ 
-            WebkitBackdropFilter: (showProfileCard || showSettingsCard || showDeveloperCard) ? 'none' : 'blur(24px)', 
-            backdropFilter: (showProfileCard || showSettingsCard || showDeveloperCard) ? 'none' : 'blur(24px)', 
-            willChange: 'transform, backdrop-filter' 
+            WebkitBackdropFilter: (showProfileCard || showSettingsCard || showDeveloperCard) ? 'none' : 'blur(24px) saturate(180%)', 
+            backdropFilter: (showProfileCard || showSettingsCard || showDeveloperCard) ? 'none' : 'blur(24px) saturate(180%)', 
+            transform: 'translate3d(0, 0, 0)' 
           }}
         >
           {/* Collapsed state: avatar + label */}
@@ -100,11 +100,8 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
                 }}
                 title="Developer Info"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
-                  <line x1="6" y1="3" x2="6" y2="15"></line>
-                  <circle cx="18" cy="6" r="3"></circle>
-                  <circle cx="6" cy="18" r="3"></circle>
-                  <path d="M18 9a9 9 0 0 1-9 9"></path>
+                <svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor" style={{ opacity: 0.85 }}>
+                  <path d="M200-520v-40q0-72 32.5-131.5T320-789l-75-75 35-36 85 85q26-12 55.5-18.5T480-840q30 0 59.5 6.5T595-815l85-85 35 36-75 75q55 38 87.5 97.5T760-560v40H200Zm428.5-91.5Q640-623 640-640t-11.5-28.5Q617-680 600-680t-28.5 11.5Q560-657 560-640t11.5 28.5Q583-600 600-600t28.5-11.5Zm-240 0Q400-623 400-640t-11.5-28.5Q377-680 360-680t-28.5 11.5Q320-657 320-640t11.5 28.5Q343-600 360-600t28.5-11.5Zm-107 490Q200-203 200-320v-160h560v160q0 117-81.5 198.5T480-40q-117 0-198.5-81.5Z"/>
                 </svg>
               </button>
               <button 
@@ -295,11 +292,8 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
           {showDeveloperCard && (
             <div className={styles.morphedCardContent}>
               <div className={styles.settingsCardHeader}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)' }}>
-                  <line x1="6" y1="3" x2="6" y2="15"></line>
-                  <circle cx="18" cy="6" r="3"></circle>
-                  <circle cx="6" cy="18" r="3"></circle>
-                  <path d="M18 9a9 9 0 0 1-9 9"></path>
+                <svg width="24" height="24" viewBox="0 -960 960 960" fill="currentColor" style={{ color: 'var(--text-secondary)' }}>
+                  <path d="M200-520v-40q0-72 32.5-131.5T320-789l-75-75 35-36 85 85q26-12 55.5-18.5T480-840q30 0 59.5 6.5T595-815l85-85 35 36-75 75q55 38 87.5 97.5T760-560v40H200Zm428.5-91.5Q640-623 640-640t-11.5-28.5Q617-680 600-680t-28.5 11.5Q560-657 560-640t11.5 28.5Q583-600 600-600t28.5-11.5Zm-240 0Q400-623 400-640t-11.5-28.5Q377-680 360-680t-28.5 11.5Q320-657 320-640t11.5 28.5Q343-600 360-600t28.5-11.5Zm-107 490Q200-203 200-320v-160h560v160q0 117-81.5 198.5T480-40q-117 0-198.5-81.5Z"/>
                 </svg>
                 <h3>Developer</h3>
               </div>
@@ -353,7 +347,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
         <div 
           className={styles.morphedBackdrop} 
           onClick={() => { setShowProfileCard(false); setShowSettingsCard(false); setShowDeveloperCard(false); }} 
-          style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)', willChange: 'transform, backdrop-filter' }}
+          style={{ WebkitBackdropFilter: 'blur(24px) saturate(180%)', backdropFilter: 'blur(24px) saturate(180%)', transform: 'translate3d(0, 0, 0)' }}
         />
       )}
     </>
