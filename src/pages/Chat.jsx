@@ -8,7 +8,6 @@ import { MobileNav } from "../components/layout/MobileNav";
 import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
 import styles from "./Chat.module.css";
-import aiIcon from "../assets/image.png";
 
 // Detect browser support — actual instance is created lazily per session
 const SpeechRecognition =
@@ -1546,20 +1545,16 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       const data = await response.json();
       if (data.success) {
         setHintText(data.hint);
-        setShowHintNudge(false);
-        setShowHintBox(true);
       } else {
         setHintText("I'm sorry, I couldn't generate a hint right now.");
-        setShowHintNudge(false);
-        setShowHintBox(true);
       }
     } catch (err) {
       console.error("Hint Fetch Error:", err);
       setHintText("Failed to connect to the hint service.");
-      setShowHintNudge(false);
-      setShowHintBox(true);
     } finally {
       setIsHintLoading(false);
+      setShowHintBox(true);
+      setShowHintNudge(false);
     }
   };
 
@@ -1861,23 +1856,28 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <div className={styles.footerBlurLayer3}></div>
           </div>
           <form onSubmit={handleSendMessage} className={styles.form}>
-            <div className={styles.unifiedInputRow}>
-              <div className={styles.textPill} style={{ WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}>
-                <textarea
-                  ref={textareaRef}
-                  placeholder={
-                    isVoiceMode ? "Listening..." : "Reply to Prep AI..."
-                  }
-                  className={styles.textarea}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  rows={1}
-                  disabled={isVoiceMode}
-                />
-              </div>
+            <div
+              className={styles.textareaPill}
+              style={{
+                WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                backdropFilter: 'blur(16px) saturate(180%)',
+                willChange: 'transform, backdrop-filter, width, border-radius, box-shadow, border-color',
+              }}
+            >
+              <textarea
+                ref={textareaRef}
+                placeholder={
+                  isVoiceMode ? "Listening..." : "Reply to Prep AI..."
+                }
+                className={styles.textarea}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                disabled={isVoiceMode}
+              />
 
-              <div className={styles.actionPill} style={{ WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}>
+              <div className={styles.pillActions}>
                 <button
                   type="button"
                   className={`${styles.micBtn} ${isDictating ? styles.activeMic : ""} ${isVoiceMode ? styles.micHidden : ""}`}
@@ -1943,9 +1943,9 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                         : {}
                     }
                   >
-                    <div className={styles.aiIconCircle}>
-                      <img src={aiIcon} alt="AI" className={styles.aiIconImg} />
-                    </div>
+                    <span className="material-symbols-outlined">
+                      graphic_eq
+                    </span>
                   </button>
                 )}
               </div>
@@ -1954,40 +1954,30 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           <p className={styles.aiWarning}>AI can make mistakes</p>
         </footer>
 
-        {/* Unified Morphing Hint Container - Moved outside footer to fix backdrop-filter issues */}
-        {hintsAllowed && (showHintNudge || showHintBox) && (
+        {/* Unified Morphing Hint Container */}
+        {hintsAllowed && (showHintNudge || showHintBox) && !isHintLoading && (
           <div
-            className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && !isHintLoading && hintText ? styles.hintLoaded : ""} ${!showHintBox && isHintLoading ? styles.hintPillLoading : ""}`}
+            className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && hintText ? styles.hintLoaded : ""}`}
             style={{ height: hintHeight, WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}
           >
             {!showHintBox ? (
               <div className={styles.hintPillContent}>
-                {isHintLoading ? (
-                  <div className={styles.hintLoadingDots}>
-                    <div className={styles.hintDot} />
-                    <div className={styles.hintDot} />
-                    <div className={styles.hintDot} />
-                  </div>
-                ) : (
-                  <>
-                    <button className={styles.nudgeBtn} onClick={requestHint}>
-                      <span className="material-symbols-outlined">
-                        lightbulb
-                      </span>
-                      Hints
-                    </button>
-                    <button
-                      className={styles.nudgeClose}
-                      onClick={() => {
-                        setShowHintNudge(false);
-                        setHintCancelCount((prev) => prev + 1);
-                        lastActionTime.current = Date.now();
-                      }}
-                    >
-                      <span className="material-symbols-outlined">close</span>
-                    </button>
-                  </>
-                )}
+                <button className={styles.nudgeBtn} onClick={requestHint}>
+                  <span className="material-symbols-outlined">
+                    lightbulb
+                  </span>
+                  Hints
+                </button>
+                <button
+                  className={styles.nudgeClose}
+                  onClick={() => {
+                    setShowHintNudge(false);
+                    setHintCancelCount((prev) => prev + 1);
+                    lastActionTime.current = Date.now();
+                  }}
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
               </div>
             ) : (
               <div className={styles.hintExpandedContent} ref={hintContentRef}>
@@ -2014,23 +2004,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   </div>
                 </div>
                 <div className={styles.hintBody}>
-                  {isHintLoading ? (
-                    <div className={styles.hintSkeleton}>
-                      <div className={styles.hintSkeletonLine}></div>
-                      <div
-                        className={styles.hintSkeletonLine}
-                        style={{ width: "80%" }}
-                      ></div>
-                    </div>
-                  ) : (
-                    <ReactMarkdown>{hintText}</ReactMarkdown>
-                  )}
+                  <ReactMarkdown>{hintText}</ReactMarkdown>
                 </div>
               </div>
             )}
 
             {showHintBox &&
-              !isHintLoading &&
               hintText &&
               dimensions.width > 0 &&
               leftPath &&
@@ -2050,14 +2029,22 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               )}
           </div>
         )}
-        {showScrollBtn && (
+        {((!showHintBox && isHintLoading) || (showScrollBtn && !isHintLoading && !showHintNudge && !showHintBox)) && (
           <button
-            className={styles.scrollDownBtn}
-            onClick={scrollToBottom}
-            title="Scroll to bottom"
-            style={{ WebkitBackdropFilter: 'blur(4px) saturate(200%)', backdropFilter: 'blur(4px) saturate(200%)', willChange: 'transform, backdrop-filter' }}
+            className={`${styles.scrollDownBtn} ${!showHintBox && isHintLoading ? styles.scrollDownBtnLoading : ""}`}
+            onClick={!showHintBox && isHintLoading ? undefined : scrollToBottom}
+            title={!showHintBox && isHintLoading ? "Loading hint..." : "Scroll to bottom"}
+            style={{ WebkitBackdropFilter: 'blur(16px) saturate(200%)', backdropFilter: 'blur(16px) saturate(200%)', willChange: 'transform, backdrop-filter, width, height, border-radius' }}
           >
-            <span className="material-symbols-outlined">arrow_downward</span>
+            {!showHintBox && isHintLoading ? (
+              <div className={styles.hintLoadingDots}>
+                <div className={styles.hintDot} />
+                <div className={styles.hintDot} />
+                <div className={styles.hintDot} />
+              </div>
+            ) : (
+              <span className="material-symbols-outlined">arrow_downward</span>
+            )}
           </button>
         )}
       </main>
