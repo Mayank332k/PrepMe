@@ -696,7 +696,7 @@
 }
 
 .messageMetadata {
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   position: relative;
 }
@@ -840,8 +840,20 @@
     line-height: 1.4;
 }
 
-.markdownContent p:last-child {
-  margin-bottom: 0;
+.markdownContent > *:last-child,
+.markdownContent > *:last-child > *:last-child,
+.markdownContent p:last-of-type:last-child,
+.markdownContent ul:last-child,
+.markdownContent ol:last-child,
+.markdownContent pre:last-child,
+.markdownContent code:last-child,
+.markdownContent blockquote:last-child,
+.markdownContent div:last-child {
+  margin-bottom: 0 !important;
+}
+
+.markdownContent p:empty {
+  display: none !important;
 }
 
 .markdownContent h1, .markdownContent h2, .markdownContent h3 {
@@ -1215,15 +1227,6 @@
   transform: translateY(0);
 }
 
-.aiWarning {
-  font-size: 12px; 
-  font-weight: 300;
-  color: var(--text-muted); 
-  opacity: 0.35;
-  margin-top: 2px; 
-  text-align: center; 
-  letter-spacing: 0.02em;
-}
 
 @media (max-width: 768px) {
   .header { 
@@ -1906,6 +1909,15 @@
 
 .hintRegen span { font-size: 18px; }
 
+.hintRegenSpin span {
+  animation: regenSpin 1s linear infinite;
+}
+
+@keyframes regenSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .hintTitle {
   display: flex;
   align-items: center;
@@ -1946,6 +1958,7 @@
 
 .hintSkeletonLine {
   height: 12px;
+  width: 100%;
   border-radius: 6px;
   background-color: rgba(211, 166, 241, 0.254);
   animation: 
@@ -1953,6 +1966,10 @@
     growWave 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   transform-origin: left;
   will-change: transform, background-color;
+}
+
+.hintSkeletonShort {
+  width: 55% !important;
 }
 
 .hintSkeletonLine:nth-child(1) { animation-delay: 0.3s, 0.3s; }
@@ -2115,7 +2132,7 @@
   display: flex;
   align-items: flex-end;
   width: 100%;
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
   background-color: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
@@ -2139,7 +2156,7 @@
 
 .textareaPill:focus-within {
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   border-color: var(--chat-border-strong, rgba(211, 166, 241, 0.45));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   background-color: var(--glass-bg-hover, var(--glass-bg));

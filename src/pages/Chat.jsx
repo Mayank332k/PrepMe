@@ -271,8 +271,8 @@ const ChatMessage = React.memo(
                     <>
                       <ReactMarkdown components={MarkdownComponents}>
                         {isLongUserMsg && !isExpanded
-                          ? (msg.text.substring(0, MAX_LENGTH) + "...").replace(/\n(?!\n)/g, "  \n")
-                          : msg.text.replace(/\n(?!\n)/g, "  \n")}
+                          ? (msg.text || "").trim().substring(0, MAX_LENGTH) + "..."
+                          : (msg.text || "").trim().replace(/\n(?!\n)/g, "  \n")}
                       </ReactMarkdown>
                       {isLongUserMsg && (
                         <button
@@ -1951,11 +1951,10 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               </div>
             </div>
           </form>
-          <p className={styles.aiWarning}>AI can make mistakes</p>
         </footer>
 
         {/* Unified Morphing Hint Container */}
-        {hintsAllowed && (showHintNudge || showHintBox) && !isHintLoading && (
+        {hintsAllowed && (showHintNudge || showHintBox) && (!isHintLoading || showHintBox) && (
           <div
             className={`${styles.hintContainer} ${showHintBox ? styles.hintExpanded : styles.hintPill} ${showHintBox && hintText ? styles.hintLoaded : ""}`}
             style={{ height: hintHeight, WebkitBackdropFilter: 'blur(5.5px) saturate(180%)', backdropFilter: 'blur(5.5px) saturate(180%)', willChange: 'transform, backdrop-filter' }}
@@ -1988,7 +1987,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   </div>
                   <div className={styles.hintActions}>
                     <button
-                      className={styles.hintRegen}
+                      className={`${styles.hintRegen} ${isHintLoading ? styles.hintRegenSpin : ""}`}
                       onClick={requestHint}
                       disabled={isHintLoading}
                       title="Regenerate Hint"
@@ -2004,7 +2003,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   </div>
                 </div>
                 <div className={styles.hintBody}>
-                  <ReactMarkdown>{hintText}</ReactMarkdown>
+                  {isHintLoading ? (
+                    <div className={styles.hintSkeleton}>
+                      <div className={styles.hintSkeletonLine} />
+                      <div className={`${styles.hintSkeletonLine} ${styles.hintSkeletonShort}`} />
+                    </div>
+                  ) : (
+                    <ReactMarkdown>{hintText}</ReactMarkdown>
+                  )}
                 </div>
               </div>
             )}
