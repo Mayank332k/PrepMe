@@ -1535,6 +1535,25 @@
   background: rgb(26, 138, 255);
 }
 
+/* Light mode styles for confirmation card */
+:global([data-theme='light']) .modalContent {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
+}
+
+:global([data-theme='light']) .modalText {
+  color: #1a1a1a;
+}
+
+:global([data-theme='light']) .cancelBtn {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+}
+
+:global([data-theme='light']) .cancelBtn:hover {
+  background: rgba(0, 0, 0, 0.14);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

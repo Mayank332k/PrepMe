@@ -420,16 +420,6 @@ export const History = ({ user, onNavigate, onViewReport, sessionActive }) => {
 
         <section className={styles.scrollArea} ref={scrollRef}>
           <div className={styles.historyContainer}>
-            <div className={styles.pageHeader}>
-              <div className={styles.headerTitleRow}>
-                <div className={styles.desktopHeaderInfo}>
-                  <h1 className={styles.pageTitle}>Your Interview History</h1>
-                  <p className={styles.pageSubtitle}>Review past sessions and track your progress over time.</p>
-                </div>
-                  
-              </div>
-            </div>
-
             {/* CHART SKELETON */}
             {loading && (
               <>

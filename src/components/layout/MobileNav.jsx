@@ -8,6 +8,7 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [showSettingsCard, setShowSettingsCard] = useState(false);
   const [showDeveloperCard, setShowDeveloperCard] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { 
     hintsEnabled, 
     setHintsEnabled, 
@@ -172,7 +173,10 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
               <div className={styles.cardActions}>
                 <button 
                   className={styles.logoutBtn} 
-                  onClick={() => onNavigate && onNavigate('logout')}
+                  onClick={() => {
+                    setShowProfileCard(false);
+                    setShowLogoutConfirm(true);
+                  }}
                 >
                   <div className={styles.btnContent}>
                     <span className={styles.btnText}>Logout</span>
@@ -349,6 +353,36 @@ export const MobileNav = ({ user, activeTab = 'upload', onNavigate, isLoading = 
           onClick={() => { setShowProfileCard(false); setShowSettingsCard(false); setShowDeveloperCard(false); }} 
           style={{ WebkitBackdropFilter: 'blur(24px) saturate(180%)', backdropFilter: 'blur(24px) saturate(180%)', transform: 'translate3d(0, 0, 0)' }}
         />
+      )}
+
+      {showLogoutConfirm && (
+        <div 
+          className={styles.confirmModalOverlay} 
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div className={styles.confirmModalContent} onClick={e => e.stopPropagation()}>
+            <p className={styles.confirmModalText}>
+              Are you sure you want to log out?
+            </p>
+            <div className={styles.confirmModalActions}>
+              <button 
+                className={styles.confirmCancelBtn} 
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.confirmLogoutBtn} 
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  onNavigate && onNavigate('logout');
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

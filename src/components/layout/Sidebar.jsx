@@ -6,6 +6,7 @@ import { useSettings } from '../../context/SettingsContext';
 export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState('profile'); // 'profile' | 'system'
   const sidebarRef = React.useRef(null);
 
@@ -274,7 +275,7 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                     className={styles.logoutBtn} 
                     onClick={() => {
                       setShowProfileCard(false);
-                      onNavigate && onNavigate('logout');
+                      setShowLogoutConfirm(true);
                     }}
                   >
                     <div className={styles.btnContent}>
@@ -349,6 +350,36 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showLogoutConfirm && (
+        <div 
+          className={styles.confirmModalOverlay} 
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div className={styles.confirmModalContent} onClick={e => e.stopPropagation()}>
+            <p className={styles.confirmModalText}>
+              Are you sure you want to log out?
+            </p>
+            <div className={styles.confirmModalActions}>
+              <button 
+                className={styles.confirmCancelBtn} 
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.confirmLogoutBtn} 
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  onNavigate && onNavigate('logout');
+                }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -550,9 +550,10 @@
 
 .messageScroll {
   width: 100%;
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -561,6 +562,7 @@
 .messageRow { 
   display: flex; 
   flex-direction: column; 
+  width: 100%;
   max-width: 100%; 
   position: relative; 
 }
@@ -569,6 +571,7 @@
   align-items: center; 
   align-self: center; 
   width: 100%;
+  max-width: 100%;
 }
 
 .aiRow .messageRowInner {
@@ -837,7 +840,7 @@
 }
 .markdownContent p {
     margin-bottom: 1.1rem;
-    line-height: 1.4;
+    line-height: 1.6;
 }
 
 .markdownContent > *:last-child,
@@ -848,6 +851,7 @@
 .markdownContent pre:last-child,
 .markdownContent code:last-child,
 .markdownContent blockquote:last-child,
+.markdownContent table:last-child,
 .markdownContent div:last-child {
   margin-bottom: 0 !important;
 }
@@ -856,49 +860,274 @@
   display: none !important;
 }
 
-.markdownContent h1, .markdownContent h2, .markdownContent h3 {
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+/* Headings (#, ##, ###, ####) */
+.markdownContent h1, .heading1,
+.markdownContent h2, .heading2,
+.markdownContent h3, .heading3,
+.markdownContent h4, .heading4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
   font-weight: 700;
   line-height: 1.3;
+  color: var(--text-primary);
+  display: block;
 }
 
-.markdownContent h1:first-child, 
-.markdownContent h2:first-child, 
-.markdownContent h3:first-child {
+.markdownContent h1:first-child, .heading1:first-child,
+.markdownContent h2:first-child, .heading2:first-child,
+.markdownContent h3:first-child, .heading3:first-child,
+.markdownContent h4:first-child, .heading4:first-child {
   margin-top: 0;
 }
 
-.markdownContent h1 { font-size: 1.5rem; }
-.markdownContent h2 { font-size: 1.25rem; }
-.markdownContent h3 { font-size: 1.1rem; }
-
-.markdownContent strong {
+.markdownContent h1, .heading1 { 
+  font-size: 1.6rem; 
   font-weight: 800;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.35rem;
+}
+.markdownContent h2, .heading2 { 
+  font-size: 1.35rem; 
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.markdownContent h3, .heading3 { 
+  font-size: 1.15rem; 
+  font-weight: 700;
+  color: var(--accent);
+}
+.markdownContent h4, .heading4 { 
+  font-size: 1.02rem; 
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Bold Text (**text** or __text__) */
+.markdownContent strong,
+.markdownContent b {
+  font-weight: 700;
   color: var(--accent);
   letter-spacing: -0.01em;
 }
 
-.markdownContent em {
+/* Italic Text (*text* or _text_) */
+.markdownContent em,
+.markdownContent i {
   color: var(--text-secondary);
   font-style: italic;
 }
 
-.markdownContent ul, .markdownContent ol {
-  margin-bottom: 1.5rem;
+/* Strikethrough Text (~~text~~) */
+.markdownContent del,
+.markdownContent s,
+.markdownContent strike {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Blockquotes (>) */
+.markdownContent blockquote {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 4px 0 4px 18px; /* 16-20px gap between the bar and text */
+  max-width: 55ch; /* 45-60 characters line length */
+  line-height: 1.7; /* 1.6-1.8 line-height */
+  color: var(--text-primary);
+  border-left: none;
+  background: transparent;
+  quotes: "“" "”" "‘" "’"; /* Use curly quotes (“ ”) instead of straight quotes */
+}
+
+.markdownContent blockquote::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 5px; /* 4-6px wide */
+  border-radius: 9999px; /* Fully rounded ends */
+  background-color: #383838; /* Slightly lighter than #181818 background */
+}
+
+:global([data-theme='light']) .markdownContent blockquote::before {
+  background-color: #d1d5db;
+}
+
+.markdownContent blockquote cite,
+.markdownContent blockquote footer,
+.markdownContent blockquote small,
+.markdownContent blockquote .author,
+.markdownContent blockquote em {
+  opacity: 0.6; /* Fade the author/date to about 60% opacity */
+  display: block;
+  margin-top: 0.5rem;
+  font-style: normal;
+  font-size: 0.9em;
+}
+
+/* Apple + Linear + Notion Minimal Question Quote Component */
+.questionCard {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 8px 0;
+  box-shadow: none;
+  margin: 1.5rem 0;
+  max-width: 530px;
+  width: 100%;
+  position: relative;
+  transition: all 200ms ease;
+  animation: questionCardFadeIn 0.4s ease-out;
+}
+
+@keyframes questionCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.questionCard:hover {
+  transform: none;
+  box-shadow: none;
+  border: none;
+}
+
+.questionCardInner {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.questionAccentBar {
+  width: 5px;
+  height: 75%;
+  min-height: 20px;
+  background-color: #404040;
+  border-radius: 9999px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.questionContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.questionText {
+  color: #f5f5f5;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-bottom: 0;
+  word-break: break-word;
+}
+
+/* Light mode support */
+:global([data-theme='light']) .questionCard {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+:global([data-theme='light']) .questionCard:hover {
+  border: none;
+  box-shadow: none;
+}
+:global([data-theme='light']) .questionAccentBar {
+  background-color: #9ca3af;
+}
+:global([data-theme='light']) .questionText {
+  color: #111827;
+}
+
+/* Lists (1., 2. and -, +, *) */
+.markdownContent ul, 
+.markdownContent ol {
+  margin-bottom: 1.25rem;
   padding-left: 24px;
 }
 
 .markdownContent li {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   line-height: 1.6;
 }
 
+.markdownContent ul ul, 
+.markdownContent ol ol, 
+.markdownContent ul ol, 
+.markdownContent ol ul {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+/* Horizontal Rules (---, ___, ***) */
 .markdownContent hr {
-  margin: 2.5rem 0;
+  margin: 2rem 0;
   border: none;
   border-top: 1px solid var(--border);
-  opacity: 2;
+  opacity: 1;
+}
+
+/* Links ([link text](URL)) */
+.markdownContent a {
+  color: var(--accent, #a855f7);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.markdownContent a:hover {
+  opacity: 0.8;
+}
+
+/* Tables (| and -) */
+.markdownContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface, rgba(255, 255, 255, 0.02));
+  display: block;
+  overflow-x: auto;
+}
+
+.markdownContent th,
+.markdownContent td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.markdownContent th {
+  background-color: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.markdownContent tr:last-child td {
+  border-bottom: none;
+}
+
+.markdownContent tr:hover td {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* Code Blocks */
@@ -1024,7 +1253,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px 0 12px;
+  padding: 12px 20px 12px;
+  box-sizing: border-box;
   background-color: transparent;
   border-top: none;
   z-index: 40; 
@@ -1123,8 +1353,9 @@
   align-items: center;
   gap: 12px; 
   width: 100% !important;
-  max-width: none !important;
+  max-width: 800px !important;
   margin: 0 auto !important;
+  box-sizing: border-box !important;
 }
 
 .plusIcon {
@@ -2132,7 +2363,7 @@
   display: flex;
   align-items: flex-end;
   width: 100%;
-  max-width: 760px;
+  max-width: 100%;
   margin: 0 auto;
   background-color: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
@@ -2156,7 +2387,7 @@
 
 .textareaPill:focus-within {
   width: 100%;
-  max-width: 760px;
+  max-width: 100%;
   border-color: var(--chat-border-strong, rgba(211, 166, 241, 0.45));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   background-color: var(--glass-bg-hover, var(--glass-bg));

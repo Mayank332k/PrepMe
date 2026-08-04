@@ -32,7 +32,10 @@ const CodeBlock = ({ language, value }) => {
   return (
     <div className={styles.codeBlockContainer}>
       <div className={styles.codeHeader}>
-        <div className={styles.codeLang}>{language || "code"}</div>
+        <div className={styles.codeLang}>
+          <span style={{ opacity: 0.6 }}>{"{/}"}</span>
+          <span>{language || "code"}</span>
+        </div>
         <button
           className={styles.copyBtn}
           onClick={copyToClipboard}
@@ -118,7 +121,133 @@ const getCodeLanguage = (className = "") => {
   return languageAliases[language] || language;
 };
 
+const extractText = (node) => {
+  if (node == null) return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (React.isValidElement(node) && node.props && node.props.children) {
+    return extractText(node.props.children);
+  }
+  return "";
+};
+
+const isRedundantHeading = (text) => {
+  if (!text) return false;
+  const cleaned = String(text)
+    .replace(/^(###|##|#|####)?\s*/i, "")
+    .replace(/[:.-]/g, "")
+    .trim()
+    .toLowerCase();
+  const redundantTitles = [
+    "question",
+    "technical question",
+    "next question",
+    "interview question",
+    "qustion",
+    "technical qustion",
+    "question 1",
+    "question 2",
+    "question 3"
+  ];
+  return redundantTitles.includes(cleaned);
+};
+
+const shouldUseAccentBar = (text, isBlockquote = false) => {
+  if (!text && !isBlockquote) return false;
+  if (isBlockquote) return true;
+
+  const accentKeywords = [
+    "follow-up",
+    "follow up",
+    "followup",
+    "follow",
+    "feedback",
+    "context",
+    "next step",
+    "next steps",
+    "moving forward",
+    "important",
+    "note",
+    "tip",
+    "takeaway",
+    "key takeaway",
+    "key takeaways",
+    "hint",
+    "insight",
+    "summary",
+    "overview",
+    "evaluation",
+    "assessment",
+    "review",
+    "observation",
+    "strength",
+    "improvement",
+    "suggestion"
+  ];
+
+  const lower = String(text).toLowerCase();
+  const pattern = new RegExp(
+    `\\b(${accentKeywords
+      .map((kw) => kw.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"))
+      .join("|")})\\b`,
+    "i"
+  );
+
+  return pattern.test(lower);
+};
+
+const renderHeadingOrQuestion = (Tag, defaultClassName, { children, ...props }) => {
+  const rawText = extractText(children);
+
+  if (isRedundantHeading(rawText)) {
+    return null;
+  }
+
+  if (shouldUseAccentBar(rawText, Tag === "blockquote")) {
+    return (
+      <div className={styles.questionCard}>
+        <div className={styles.questionCardInner}>
+          <div className={styles.questionAccentBar} />
+          <div className={styles.questionContent}>
+            <div className={styles.questionText}>{children}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Tag className={defaultClassName} {...props}>
+      {children}
+    </Tag>
+  );
+};
+
 const MarkdownComponents = {
+  hr: () => null,
+  h1: (props) => renderHeadingOrQuestion("h1", styles.heading1, props),
+  h2: (props) => renderHeadingOrQuestion("h2", styles.heading2, props),
+  h3: (props) => renderHeadingOrQuestion("h3", styles.heading3, props),
+  h4: (props) => renderHeadingOrQuestion("h4", styles.heading4, props),
+  blockquote: (props) => renderHeadingOrQuestion("blockquote", "", props),
+  p: (props) => {
+    const rawText = extractText(props.children).trim();
+    // Check if paragraph begins with an accent keyword label (e.g. "Feedback:" or "**Context:**")
+    const firstWordMatch = rawText.match(/^([A-Za-z\s-]+)([:.-]|\s{2,})/);
+    if (firstWordMatch && shouldUseAccentBar(firstWordMatch[1])) {
+      return (
+        <div className={styles.questionCard}>
+          <div className={styles.questionCardInner}>
+            <div className={styles.questionAccentBar} />
+            <div className={styles.questionContent}>
+              <div className={styles.questionText}>{props.children}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <p {...props}>{props.children}</p>;
+  },
   code({ node, inline, className, children, ...props }) {
     const language = getCodeLanguage(className);
     return !inline && language ? (
@@ -147,29 +276,6 @@ const stripMarkdown = (text) => {
     .trim();
 };
 
-const AiRoboAvatar = ({ isGlowing }) => (
-  <div
-    className={`${styles.aiAvatar} ${isGlowing ? styles.aiAvatarGlowing : styles.aiAvatarSettled}`}
-  >
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="4" y="8" width="16" height="12" rx="3" strokeDasharray="2 2" />
-      <path d="M8 4v4" />
-      <path d="M16 4v4" />
-      <circle cx="9" cy="14" r="1" fill="currentColor" />
-      <circle cx="15" cy="14" r="1" fill="currentColor" />
-      <path d="M10 18h4" strokeDasharray="1 2" />
-    </svg>
-  </div>
-);
 
 const ChatMessage = React.memo(
   ({
@@ -222,7 +328,6 @@ const ChatMessage = React.memo(
         className={`${styles.messageRow} ${msg.sender === "user" ? styles.userRow : styles.aiRow}`}
       >
         <div className={styles.messageRowInner}>
-          {msg.sender === "ai" && <AiRoboAvatar isGlowing={isGlowing} />}
           <div className={styles.messageBody}>
             <div className={styles.bubbleContainer}>
               <div
@@ -1516,10 +1621,20 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     lastActionTime.current = Date.now();
     if (showHintNudge) setShowHintNudge(false);
 
-    // Send on Cmd+Enter or Ctrl+Enter, while plain Enter goes to next line
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleSendMessage(e);
+    const isDesktop =
+      window.innerWidth > 768 &&
+      !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (e.key === "Enter") {
+      if (isDesktop && !e.shiftKey) {
+        // On desktop: Enter sends message, Shift+Enter adds a new line
+        e.preventDefault();
+        handleSendMessage(e);
+      } else if (e.metaKey || e.ctrlKey) {
+        // Cmd/Ctrl+Enter sends message
+        e.preventDefault();
+        handleSendMessage(e);
+      }
     }
   };
 
@@ -1829,7 +1944,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             {isTyping && (
               <div className={`${styles.messageRow} ${styles.aiRow}`}>
                 <div className={styles.messageRowInner}>
-                  <AiRoboAvatar isGlowing={true} />
                   <div className={styles.messageBody}>
                     <div className={styles.skeletonContainer}>
                       <div className={styles.skeletonLine}></div>
