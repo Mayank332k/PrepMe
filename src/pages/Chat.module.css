@@ -106,9 +106,9 @@
 
 .backBtn {
   font-size: 10px;
-  height: 50px;
-  width: 100px;
-  border-radius: 30px;
+  height: 48px;
+  width: 96px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,12 +117,12 @@
   -webkit-backdrop-filter: blur(5px);
   will-change: transform, backdrop-filter;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   color: var(--text-primary);
   cursor: pointer;
   margin-right: 20px;
-  margin-left: 7px;
-  margin-top: 17px;
+  margin-left: 8px;
+  margin-top: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -225,7 +225,7 @@
 
 .sessionBadge {
   background-color: var(--chat-pill);
-  padding: 10px 24px;
+  padding: 12px 24px;
   border-radius: 100px;
   font-size: 14px;
   color: var(--text-secondary);
@@ -236,11 +236,11 @@
 .endPillWrapper {
   justify-self: end;
   position: relative;
-  width: 95px;
-  height: 44px;
+  width: 96px;
+  height: 48px;
   margin-left: 20px;
-  margin-right: 5px;
-  margin-top: 15px;
+  margin-right: 4px;
+  margin-top: 16px;
   z-index: 50;
 }
 
@@ -248,9 +248,9 @@
   position: absolute;
   top: 0;
   right: 0;
-  height: 44px; /* Slightly slimmer */
-  width: 95px; /* Compact width for icons only */
-  border-radius: 50px;
+  height: 48px;
+  width: 96px;
+  border-radius: 48px;
   background-color: rgba(18, 18, 18, 0.75);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
@@ -269,9 +269,9 @@
 
 /* Expanded Menu State */
 .endPill.menuOpen {
-  width: 190px;
+  width: 192px;
   height: 88px;
-  border-radius: 25px;
+  border-radius: 24px;
   background-color: var(--glass-bg);
   backdrop-filter: blur(5px) saturate(180%);
   -webkit-backdrop-filter: blur(5px) saturate(180%);
@@ -383,7 +383,7 @@
   width: 1px;
   height: 24px;
   background-color: rgba(255, 255, 255, 0.15);
-  margin: 0 5px;
+  margin: 0 4px;
 }
 
 :global([data-theme='light']) .pillDivider {
@@ -453,7 +453,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.5px;
+  gap: 4px;
 }
 
 .customDots span {
@@ -471,7 +471,7 @@
   background-color: var(--bg-base);
   color: var(--text-primary);
   border: 1px solid var(--border);
-  padding: 10px 28px;
+  padding: 12px 24px;
   border-radius: 100px;
   font-size: 15px;
   font-weight: 600;
@@ -480,7 +480,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
+  height: 48px;
   min-width: 160px;
 }
 
@@ -492,14 +492,14 @@
 .cancelLink {
   background: none;
   border: 1px solid var(--chat-border);
-  padding: 10px 24px;
+  padding: 12px 24px;
   border-radius: 100px;
   font-size: 15px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.3s ease;
-  height: 44px;
+  height: 48px;
 }
 
 .cancelLink:hover {
@@ -550,7 +550,7 @@
   flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 120px 0 180px; /* Increased to prevent hiding behind footer */
+  padding: 120px 0 176px;
   display: flex;
   justify-content: center;
 }
@@ -678,7 +678,7 @@
 .userAvatarImg { width: 100%; height: 100%; object-fit: cover; }
 
 .messageBody {
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 8px;
   max-width: 100%;
   min-width: 0;
 }
@@ -707,7 +707,7 @@
 }
 
 .messageMetadata {
-  margin-top: 6px;
+  margin-top: 8px;
   display: flex;
   position: relative;
   gap: 8px;
@@ -787,8 +787,8 @@
   transform: translate3d(0, 0, 0);
   border: 1px solid var(--chat-border);
   border-radius: 25px;
-  padding: 10px 12px;
-  width: 190px;
+  padding: 12px;
+  width: 192px;
   box-shadow: var(--chat-shadow);
   z-index: 100;
   animation: dropdownUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -983,7 +983,7 @@
 .markdownContent blockquote {
   position: relative;
   margin: 1.5rem 0;
-  padding: 4px 0 4px 18px; /* 16-20px gap between the bar and text */
+  padding: 4px 0 4px 20px;
   max-width: 55ch; /* 45-60 characters line length */
   line-height: 1.7; /* 1.6-1.8 line-height */
   color: var(--text-primary);
@@ -998,7 +998,7 @@
   left: 0;
   top: 2px;
   bottom: 2px;
-  width: 5px; /* 4-6px wide */
+  width: 4px;
   border-radius: 9999px; /* Fully rounded ends */
   background-color: #383838; /* Slightly lighter than #181818 background */
 }
@@ -1058,12 +1058,12 @@
 }
 
 .questionAccentBar {
-  width: 5px;
+  width: 4px;
   height: 75%;
   min-height: 20px;
   background-color: #404040;
   border-radius: 9999px;
-  margin-right: 10px;
+  margin-right: 12px;
   flex-shrink: 0;
   align-self: center;
 }
@@ -1107,7 +1107,7 @@
 .markdownContent ul, 
 .markdownContent ol {
   margin-bottom: 1.25rem;
-  padding-left: 24px;
+  padding-left: 16px;
 }
 
 .markdownContent li {
@@ -1119,7 +1119,7 @@
 .markdownContent ol ol, 
 .markdownContent ul ol, 
 .markdownContent ol ul {
-  margin-top: 6px;
+  margin-top: 8px;
   margin-bottom: 0;
 }
 
@@ -1159,7 +1159,7 @@
 
 .markdownContent th,
 .markdownContent td {
-  padding: 10px 14px;
+  padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   font-size: 0.92rem;
@@ -1182,13 +1182,13 @@
 
 /* Code Blocks */
 .codeBlockContainer {
-  margin: 16px 2px;
+  margin: 16px 4px;
   background-color: var(--chat-pill);
-  border-radius: 34px;
+  border-radius: 32px;
   overflow: hidden;
   border: 1px solid var(--chat-border);
   min-width: 0;
-  width: calc(100% - 4px);
+  width: calc(100% - 8px);
   max-width: 100%;
 }
 
@@ -1207,7 +1207,7 @@
   text-transform: capitalize;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .copyBtn {
@@ -1303,7 +1303,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px 20px 12px;
+  padding: 12px 20px;
   box-sizing: border-box;
   background-color: transparent;
   border-top: none;
@@ -1380,10 +1380,10 @@
 .inputWrapper {
   width: 100%; 
   max-width: 900px; 
-  background-color: var(--chat-pill);
+  background-color: rgb(25, 25, 25);
   border: 1px solid var(--chat-border); 
-  border-radius: 34px; 
-  padding: 6px 10px 6px 20px;
+  border-radius: 32px; 
+  padding: 4px 8px 4px 20px;
   display: flex;
   align-items: center;
   backdrop-filter: blur(5px);
@@ -1445,8 +1445,8 @@
 }
 
 .sendIcon {
-  width: 42px; 
-  height: 42px; 
+  width: 40px; 
+  height: 40px; 
   border-radius: 50%; 
   background-color: var(--bg-base);
   color: var(--text-primary); 
@@ -1526,15 +1526,15 @@
   }
   
   .endPillWrapper {
-    width: 95px;
-    height: 44px;
+    width: 96px;
+    height: 48px;
     margin-left: 20px;
-    margin-right: 5px;
+    margin-right: 4px;
   }
   
   .endPill { 
-    height: 44px;
-    width: 95px;
+    height: 48px;
+    width: 96px;
     border-radius: 30px;
     background-color: rgba(18, 18, 18, 0.75);
     backdrop-filter: blur(12px);
@@ -1552,13 +1552,13 @@
   }
 
   .endActionBtn, .menuActionBtn {
-    height: 35px;
-    width: 35px;
+    height: 36px;
+    width: 36px;
   }
 
   .backBtn {
-    height: 45px;
-    width: 65px;
+    height: 48px;
+    width: 64px;
     border-radius: 30px;
     display: flex;
     align-items: center;
@@ -1571,7 +1571,7 @@
     color: var(--text-primary);
     cursor: pointer;
     margin-right: 20px;
-    margin-left: 5px;
+    margin-left: 4px;
   }
 
   :global([data-theme='light']) .backBtn {
@@ -1604,7 +1604,7 @@
   }
 
   .sessionBadge { 
-    padding: 5px 10px; 
+    padding: 4px 12px; 
     font-size: 10px; 
     background-color: var(--chat-pill);
   }
@@ -1617,18 +1617,18 @@
     border-top: none;
   }
   .inputWrapper {
-    padding: 2px 10px 2px 24px;
-    border-radius: 34px;
+    padding: 4px 12px 4px 24px;
+    border-radius: 32px;
   }
   .sendIcon {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
   .textarea {
     font-size: 14px;
     padding: 12px 0;
     line-height: 20px;
-    min-height: 38px;
+    min-height: 40px;
   }
   .codeBlockContainer {
     min-width: 0;
@@ -1665,7 +1665,7 @@
     display: flex !important;
     width: 48px !important;
     height: 48px !important;
-    border-radius: 18px !important;
+    border-radius: 16px !important;
     background-color: var(--chat-pill) !important;
     margin: 0 !important;
     margin-right: 16px !important;
@@ -1705,7 +1705,7 @@
     background-color: var(--chat-pill) !important;
     color: var(--text-primary) !important;
     border: none !important;
-    padding: 14px !important;
+    padding: 12px !important;
     border-radius: 100px !important;
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -1737,11 +1737,12 @@
   width: 480px; /* Increased from 280px */
   max-width: 90%;
   padding: 12px 0;
+
 }
 
 .skeletonLine {
   height: 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: rgba(211, 166, 241, 0.254);
   /* Combine pulse with a one-time growth animation */
   animation: 
@@ -1791,6 +1792,7 @@
   max-width: 420px;
   border-radius: 42px;
   padding: 40px 32px;
+
   text-align: center;
   box-shadow: var(--chat-shadow);
   animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1870,8 +1872,8 @@
 
 .minimalCancelBtn, .minimalEndBtn {
   flex: 1;
-  height: 50px;
-  border-radius: 25px;
+  height: 48px;
+  border-radius: 24px;
   border: none;
   font-size: 15px;
   font-weight: 600;
@@ -1896,8 +1898,8 @@
 
 .minimalLeaveBtn {
   flex: 1;
-  height: 50px;
-  border-radius: 25px;
+  height: 48px;
+  border-radius: 24px;
   border: none;
   font-size: 15px;
   font-weight: 600;
@@ -1977,7 +1979,7 @@
   width: 140px;
   height: 44px;
   border-radius: 100px;
-  padding: 0 6px 0 14px;
+  padding: 0 8px 0 16px;
   animation: pillPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -2005,6 +2007,7 @@
   min-height: unset; 
   border-radius: 28px;
   padding: 16px 20px;
+
   box-shadow: none !important;
 }
 
@@ -2095,8 +2098,8 @@
 }
 
 .hintDot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   background-color: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   animation: hintDotWave 1.2s infinite ease-in-out;
@@ -2126,7 +2129,7 @@
   border: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--hint-accent);
@@ -2139,8 +2142,8 @@
 .nudgeClose {
   background-color: var(--glass-highlight);
   border: none;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2162,7 +2165,7 @@
 .hintActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .hintRegen {
@@ -2202,7 +2205,7 @@
 .hintTitle {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 10px; /* Slightly smaller */
   font-weight: 700;
   color: var(--text-secondary);
@@ -2240,7 +2243,7 @@
 .hintSkeletonLine {
   height: 12px;
   width: 100%;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: rgba(211, 166, 241, 0.254);
   animation: 
     pulseColorWave 1.2s infinite ease-in-out,
@@ -2266,7 +2269,7 @@
     transform: translateX(-50%) !important;
     top: 72px !important;
     bottom: auto !important;
-    padding: 14px 18px !important;
+    padding: 16px 20px !important;
     border-radius: 34px !important;
   }
 
@@ -2286,11 +2289,11 @@
   background: var(--glass-bg-solid);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--chat-border-strong);
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 100px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   z-index: 1000;
   box-shadow: var(--chat-shadow);
   animation: pillSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -2306,7 +2309,7 @@
 @media (max-width: 768px) {
   .resumedPill {
     bottom: 140px; /* Thoda aur upar mobile par input box ke wajah se */
-    padding: 8px 14px;
+    padding: 8px 16px;
   }
   .resumedText {
     font-size: 13px !important;
@@ -2353,8 +2356,8 @@
   bottom: auto;
   left: 50%;
   transform: translateX(-50%);
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background-color: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(200%);
@@ -2403,8 +2406,8 @@
 @media (max-width: 768px) {
   .scrollDownBtn {
     bottom: 145px;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -2415,13 +2418,13 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  background-color: var(--glass-bg);
+  background-color: rgb(25, 25, 25);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--border);
-  border-radius: 34px;
-  padding: 6px 10px 6px 20px;
-  min-height: 52px;
+  border-radius: 32px;
+  padding: 4px 8px 4px 20px;
+  min-height: 44px;
   box-sizing: border-box;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   transition:
@@ -2461,7 +2464,7 @@
   flex-shrink: 0;
   background: transparent;
   border: none;
-  padding-bottom: 2px;
+  padding-bottom: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2519,8 +2522,8 @@
 }
 
 .voiceModeTrigger {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background-color: var(--bg-base);
@@ -2564,9 +2567,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   background: #0084ff;
-  padding: 12px 18px;
+  padding: 12px 20px;
   border-radius: 32px;
   border: none;
   cursor: pointer;
@@ -2591,13 +2594,13 @@
   color: white;
   font-weight: 600;
   font-size: 16px;
-  margin-left: 2px;
+  margin-left: 4px;
 }
 
 .bouncingDots {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .dot {
@@ -2648,9 +2651,9 @@
 
 @media (max-width: 768px) {
   .chatCanvas { padding-top: 84px !important; padding-bottom: 120px; }
-  .messageScroll { padding: 0 10px 0 6px; gap: 12px; }
+  .messageScroll { padding: 0 12px 0 8px; gap: 12px; }
   .footer { 
-    padding: 0 10px 10px 6px; 
+    padding: 0 12px 12px 8px; 
     background-color: transparent;
     border-top: none;
   }
@@ -2666,9 +2669,9 @@
   }
   .textarea {
     font-size: 14px;
-    padding: 10px 0;
+    padding: 12px 0;
     line-height: 20px;
-    min-height: 38px;
+    min-height: 40px;
   }
   
   .textareaPill {
@@ -2676,8 +2679,8 @@
     max-width: 90vw;
     margin: 0 auto;
     border-radius: 32px;
-    padding: 6px 8px 6px 16px;
-    min-height: 48px;
+    padding: 4px 8px 4px 16px;
+    min-height: 44px;
   }
 
   .textareaPill:focus-within {
@@ -2688,13 +2691,13 @@
   }
 
   .pillActions {
-    gap: 2px;
+    gap: 4px;
   }
 
   .voicePillBlue {
-    padding: 12px 10px;
-    gap: 1px;
-    border-radius: 28px;
+    padding: 12px 12px;
+    gap: 4px;
+    border-radius: 24px;
   }
   .endText {
     font-size: 14px;
@@ -2706,8 +2709,8 @@
 }
 @media (max-width: 768px) {
   .voiceModeTrigger {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
   }
 }
 .lyricBubble {
@@ -2807,8 +2810,8 @@
 @media (max-width: 768px) {
   .lyricText {
     font-size: 26px;
-    gap: 0 10px;
-    padding: 0 15px;
+    gap: 0 12px;
+    padding: 0 16px;
   }
 }
 
@@ -2865,7 +2868,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  height: 42px;
+  height: 40px;
   padding: 0 4px;
   animation: fadeInListening 0.3s ease-out;
 }
@@ -2882,7 +2885,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 18px;
+  height: 20px;
 }
 
 .waveBar {
@@ -3057,6 +3060,7 @@
   width: 500px;
   max-width: calc(100vw - 32px);
   border-radius: 24px;
+
   overflow: hidden;
   background: #111111;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3166,7 +3170,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   padding: 12px 24px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -3184,7 +3188,7 @@
   color: #000000 !important;
   border: none !important;
   padding: 12px 24px;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -3234,11 +3238,12 @@
 /* Responsive Handling for Beta Warning Modal */
 @media (max-width: 550px) {
   .modalCard {
-    width: calc(100vw - 24px);
+    width: calc(100vw - 32px);
   }
   
   .modalContent {
     padding: 24px 20px;
+
     gap: 12px;
   }
   
@@ -3280,7 +3285,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   color: #ff453a;
   font-family: 'Outfit', sans-serif;
   font-size: 13px;
@@ -3375,7 +3380,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 0;
+  padding: 4px 0;
 }
 
 .settingsRow span {
@@ -3388,18 +3393,18 @@
   position: relative;
   display: flex;
   background: var(--bg-hover);
-  padding: 3px;
+  padding: 4px;
   border-radius: 100px;
-  gap: 2px;
+  gap: 4px;
   isolation: isolate;
 }
 
 .sliderTint {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc((100% - 10px) / 3);
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 16px) / 3);
   background: #7C3AED;
   border-radius: 100px;
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
@@ -3412,10 +3417,10 @@
   transform: translateX(0);
 }
 .themeSegmentedControl[data-active='light'] .sliderTint {
-  transform: translateX(calc(100% + 2px));
+  transform: translateX(calc(100% + 4px));
 }
 .themeSegmentedControl[data-active='device'] .sliderTint {
-  transform: translateX(calc(200% + 4px));
+  transform: translateX(calc(200% + 8px));
 }
 
 .themeSegmentBtn {
@@ -3444,7 +3449,7 @@
 }
 
 .themeSegmentedControl:active .sliderTint {
-  width: calc(((100% - 10px) / 3) + 8px);
+  width: calc(((100% - 16px) / 3) + 8px);
 }
 
 :global([data-theme='light']) .themeSegmentedControl {
@@ -3531,5 +3536,11 @@
 @media (max-width: 768px) {
   .userRow {
     max-width: 75% !important;
+  }
+  
+  .markdownContent {
+    margin-left: 1px !important;
+    margin-right: 1px !important;
+    width: calc(100% - 2px) !important;
   }
 }
