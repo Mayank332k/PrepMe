@@ -286,6 +286,8 @@ const ChatMessage = React.memo(
     activeVoiceMessageId,
     currentSpokenWordIndex,
     isGlowing,
+    onSpeak,
+    onStopSpeak,
   }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const MAX_LENGTH = 150;
@@ -400,6 +402,32 @@ const ChatMessage = React.memo(
 
             {msg.sender === "ai" && (
               <div className={styles.messageMetadata}>
+                {isSpeaking ? (
+                  <button
+                    className={`${styles.menuTrigger} ${styles.speakActive}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onStopSpeak) onStopSpeak();
+                    }}
+                    title="Stop speaking"
+                  >
+                    <span className="material-symbols-outlined" style={{ color: 'var(--accent-color)' }}>
+                      stop_circle
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    className={styles.menuTrigger}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSpeak) onSpeak(msg.text, msg.id);
+                    }}
+                    title="Speak message"
+                  >
+                    <i className="fi fi-br-volume"></i>
+                  </button>
+                )}
+                
                 <button
                   className={styles.menuTrigger}
                   onClick={(e) => {
@@ -407,7 +435,7 @@ const ChatMessage = React.memo(
                     setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
                   }}
                 >
-                  <span className="material-symbols-outlined">more_horiz</span>
+                  <i className="fi fi-br-menu-dots-vertical"></i>
                 </button>
 
                 {activeMenuId === msg.id && (
@@ -1171,6 +1199,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     }
   };
 
+  const stopSpeakMessage = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setActiveVoiceMessageId(null);
+    setCurrentSpokenWordIndex(-1);
+  };
+
   const speakMessage = (text, messageId) => {
     if (!("speechSynthesis" in window)) return null;
 
@@ -1715,9 +1751,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                     <div className={styles.dashedSpinner}></div>
                   ) : (
                     <>
-                      <div className={styles.powerIcon}>
-                        <div className={styles.powerLine}></div>
-                      </div>
+                      <i className="fi fi-br-assessment" style={{ fontSize: '18px' }}></i>
                       <span className={styles.endBtnText}>End Session</span>
                     </>
                   )}
@@ -1910,6 +1944,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                   activeVoiceMessageId={activeVoiceMessageId}
                   currentSpokenWordIndex={currentSpokenWordIndex}
                   isGlowing={isStreaming && index === messages.length - 1}
+                  onSpeak={speakMessage}
+                  onStopSpeak={stopSpeakMessage}
                 />
               ))
             )}
@@ -2057,9 +2093,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                         : {}
                     }
                   >
-                    <span className="material-symbols-outlined">
-                      graphic_eq
-                    </span>
+                    <i className="fi fi-br-waveform-path" style={{ fontSize: '18px' }}></i>
                   </button>
                 )}
               </div>

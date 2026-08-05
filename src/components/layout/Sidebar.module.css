@@ -69,9 +69,10 @@
 }
 
 .logoImg {
-  width: 100%;
-  height: auto;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
+  margin-right: 10px;
 }
 
 .brandTitle h1 {

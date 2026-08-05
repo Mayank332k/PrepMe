@@ -73,6 +73,7 @@ export const Sidebar = ({ user, activeTab = 'upload', onNavigate }) => {
           </button>
           {isExpanded && (
             <div className={styles.logoBadge}>
+              <img src="/favicon.svg" alt="PrepMe Logo" className={styles.logoImg} />
               <span className={styles.logoText}>PrepMe</span>
             </div>
           )}

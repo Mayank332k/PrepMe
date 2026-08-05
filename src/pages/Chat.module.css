@@ -368,8 +368,15 @@
 }
 
 .endActionBtn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.endActionBtn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
 }
 
 .pillDivider {
@@ -690,6 +697,7 @@
     word-break: break-word;
     min-width: 0;
     max-width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bubbleContainer {
@@ -699,19 +707,21 @@
 }
 
 .messageMetadata {
-  margin-top: 2px;
+  margin-top: 6px;
   display: flex;
   position: relative;
+  gap: 8px;
+  align-items: center;
 }
 
 .aiRow .messageMetadata {
   justify-content: flex-start;
-  padding-left: 2px;
+  padding-left: 12px; /* Aligns icons closer to the text start */
 }
 
 .userRow .messageMetadata {
   justify-content: flex-end;
-  padding-right: 2px;
+  padding-right: 12px;
 }
 
 .menuTrigger {
@@ -724,7 +734,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 1;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
@@ -734,9 +744,36 @@
   font-variation-settings: 'wght' 400, 'opsz' 20;
 }
 
+.menuTrigger i {
+  font-size: 14px; /* Flaticons are thicker, so they need a smaller size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
 .messageRow:hover .menuTrigger, .menuTrigger:focus {
-  opacity: 1;
   color: var(--text-primary);
+}
+
+.speakActive {
+  opacity: 1;
+  animation: pulseVolume 1.5s infinite;
+}
+
+@keyframes pulseVolume {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 .infoDropdown {
@@ -822,8 +859,21 @@
 
 /* Markdown Styles inside Bubbles */
 .markdownContent {
+  width: 100%;
   max-width: 100%;
   min-width: 0;
+  animation: contentFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .markdownContent pre {
@@ -2499,10 +2549,15 @@
   background-color: #333333;
 }
 
-.voiceModeTrigger span {
+.voiceModeTrigger span,
+.voiceModeTrigger i {
   font-size: 22px;
   font-variation-settings: 'wght' 600;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
 }
 
 .voicePillBlue {
@@ -2687,6 +2742,7 @@
   justify-content: center;
   width: 100%;
   overflow: visible;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .lyricViewport {
@@ -2699,6 +2755,7 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-base);
+  animation: contentFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* More efficient gradient overlays instead of mask-image */
