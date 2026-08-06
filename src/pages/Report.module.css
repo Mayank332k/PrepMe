@@ -843,7 +843,7 @@
   background-color: var(--bg-hover);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: none;
   width: 100%;
   max-width: 100%;
 }
@@ -871,7 +871,7 @@
 .copyBtn {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #ffffff;
   width: 28px;
   height: 28px;
   display: flex;

@@ -1,3 +1,52 @@
+@media (min-width: 769px) {
+  :global(:root) {
+    /* Typography */
+    --text-xs: 13px;
+    --text-sm: 14px;
+    --text-base: 16px;
+    --text-lg: 18px;
+    --text-xl: 20px;
+    --text-2xl: 24px;
+    --text-3xl: 32px;
+
+    /* Font Weights */
+    --regular: 400;
+    --medium: 500;
+    --semibold: 600;
+    --bold: 700;
+
+    /* Line Heights */
+    --lh-sm: 20px;
+    --lh-md: 24px;
+    --lh-base: 28px;
+    --lh-lg: 32px;
+    --lh-xl: 40px;
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 28px;
+    --radius-full: 999px;
+
+    /* Layout */
+    --content-width: 768px;
+
+    /* Grid */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+  }
+}
+
 .pageContainer {
   --chat-border: var(--border);
   --chat-border-strong: var(--border);
@@ -837,6 +886,10 @@
   border: none;
   padding: 0;
   border-radius: 0;
+  font-size: var(--text-lg, 16px);
+  line-height: var(--lh-base, 1.6);
+  font-weight: var(--regular, 420);
+  letter-spacing: 0.02em;
 }
 
 .errorBubble,
@@ -850,11 +903,12 @@
   background-color: var(--chat-pill); 
   color: var(--text-primary); 
   border-radius: 32px;
-  padding: 12px 20px;
+  padding: 6px 16px;
   border: none;
   width: fit-content;
   max-width: 100%;
   font-size: 18.5px;
+  line-height: 1.35;
 }
 
 /* Markdown Styles inside Bubbles */
@@ -882,15 +936,17 @@
   word-wrap: break-word;
   margin: 0;
   padding: 0;
+  font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 .markdownContent code {
   word-break: break-word;
   white-space: pre-wrap;
+  font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 .markdownContent p {
     margin-bottom: 1.1rem;
-    line-height: 1.6;
+    line-height: var(--lh-base, 1.6);
 }
 
 .markdownContent > *:last-child,
@@ -931,24 +987,24 @@
 }
 
 .markdownContent h1, .heading1 { 
-  font-size: 1.6rem; 
+  font-size: var(--text-3xl, 1.6rem); 
   font-weight: 800;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.35rem;
 }
 .markdownContent h2, .heading2 { 
-  font-size: 1.35rem; 
+  font-size: var(--text-2xl, 1.35rem); 
   font-weight: 700;
   color: var(--text-primary);
 }
 .markdownContent h3, .heading3 { 
-  font-size: 1.15rem; 
+  font-size: var(--text-xl, 1.15rem); 
   font-weight: 700;
   color: var(--accent);
 }
 .markdownContent h4, .heading4 { 
-  font-size: 1.02rem; 
+  font-size: var(--text-lg, 1.02rem); 
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1059,13 +1115,13 @@
 
 .questionAccentBar {
   width: 4px;
-  height: 75%;
-  min-height: 20px;
   background-color: #404040;
   border-radius: 9999px;
   margin-right: 12px;
+  margin-top: 4px;
+  margin-bottom: 4px;
   flex-shrink: 0;
-  align-self: center;
+  align-self: stretch;
 }
 
 .questionContent {
@@ -1125,7 +1181,7 @@
 
 /* Horizontal Rules (---, ___, ***) */
 .markdownContent hr {
-  margin: 2rem 0;
+  margin: 0.75rem 0;
   border: none;
   border-top: 1px solid var(--border);
   opacity: 1;
@@ -1186,10 +1242,16 @@
   background-color: var(--chat-pill);
   border-radius: 32px;
   overflow: hidden;
-  border: 1px solid var(--chat-border);
+  border: none;
   min-width: 0;
   width: calc(100% - 8px);
   max-width: 100%;
+}
+
+.markdownContent li .codeBlockContainer {
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
 }
 
 .codeHeader {
@@ -1213,7 +1275,7 @@
 .copyBtn {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #ffffff;
   width: 32px;
   height: 32px;
   display: flex;
@@ -1403,7 +1465,7 @@
   align-items: center;
   gap: 12px; 
   width: 100% !important;
-  max-width: 800px !important;
+  max-width: 770px !important;
   margin: 0 auto !important;
   box-sizing: border-box !important;
 }
@@ -2447,11 +2509,13 @@
 }
 
 :global([data-theme='light']) .textareaPill {
+  background-color: var(--chat-pill, #F1F3F5) !important;
   border: 1px solid rgba(0, 0, 0, 0.14) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
 }
 
 :global([data-theme='light']) .textareaPill:focus-within {
+  background-color: #FFFFFF !important;
   border: 1px solid rgba(0, 0, 0, 0.28) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
@@ -3518,7 +3582,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: -8px;
+  margin-bottom: -2px;
   padding: 4px;
   align-self: flex-end;
   opacity: 0.8;

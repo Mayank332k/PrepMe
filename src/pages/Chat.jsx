@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import api from "../api";
@@ -55,22 +56,7 @@ const CodeBlock = ({ language, value }) => {
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           ) : (
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="8" y="8" width="12" height="12" rx="3.5" ry="3.5"></rect>
-              <path
-                d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
-                opacity="0.5"
-              ></path>
-            </svg>
+            <i className="fi fi-rr-clone" style={{ fontSize: "16px" }}></i>
           )}
         </button>
       </div>
@@ -224,7 +210,6 @@ const renderHeadingOrQuestion = (Tag, defaultClassName, { children, ...props }) 
 };
 
 const MarkdownComponents = {
-  hr: () => null,
   h1: (props) => renderHeadingOrQuestion("h1", styles.heading1, props),
   h2: (props) => renderHeadingOrQuestion("h2", styles.heading2, props),
   h3: (props) => renderHeadingOrQuestion("h3", styles.heading3, props),
@@ -248,18 +233,21 @@ const MarkdownComponents = {
     }
     return <p {...props}>{props.children}</p>;
   },
-  code({ node, inline, className, children, ...props }) {
-    const language = getCodeLanguage(className);
-    return !inline && language ? (
-      <CodeBlock
-        language={language}
-        value={String(children).replace(/\n$/, "")}
-      />
-    ) : (
-      <code className={className} {...props}>
-        {children}
-      </code>
+  pre: ({ children }) => {
+    const codeEl = React.Children.toArray(children).find(
+      (child) => React.isValidElement(child) && (child.type === "code" || child.props?.mdastName === "code")
     );
+    if (codeEl) {
+      const { className, children: codeChildren } = codeEl.props;
+      const language = getCodeLanguage(className);
+      return (
+        <CodeBlock
+          language={language || "text"}
+          value={String(codeChildren).replace(/\n$/, "")}
+        />
+      );
+    }
+    return <pre>{children}</pre>;
   },
 };
 
@@ -376,11 +364,17 @@ const ChatMessage = React.memo(
                     </div>
                   ) : (
                     <>
-                      <ReactMarkdown components={MarkdownComponents}>
-                        {isLongUserMsg && !isExpanded
-                          ? (msg.text || "").trim().substring(0, MAX_LENGTH) + "..."
-                          : (msg.text || "").trim().replace(/\n(?!\n)/g, "  \n")}
-                      </ReactMarkdown>
+                      {msg.sender === "user" ? (
+                        <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                          {isLongUserMsg && !isExpanded
+                            ? (msg.text || "").trim().substring(0, MAX_LENGTH) + "..."
+                            : (msg.text || "").trim()}
+                        </div>
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                          {(msg.text || "").trim()}
+                        </ReactMarkdown>
+                      )}
                       {isLongUserMsg && (
                         <button
                           className={styles.expandButton}
@@ -1924,13 +1918,16 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             )}
 
             {isInitialLoading && messages.length === 0 ? (
-              <div style={{ padding: "20px" }}>
-                <div className={styles.skeletonContainer}>
-                  <div className={styles.skeletonLine}></div>
-                  <div className={styles.skeletonLine}></div>
-                  <div
-                    className={`${styles.skeletonLine} ${styles.short}`}
-                  ></div>
+              <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", minHeight: "50vh", width: "100%" }}>
+                <div className={styles.iosSpinner} style={{ width: "24px", height: "24px", color: "var(--text-muted)" }}>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
+                  <div className={styles.iosBar}></div>
                 </div>
               </div>
             ) : (
@@ -2157,7 +2154,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       <div className={`${styles.hintSkeletonLine} ${styles.hintSkeletonShort}`} />
                     </div>
                   ) : (
-                    <ReactMarkdown>{hintText}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{hintText}</ReactMarkdown>
                   )}
                 </div>
               </div>

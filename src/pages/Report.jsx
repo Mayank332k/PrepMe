@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Sidebar } from '../components/layout/Sidebar';
 import { MobileNav } from '../components/layout/MobileNav';
 import styles from './Report.module.css';
@@ -136,10 +137,7 @@ const CodeBlock = ({ language, value }) => {
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="8" y="8" width="12" height="12" rx="3.5" ry="3.5"></rect>
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" opacity="0.5"></path>
-            </svg>
+            <i className="fi fi-rr-clone" style={{ fontSize: '16px' }}></i>
           )}
         </button>
       </div>
@@ -168,9 +166,9 @@ const CodeBlock = ({ language, value }) => {
 const MarkdownComponents = {
   code({ node, inline, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || '');
-    return !inline && match ? (
+    return !inline ? (
       <CodeBlock 
-        language={match[1]} 
+        language={match ? match[1] : 'text'} 
         value={String(children).replace(/\n$/, '')} 
       />
     ) : (
@@ -493,7 +491,7 @@ export const Report = ({ user, sessionData, setSessionData, sessionActive, onNav
                       <div className={styles.msgBubble}>
                         <div className={styles.msgLabel}>{msg.role === 'user' ? 'You' : 'AI Interviewer'}</div>
                         <div className={styles.msgText}>
-                          <ReactMarkdown components={MarkdownComponents}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
                             {msg.content.replace(/\n(?!\n)/g, '  \n')}
                           </ReactMarkdown>
                         </div>
