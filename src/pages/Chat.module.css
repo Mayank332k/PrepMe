@@ -903,12 +903,12 @@
   background-color: var(--chat-pill); 
   color: var(--text-primary); 
   border-radius: 32px;
-  padding: 6px 16px;
+  padding: 12px 20px;
   border: none;
   width: fit-content;
   max-width: 100%;
   font-size: 18.5px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 /* Markdown Styles inside Bubbles */
@@ -1455,7 +1455,7 @@
 }
 
 .inputWrapper:focus-within { 
-  background-color: var(--chat-pill-hover);
+  background-color: rgb(25, 25, 25);
   border-color: var(--chat-border-strong);
 }
 
@@ -1672,7 +1672,7 @@
   }
   
   .chatCanvas { padding-top: 84px !important; padding-bottom: 180px; }
-  .messageScroll { padding: 0 12px; gap: 12px; }
+  .messageScroll { padding: 0 1.2rem; gap: 12px; }
   .footer { 
     padding: 0 12px 8px; 
     background-color: transparent;
@@ -1695,6 +1695,7 @@
   .codeBlockContainer {
     min-width: 0;
     width: 100%;
+    margin: 16px 0;
   }
 
   .modalOverlay {
@@ -2038,10 +2039,11 @@
   bottom: auto;
   left: 50%;
   transform: translateX(-50%);
-  width: 140px;
-  height: 44px;
+  width: fit-content;
+  min-width: 100px;
+  height: 38px;
   border-radius: 100px;
-  padding: 0 8px 0 16px;
+  padding: 0 6px 0 14px;
   animation: pillPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -2136,6 +2138,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   height: 100%;
   width: 100%;
   animation: fadeIn 0.3s ease-out;
@@ -2191,21 +2194,21 @@
   border: none;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
+  gap: 6px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--hint-accent);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.nudgeBtn span { font-size: 18px; }
+.nudgeBtn span { font-size: 16px; }
 
 .nudgeClose {
   background-color: var(--glass-highlight);
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2216,6 +2219,8 @@
 }
 
 .nudgeClose:hover { background-color: var(--glass-highlight-hover); color: var(--text-primary); }
+
+.nudgeClose span { font-size: 14px; }
 
 .hintHeader {
   display: flex;
@@ -2505,7 +2510,7 @@
   max-width: 100%;
   border-color: var(--chat-border-strong, rgba(211, 166, 241, 0.45));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  background-color: var(--glass-bg-hover, var(--glass-bg));
+  background-color: rgb(25, 25, 25);
 }
 
 :global([data-theme='light']) .textareaPill {
@@ -2586,18 +2591,18 @@
 }
 
 .voiceModeTrigger {
-  width: 40px;
-  height: 40px;
+  width: 38.5px;
+  height: 38.5px;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background-color: var(--bg-base);
-  color: var(--text-primary);
+  border: none;
+  background-color: #3b82f6;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: var(--chat-shadow);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
   flex-shrink: 0;
 }
 
@@ -2609,7 +2614,7 @@
 
 .voiceModeTrigger:hover {
   transform: scale(1.08);
-  background-color: var(--glass-bg-hover);
+  background-color: #2563eb;
 }
 
 :global([data-theme='light']) .voiceModeTrigger:hover {
@@ -2715,7 +2720,7 @@
 
 @media (max-width: 768px) {
   .chatCanvas { padding-top: 84px !important; padding-bottom: 120px; }
-  .messageScroll { padding: 0 12px 0 8px; gap: 12px; }
+  .messageScroll { padding: 0 1.2rem; gap: 12px; }
   .footer { 
     padding: 0 12px 12px 8px; 
     background-color: transparent;

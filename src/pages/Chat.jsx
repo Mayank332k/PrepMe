@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Mic02Icon } from "hugeicons-react";
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import api from "../api";
@@ -2041,7 +2042,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       : {}
                   }
                 >
-                  <span className="material-symbols-outlined">mic</span>
+                  <Mic02Icon size={24} />
                 </button>
 
                 {isVoiceMode ? (
@@ -2209,7 +2210,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               <div className={styles.pulseRing} />
               <div className={styles.glowingOrb}>
                 <div className={styles.glowingOrbInner}>
-                  <span className="material-symbols-outlined">mic</span>
+                  <Mic02Icon size={28} />
                 </div>
               </div>
             </div>
