@@ -1314,6 +1314,13 @@
   overflow-x: auto;
   overflow-y: auto;
   max-height: 350px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.codeContent::-webkit-scrollbar {
+  display: none;
 }
 
 .codeContent pre,
@@ -1609,9 +1616,9 @@
   }
   
   .endPill { 
-    height: 48px;
-    width: 96px;
-    border-radius: 30px;
+    height: 45px;
+    width: 90px;
+    border-radius: 28px;
     background-color: rgba(18, 18, 18, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1633,9 +1640,9 @@
   }
 
   .backBtn {
-    height: 48px;
-    width: 64px;
-    border-radius: 30px;
+    height: 45px;
+    width: 58px;
+    border-radius: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2530,14 +2537,14 @@
 
 :global([data-theme='light']) .textareaPill {
   background-color: rgb(255, 255, 255) !important;
-  border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.03), 0 4px 24px rgba(0, 0, 0, 0.05);
 }
 
 :global([data-theme='light']) .textareaPill:focus-within,
 :global([data-theme='light']) .textareaPill.activePill {
   background-color: rgb(255, 255, 255) !important;
-  border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
@@ -2839,7 +2846,7 @@
   .chatCanvas { padding-top: 84px !important; padding-bottom: 120px; }
   .messageScroll { padding: 0 1rem; gap: 12px; }
   .footer { 
-    padding: 0 12px 12px 8px; 
+    padding: 0 12px 21px 8px; 
     background-color: transparent;
     border-top: none;
   }
