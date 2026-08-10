@@ -2005,7 +2005,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
           </div>
           <form onSubmit={handleSendMessage} className={styles.form}>
             <div
-              className={styles.textareaPill}
+              className={`${styles.textareaPill} ${inputText.trim().length > 0 ? styles.activePill : ""}`}
               style={{
                 WebkitBackdropFilter: 'blur(16px) saturate(180%)',
                 backdropFilter: 'blur(16px) saturate(180%)',
