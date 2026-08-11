@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Mic02Icon } from "hugeicons-react";
-import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import api from "../api";
 import { Sidebar } from "../components/layout/Sidebar";
 import { MobileNav } from "../components/layout/MobileNav";
+import CodeBlock from "../components/Chat/CodeBlock";
+import ChatMessage from "../components/Chat/ChatMessage";
+import { ErrorNotification } from "../components/ui/ErrorNotification";
 import { useSettings } from "../context/SettingsContext";
 import { useTheme } from "../context/ThemeContext";
 import styles from "./Chat.module.css";
@@ -15,587 +14,116 @@ import styles from "./Chat.module.css";
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const CodeBlock = ({ language, value }) => {
-  const [copied, setCopied] = useState(false);
-  const scrollRef = useRef(null);
+// CodeBlock has been moved to src/components/Chat/CodeBlock.jsx
+// ChatMessage and Markdown rules have been moved to src/components/Chat/ChatMessage.jsx
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [value]);
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className={styles.codeBlockContainer}>
-      <div className={styles.codeHeader}>
-        <div className={styles.codeLang}>
-          <span style={{ opacity: 0.6 }}>{"{/}"}</span>
-          <span>{language || "code"}</span>
-        </div>
-        <button
-          className={styles.copyBtn}
-          onClick={copyToClipboard}
-          title="Copy code"
-        >
-          {copied ? (
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          ) : (
-            <i className="fi fi-rr-clone" style={{ fontSize: "16px" }}></i>
-          )}
-        </button>
-      </div>
-      <div className={styles.codeContent} ref={scrollRef}>
-        <SyntaxHighlighter
-          language={language || "text"}
-          style={oneDark}
-          useInlineStyles={false}
-          PreTag="div"
-          codeTagProps={{ style: { backgroundColor: "transparent" } }}
-          customStyle={{
-            margin: 0,
-            padding: "16px 20px",
-            backgroundColor: "transparent",
-            fontSize: "14.5px",
-            lineHeight: "1.6",
-          }}
-        >
-          {value}
-        </SyntaxHighlighter>
-      </div>
-    </div>
-  );
-};
-
-const languageAliases = {
-  js: "javascript",
-  node: "javascript",
-  ts: "typescript",
-  py: "python",
-  sh: "bash",
-  shell: "bash",
-  zsh: "bash",
-  cplusplus: "cpp",
-  "c++": "cpp",
-  cs: "csharp",
-  yml: "yaml",
-};
-
-const getCodeLanguage = (className = "") => {
-  const languageClass = className
-    .split(/\s+/)
-    .find((name) => name.startsWith("language-"));
-
-  if (!languageClass) return "";
-
-  const language = languageClass.replace("language-", "").toLowerCase();
-  return languageAliases[language] || language;
-};
-
-const extractText = (node) => {
-  if (node == null) return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join("");
-  if (React.isValidElement(node) && node.props && node.props.children) {
-    return extractText(node.props.children);
-  }
-  return "";
-};
-
-const isRedundantHeading = (text) => {
-  if (!text) return false;
-  const cleaned = String(text)
-    .replace(/^(###|##|#|####)?\s*/i, "")
-    .replace(/[:.-]/g, "")
-    .trim()
-    .toLowerCase();
-  const redundantTitles = [
-    "question",
-    "technical question",
-    "next question",
-    "interview question",
-    "qustion",
-    "technical qustion",
-    "question 1",
-    "question 2",
-    "question 3"
-  ];
-  return redundantTitles.includes(cleaned);
-};
-
-const shouldUseAccentBar = (text, isBlockquote = false) => {
-  if (!text && !isBlockquote) return false;
-  if (isBlockquote) return true;
-
-  const accentKeywords = [
-    "follow-up",
-    "follow up",
-    "followup",
-    "follow",
-    "feedback",
-    "context",
-    "next step",
-    "next steps",
-    "moving forward",
-    "important",
-    "note",
-    "tip",
-    "takeaway",
-    "key takeaway",
-    "key takeaways",
-    "hint",
-    "insight",
-    "summary",
-    "overview",
-    "evaluation",
-    "assessment",
-    "review",
-    "observation",
-    "strength",
-    "improvement",
-    "suggestion"
-  ];
-
-  const lower = String(text).toLowerCase();
-  const pattern = new RegExp(
-    `\\b(${accentKeywords
-      .map((kw) => kw.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"))
-      .join("|")})\\b`,
-    "i"
-  );
-
-  return pattern.test(lower);
-};
-
-const renderHeadingOrQuestion = (Tag, defaultClassName, { children, ...props }) => {
-  const rawText = extractText(children);
-
-  if (isRedundantHeading(rawText)) {
-    return null;
-  }
-
-  if (shouldUseAccentBar(rawText, Tag === "blockquote")) {
-    return (
-      <div className={styles.questionCard}>
-        <div className={styles.questionCardInner}>
-          <div className={styles.questionAccentBar} />
-          <div className={styles.questionContent}>
-            <div className={styles.questionText}>{children}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Tag className={defaultClassName} {...props}>
-      {children}
-    </Tag>
-  );
-};
-
-const MarkdownComponents = {
-  h1: (props) => renderHeadingOrQuestion("h1", styles.heading1, props),
-  h2: (props) => renderHeadingOrQuestion("h2", styles.heading2, props),
-  h3: (props) => renderHeadingOrQuestion("h3", styles.heading3, props),
-  h4: (props) => renderHeadingOrQuestion("h4", styles.heading4, props),
-  blockquote: (props) => renderHeadingOrQuestion("blockquote", "", props),
-  p: (props) => {
-    const rawText = extractText(props.children).trim();
-    // Check if paragraph begins with an accent keyword label (e.g. "Feedback:" or "**Context:**")
-    const firstWordMatch = rawText.match(/^([A-Za-z\s-]+)([:.-]|\s{2,})/);
-    if (firstWordMatch && shouldUseAccentBar(firstWordMatch[1])) {
-      return (
-        <div className={styles.questionCard}>
-          <div className={styles.questionCardInner}>
-            <div className={styles.questionAccentBar} />
-            <div className={styles.questionContent}>
-              <div className={styles.questionText}>{props.children}</div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return <p {...props}>{props.children}</p>;
-  },
-  pre: ({ children }) => {
-    const codeEl = React.Children.toArray(children).find(
-      (child) => React.isValidElement(child) && (child.type === "code" || child.props?.mdastName === "code")
-    );
-    if (codeEl) {
-      const { className, children: codeChildren } = codeEl.props;
-      const language = getCodeLanguage(className);
-      return (
-        <CodeBlock
-          language={language || "text"}
-          value={String(codeChildren).replace(/\n$/, "")}
-        />
-      );
-    }
-    return <pre>{children}</pre>;
-  },
-};
-
-// Helper to clean markdown for Voice Mode
-const stripMarkdown = (text) => {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
-    .replace(/\*(.*?)\*/g, "$1") // Italic
-    .replace(/__(.*?)__/g, "$1") // Bold underscore
-    .replace(/_(.*?)_/g, "$1") // Italic underscore
-    .replace(/`(.*?)`/g, "$1") // Inline code
-    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Links
-    .replace(/#+\s/g, "") // Headers
-    .trim();
-};
-
-
-const ChatMessage = React.memo(
-  ({
-    msg,
-    activeMenuId,
-    setActiveMenuId,
-    sessionData,
-    activeVoiceMessageId,
-    currentSpokenWordIndex,
-    isGlowing,
-    onSpeak,
-    onStopSpeak,
-  }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const MAX_LENGTH = 150;
-    const isLongUserMsg = msg.sender === "user" && msg.text.length > MAX_LENGTH;
-    
-    const isSpeaking = activeVoiceMessageId === msg.id;
-    const lyricContainerRef = useRef(null);
-
-    // Memoize cleaned words to prevent re-splitting on every render
-    const words = useMemo(() => {
-      const cleanText = isSpeaking ? stripMarkdown(msg.text) : msg.text;
-      return cleanText.split(/\s+/);
-    }, [msg.text, isSpeaking]);
-
-    // Adjust scroll position to keep active word centered
-    useEffect(() => {
-      if (isSpeaking && lyricContainerRef.current) {
-        const activeWord = lyricContainerRef.current.querySelector(
-          `.${styles.wordActive}`,
-        );
-        const viewport = lyricContainerRef.current.closest(
-          `.${styles.lyricViewport}`,
-        );
-
-        if (activeWord && viewport) {
-          const viewportHeight = viewport.offsetHeight;
-          const wordOffset = activeWord.offsetTop;
-          const wordHeight = activeWord.offsetHeight;
-
-          // Calculate the translation needed to put the active word at the center of the viewport
-          // Use translate3d for hardware acceleration and sub-pixel accuracy
-          const targetScroll = wordOffset - viewportHeight / 2 + wordHeight / 2;
-          lyricContainerRef.current.style.transform = `translate3d(0, ${-targetScroll}px, 0)`;
-        }
-      }
-    }, [currentSpokenWordIndex, isSpeaking]);
-
-    return (
-      <div
-        className={`${styles.messageRow} ${msg.sender === "user" ? styles.userRow : styles.aiRow}`}
-      >
-        <div className={styles.messageRowInner}>
-          <div className={styles.messageBody}>
-            <div className={styles.bubbleContainer}>
-              <div
-                className={`${styles.bubble} ${isSpeaking ? styles.lyricBubble : ""} ${msg.isError ? styles.errorBubble : ""}`}
-              >
-                <div className={styles.markdownContent}>
-                  {isSpeaking ? (
-                    <div className={styles.lyricViewport}>
-                      <div className={styles.lyricText} ref={lyricContainerRef}>
-                        {words.map((word, wIdx) => {
-                          const isPast = wIdx < currentSpokenWordIndex;
-                          const isActive = wIdx === currentSpokenWordIndex;
-                          const isFuture = wIdx > currentSpokenWordIndex;
-
-                          return (
-                            <span
-                              key={wIdx}
-                              className={`${styles.lyricWord} ${
-                                isActive
-                                  ? styles.wordActive
-                                  : isPast
-                                    ? styles.wordPast
-                                    : styles.wordFuture
-                              }`}
-                            >
-                              {word.split("").map((char, cIdx) => (
-                                <span
-                                  key={cIdx}
-                                  className={styles.lyricChar}
-                                  style={{
-                                    transitionDelay: isActive
-                                      ? `${cIdx * 0.06}s`
-                                      : "0s",
-                                  }}
-                                >
-                                  {char}
-                                </span>
-                              ))}
-                              <span className={styles.lyricChar}>&nbsp;</span>
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {msg.sender === "user" ? (
-                        <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                          {isLongUserMsg && !isExpanded
-                            ? (msg.text || "").trim().substring(0, MAX_LENGTH) + "..."
-                            : (msg.text || "").trim()}
-                        </div>
-                      ) : (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
-                          {(msg.text || "").trim()}
-                        </ReactMarkdown>
-                      )}
-                      {isLongUserMsg && (
-                        <button
-                          className={styles.expandButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsExpanded(!isExpanded);
-                          }}
-                        >
-                          <span className="material-symbols-outlined">
-                            {isExpanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}
-                          </span>
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {msg.sender === "ai" && (
-              <div className={styles.messageMetadata}>
-                {isSpeaking ? (
-                  <button
-                    className={`${styles.menuTrigger} ${styles.speakActive}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onStopSpeak) onStopSpeak();
-                    }}
-                    title="Stop speaking"
-                  >
-                    <span className="material-symbols-outlined" style={{ color: 'var(--accent-color)' }}>
-                      stop_circle
-                    </span>
-                  </button>
-                ) : (
-                  <button
-                    className={styles.menuTrigger}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSpeak) onSpeak(msg.text, msg.id);
-                    }}
-                    title="Speak message"
-                  >
-                    <i className="fi fi-br-volume"></i>
-                  </button>
-                )}
-                
-                <button
-                  className={styles.menuTrigger}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
-                  }}
-                >
-                  <i className="fi fi-br-menu-dots-vertical"></i>
-                </button>
-
-                {activeMenuId === msg.id && (
-                  <div
-                    className={styles.infoDropdown}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className={styles.infoLabel}>
-                      {(() => {
-                        const msgDate = msg.date || new Date();
-                        const today = new Date();
-                        const isToday =
-                          msgDate.getDate() === today.getDate() &&
-                          msgDate.getMonth() === today.getMonth() &&
-                          msgDate.getFullYear() === today.getFullYear();
-
-                        return isToday
-                          ? "Today"
-                          : msgDate.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            });
-                      })()}
-                      , {msg.timestamp}
-                    </span>
-
-                    <div className={styles.infoItem}>
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "20px", color: "#666" }}
-                      >
-                        fingerprint
-                      </span>
-                      <span className={styles.infoValue}>
-                        Session #
-                        {sessionData?.sessionId?.slice(-6).toUpperCase() ||
-                          "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  },
-);
+import { useVoiceMode } from "../hooks/useVoiceMode";
+import { useChatLogic } from "../hooks/useChatLogic";
 
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
-  const [messages, setMessages] = useState([]);
-
-  // Initialize with results from Analysis or Restore Session
-  useEffect(() => {
-    const restoreSession = async () => {
-      const sessionId = sessionData?.sessionId;
-      if (!sessionId || messages.length > 0) return;
-
-      setIsInitialLoading(true);
-      try {
-        const { data } = await api.get(`/interview/session/${sessionId}`);
-
-        // Handle completed session by redirecting back
-        if (
-          data.success &&
-          data.message === "Interview completed successfully!"
-        ) {
-          localStorage.removeItem("activeSessionId");
-          onNavigate("upload");
-          return;
-        }
-
-        if (data.success && data.session.transcript.length > 0) {
-          const formattedMessages = data.session.transcript.map((m, idx) => ({
-            id: m._id || `msg-${idx}-${Date.now()}`,
-            sender: m.role === "assistant" ? "ai" : "user",
-            text: m.content,
-            timestamp: m.timestamp
-              ? new Date(m.timestamp).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })
-              : "Earlier",
-            date: m.timestamp ? new Date(m.timestamp) : new Date(),
-          }));
-          setMessages(formattedMessages);
-
-          if (!sessionData?.firstMessage) {
-            setIsResumed(true);
-            setTimeout(() => {
-              setIsExiting(true);
-              setTimeout(() => {
-                setIsResumed(false);
-                setIsExiting(false);
-              }, 600); // Animation duration
-            }, 5000);
-          }
-        } else if (sessionData?.firstMessage) {
-          setMessages([
-            {
-              id: Date.now(),
-              sender: "ai",
-              text: sessionData.firstMessage,
-              timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            },
-          ]);
-        }
-      } catch (err) {
-        console.error("Failed to restore session:", err);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-
-    restoreSession();
-  }, [sessionData, messages.length]);
-
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [isEnding, setIsEnding] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [showPillMenu, setShowPillMenu] = useState(false);
+  
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
-  const [activeMenuId, setActiveMenuId] = useState(null);
-  const [isResumed, setIsResumed] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [showPillMenu, setShowPillMenu] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+  const [showVoiceBetaModal, setShowVoiceBetaModal] = useState(false);
+  const [voiceToast, setVoiceToast] = useState(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  
   const pillMenuRef = useRef(null);
+  const scrollRef = useRef(null);
+  const textareaRef = useRef(null);
+  const chatCanvasRef = useRef(null);
+  const sendMessageRef = useRef(null);
+  const inputTextRef = useRef(inputText);
+  const voiceToastTimeoutRef = useRef(null);
+  const pillRef = useRef(null);
+  const orbRef = useRef(null);
+  const hintContentRef = useRef(null);
+
+  const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } = useSettings();
+  const { theme, setThemePreference } = useTheme();
 
   useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (pillMenuRef.current && !pillMenuRef.current.contains(e.target)) {
-        setShowPillMenu(false);
-      }
-    };
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setShowPillMenu(false);
-    };
-    if (showPillMenu) {
-      document.addEventListener("mousedown", handleOutsideClick);
-      document.addEventListener("keydown", handleEsc);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [showPillMenu]);
+    inputTextRef.current = inputText;
+  }, [inputText]);
 
-  // Hint States
-  const [showHintNudge, setShowHintNudge] = useState(false);
-  const [showHintBox, setShowHintBox] = useState(false);
-  const [isHintLoading, setIsHintLoading] = useState(false);
-  const [hintText, setHintText] = useState("");
-  const [hintCancelCount, setHintCancelCount] = useState(0);
-  const lastActionTime = useRef(Date.now());
-  const hintTimerRef = useRef(null);
+  const scrollToBottom = () => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const triggerVoiceToast = (message) => {
+    if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+    setVoiceToast(message);
+    voiceToastTimeoutRef.current = setTimeout(() => setVoiceToast(null), 6000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (voiceToastTimeoutRef.current) clearTimeout(voiceToastTimeoutRef.current);
+    };
+  }, []);
+
+  // --- Voice Mode Hook ---
+  const voiceMode = useVoiceMode({
+    inputText,
+    setInputText,
+    inputTextRef,
+    sendMessageRef,
+    isStreamingRef: { current: false }, // Will sync below
+    scrollToBottom,
+    textareaRef,
+    pillRef,
+    orbRef,
+    triggerVoiceToast,
+    setShowVoiceBetaModal
+  });
+
+  const {
+    isVoiceMode, isListening, isDictating, activeVoiceMessageId,
+    currentSpokenWordIndex, micVolume, toggleDictation, toggleVoiceMode,
+    stopSpeakMessage, speakMessage, stopVoiceMode, startVoiceModeConfirm
+  } = voiceMode;
+
+  // --- Chat API Logic Hook ---
+  const chatLogic = useChatLogic({
+    sessionData,
+    onNavigate,
+    inputText,
+    setInputText,
+    voiceMode,
+    sendMessageRef,
+    scrollToBottom,
+  });
+
+  const {
+    messages, setMessages, isTyping, isStreaming, isInitialLoading,
+    isResumed, isExiting, handleSendMessage, requestHint,
+    showHintNudge, setShowHintNudge, showHintBox, setShowHintBox,
+    isHintLoading, hintText, hintCancelCount, setHintCancelCount, lastActionTime
+  } = chatLogic;
+
+  // Sync Streaming state to Voice Mode
+  useEffect(() => {
+    voiceMode.isStreamingRef = chatLogic.isStreamingRef;
+  }, [chatLogic.isStreamingRef, voiceMode]);
+
+  const hintsAllowed = useMemo(() => {
+    return hintsEnabled && (isVoiceMode ? hintsForVoice : hintsForChat);
+  }, [hintsEnabled, isVoiceMode, hintsForVoice, hintsForChat]);
+
+  useEffect(() => {
+    if (!hintsAllowed) {
+      setShowHintNudge(false);
+      setShowHintBox(false);
+    }
+  }, [hintsAllowed, setShowHintNudge, setShowHintBox]);
+
+  // Hint Resize Observer (UI specific)
   const [hintHeight, setHintHeight] = useState("44px");
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const hintContentRef = useRef(null);
 
   useEffect(() => {
     if (!showHintBox) {
@@ -603,7 +131,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
       setDimensions({ width: 0, height: 0 });
       return;
     }
-
     if (!hintContentRef.current) return;
 
     const observer = new ResizeObserver((entries) => {
@@ -611,11 +138,8 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
         const contentHeight = entry.contentRect.height;
         const contentWidth = entry.contentRect.width;
         const isMobile = window.innerWidth <= 768;
-        const paddingY = isMobile ? 28 : 32;
-        const paddingX = isMobile ? 36 : 40;
-
-        const totalHeight = contentHeight + paddingY;
-        const totalWidth = contentWidth + paddingX;
+        const totalHeight = contentHeight + (isMobile ? 28 : 32);
+        const totalWidth = contentWidth + (isMobile ? 36 : 40);
 
         setDimensions({ width: totalWidth, height: totalHeight });
         setHintHeight(`${totalHeight}px`);
@@ -634,129 +158,28 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     const offset = 0.5;
 
     if (w <= 0 || h <= 0) return { left: "", right: "" };
-
     const left = `M ${w / 2} ${offset} L ${offset + r} ${offset} A ${r} ${r} 0 0 0 ${offset} ${offset + r} L ${offset} ${h - offset - r} A ${r} ${r} 0 0 0 ${offset + r} ${h - offset} L ${w / 2} ${h - offset}`;
     const right = `M ${w / 2} ${offset} L ${w - offset - r} ${offset} A ${r} ${r} 0 0 1 ${w - offset} ${offset + r} L ${w - offset} ${h - offset - r} A ${r} ${r} 0 0 1 ${w - offset - r} ${h - offset} L ${w / 2} ${h - offset}`;
-
     return { left, right };
   };
 
   const { left: leftPath, right: rightPath } = getBorderPaths();
 
-  const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } =
-    useSettings();
-  const { theme, themePreference, setThemePreference, toggleTheme } = useTheme();
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
-
-  const hintsAllowed = useMemo(() => {
-    return hintsEnabled && (isVoiceMode ? hintsForVoice : hintsForChat);
-  }, [hintsEnabled, isVoiceMode, hintsForVoice, hintsForChat]);
-
-  useEffect(() => {
-    if (!hintsAllowed) {
-      setShowHintNudge(false);
-      setShowHintBox(false);
-    }
-  }, [hintsAllowed]);
-  const [showVoiceBetaModal, setShowVoiceBetaModal] = useState(false);
-  const [voiceToast, setVoiceToast] = useState(null);
-  const voiceToastTimeoutRef = useRef(null);
-
-  const triggerVoiceToast = (message) => {
-    if (voiceToastTimeoutRef.current)
-      clearTimeout(voiceToastTimeoutRef.current);
-    setVoiceToast(message);
-    voiceToastTimeoutRef.current = setTimeout(() => {
-      setVoiceToast(null);
-    }, 6000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (voiceToastTimeoutRef.current)
-        clearTimeout(voiceToastTimeoutRef.current);
-    };
-  }, []);
-
-  const [isDictating, setIsDictating] = useState(false);
-  // Lazily created per session — avoids Android Chrome gesture-policy violations
-  const recognitionRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
-  const [activeVoiceMessageId, setActiveVoiceMessageId] = useState(null);
-  const [currentSpokenWordIndex, setCurrentSpokenWordIndex] = useState(-1);
-  const isDictatingRef = useRef(false);
-  const isListeningRef = useRef(false);
-  const isVoiceModeRef = useRef(false);
-  const activeVoiceMessageIdRef = useRef(null);
-  const isStreamingRef = useRef(false);
-  const sendMessageRef = useRef(null);
-  const silenceTimerRef = useRef(null);
-  const [voiceWave, setVoiceWave] = useState(false);
-  const recognitionBaseTextRef = useRef("");
-  const inputTextRef = useRef(inputText);
-  const speechQueueRef = useRef([]);
-  const isSpeakingChunkRef = useRef(false);
-  const totalWordsSpokenRef = useRef(0);
-
-  // Audio Visualizer Refs
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const dataArrayRef = useRef(null);
-  const sourceRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const visualizerIntervalRef = useRef(null);
-  const pillRef = useRef(null); // Ref for direct DOM update
-  const orbRef = useRef(null); // Ref for immersive voice listening bubble
-  const [micVolume, setMicVolume] = useState(0);
-
-  // Sync inputTextRef and activeVoiceMessageIdRef with state
-  useEffect(() => {
-    inputTextRef.current = inputText;
-  }, [inputText]);
-
-  // Lock body scroll when Beta Modal is open to prevent mobile scroll shifts
-  useEffect(() => {
-    if (showVoiceBetaModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showVoiceBetaModal]);
-
-  useEffect(() => {
-    activeVoiceMessageIdRef.current = activeVoiceMessageId;
-  }, [activeVoiceMessageId]);
-
-  const scrollRef = useRef(null);
-  const textareaRef = useRef(null);
-  const chatCanvasRef = useRef(null);
-  const [showScrollBtn, setShowScrollBtn] = useState(false);
-
+  // Scroll visibility
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    // Show button if user scrolls up by more than 300px from bottom
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 300;
     setShowScrollBtn(!isAtBottom);
   };
 
-  // Auto-resize textarea with refined smooth transition
+  // Textarea auto-resize
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // 1. Save current height
       const startHeight = textarea.style.height;
-
-      // 2. Measure new height
       textarea.style.height = "auto";
       const targetHeight = `${Math.min(textarea.scrollHeight, 150)}px`;
-
-      // 3. Restore start height immediately
       textarea.style.height = startHeight;
-
-      // 4. In the next frame, apply target height to trigger transition
       requestAnimationFrame(() => {
         textarea.style.height = targetHeight;
       });
@@ -769,12 +192,27 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     });
   }, [messages, isStreaming]);
 
-  // Keep Voice Mode components fully pinned inside the viewport
   useEffect(() => {
     if (isVoiceMode) {
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [isVoiceMode, activeVoiceMessageId, isTyping, inputText]);
+
+  // Pill menu dismiss
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (pillMenuRef.current && !pillMenuRef.current.contains(e.target)) setShowPillMenu(false);
+    };
+    const handleEsc = (e) => { if (e.key === "Escape") setShowPillMenu(false); };
+    if (showPillMenu) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEsc);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [showPillMenu]);
 
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
@@ -782,933 +220,57 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // Warm up SpeechSynthesis voices to avoid Chrome/Safari lazy-load race condition
+  // Warm up voices
   useEffect(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.getVoices();
-      const handleVoicesChanged = () => {
-        window.speechSynthesis.getVoices();
-      };
-      window.speechSynthesis.addEventListener(
-        "voiceschanged",
-        handleVoicesChanged,
-      );
-      return () => {
-        window.speechSynthesis.removeEventListener(
-          "voiceschanged",
-          handleVoicesChanged,
-        );
-      };
+      const handleVoicesChanged = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
+      return () => window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
     }
   }, []);
+
+  // Keyboard shortcut
+  const handleKeyDown = (e) => {
+    lastActionTime.current = Date.now();
+    if (showHintNudge) setShowHintNudge(false);
+    const isDesktop = window.innerWidth > 768 && !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (e.key === "Enter") {
+      if (isDesktop && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage(e);
+      } else if (e.metaKey || e.ctrlKey) {
+        e.preventDefault();
+        handleSendMessage(e);
+      }
+    }
+  };
+
+  // Prevent scroll when beta modal open
+  useEffect(() => {
+    if (showVoiceBetaModal) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showVoiceBetaModal]);
 
   // Cleanup voice on unmount (navigating away / session end)
   useEffect(() => {
     return () => {
-      // stopVoiceMode is not yet defined when this effect registers,
-      // so we inline the same cleanup directly
-      isVoiceModeRef.current = false;
-      isListeningRef.current = false;
-      isDictatingRef.current = false;
-      const rec = recognitionRef.current;
-      if (rec)
-        try {
-          rec.stop();
-        } catch (e) {}
-      if (animationFrameRef.current)
-        cancelAnimationFrame(animationFrameRef.current);
-      if (sourceRef.current) {
-        try {
-          sourceRef.current.mediaStream.getTracks().forEach((t) => t.stop());
-        } catch (e) {}
-      }
-      if (audioContextRef.current?.state !== "closed") {
-        try {
-          audioContextRef.current?.close();
-        } catch (e) {}
-      }
-      window.speechSynthesis.cancel();
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      stopVoiceMode();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Sync refs with state
-  useEffect(() => {
-    isDictatingRef.current = isDictating;
-    isListeningRef.current = isListening;
-    isVoiceModeRef.current = isVoiceMode;
-    isStreamingRef.current = isStreaming;
-    sendMessageRef.current = handleSendMessage;
-  }); // Run on every render to ensure sendMessageRef always has the latest closure/state
-
-  // Bind event handlers to a recognition instance (called after lazy creation)
-  const bindRecognitionHandlers = (rec) => {
-    rec.onstart = () => {
-      recognitionBaseTextRef.current = inputTextRef.current;
-    };
-
-    rec.onresult = (event) => {
-      let currentSessionFinal = "";
-      let currentSessionInterim = "";
-
-      for (let i = 0; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          currentSessionFinal += event.results[i][0].transcript;
-        } else {
-          currentSessionInterim += event.results[i][0].transcript;
-        }
-      }
-
-      if (isDictatingRef.current || isListeningRef.current) {
-        const base = recognitionBaseTextRef.current;
-        const newText =
-          base +
-          (base && !base.endsWith(" ") ? " " : "") +
-          currentSessionFinal +
-          currentSessionInterim;
-        setInputText(newText);
-
-        if (isVoiceModeRef.current && currentSessionFinal.trim().length > 0) {
-          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = setTimeout(() => {
-            if (sendMessageRef.current) {
-              sendMessageRef.current();
-            }
-          }, 500);
-        }
-      }
-    };
-
-    rec.onerror = (event) => {
-      const recoverableErrors = [
-        "no-speech",
-        "audio-capture",
-        "network",
-        "aborted",
-      ];
-      if (recoverableErrors.includes(event.error)) {
-        // Suppress console warnings for recoverable network errors (common in Web Speech API)
-        if (event.error !== "network") {
-          console.warn("Speech recognition warning:", event.error);
-        }
-        return; // Let onend handle the safe restart
-      }
-      // Non-recoverable errors (e.g. not-allowed, service-not-allowed)
-      setIsDictating(false);
-      isDictatingRef.current = false;
-      setIsListening(false);
-      isListeningRef.current = false;
-      setIsVoiceMode(false);
-      isVoiceModeRef.current = false;
-    };
-
-    rec.onend = () => {
-      if (isDictatingRef.current) {
-        setTimeout(() => {
-          if (isDictatingRef.current) {
-            try {
-              rec.start();
-            } catch (e) {}
-          }
-        }, 400);
-      } else if (isVoiceModeRef.current && isListeningRef.current) {
-        setTimeout(() => {
-          if (isVoiceModeRef.current && isListeningRef.current) {
-            try {
-              rec.start();
-            } catch (e) {
-              setIsListening(false);
-              isListeningRef.current = false;
-            }
-          }
-        }, 400);
-      } else {
-        setIsListening(false);
-        isListeningRef.current = false;
-      }
-    };
-  };
-
-  const toggleDictation = () => {
-    const rec = recognitionRef.current;
-    if (isDictating) {
-      if (rec)
-        try {
-          rec.stop();
-        } catch (e) {}
-      setIsDictating(false);
-    } else {
-      if (!SpeechRecognition) {
-        alert("Speech recognition is not supported in your browser.");
-        return;
-      }
-      // Create a fresh instance for dictation
-      const newRec = new SpeechRecognition();
-      newRec.continuous = true;
-      newRec.interimResults = true;
-      newRec.lang = "en-US";
-      newRec.maxAlternatives = 1;
-      recognitionRef.current = newRec;
-      bindRecognitionHandlers(newRec);
-      try {
-        newRec.start();
-        setIsDictating(true);
-      } catch (e) {
-        console.warn("Recognition already running:", e);
-        setIsDictating(true);
-      }
-    }
-  };
-
-  const startListeningSession = () => {
-    const rec = recognitionRef.current;
-    if (!rec || !isVoiceModeRef.current) return;
-    // No delay — must stay within the user gesture tick on Android Chrome
-    try {
-      rec.start();
-      setIsListening(true);
-      isListeningRef.current = true;
-    } catch (e) {
-      // If already started, sync state
-      setIsListening(true);
-      isListeningRef.current = true;
-    }
-  };
-
-  const startVisualizer = async () => {
-    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(
-      navigator.userAgent,
-    );
-    if (isMobileDevice) {
-      // On mobile, bypass AudioContext mic capture to avoid hardware locking conflicts with SpeechRecognition
-      if (visualizerIntervalRef.current)
-        clearInterval(visualizerIntervalRef.current);
-      visualizerIntervalRef.current = setInterval(() => {
-        const isActive =
-          isListeningRef.current && !activeVoiceMessageIdRef.current;
-        const v1 = isActive ? 0.3 + Math.random() * 0.7 : 0;
-        const v2 = isActive ? 0.3 + Math.random() * 0.7 : 0;
-        const v3 = isActive ? 0.3 + Math.random() * 0.7 : 0;
-        if (pillRef.current) {
-          pillRef.current.style.setProperty("--v1", v1);
-          pillRef.current.style.setProperty("--v2", v2);
-          pillRef.current.style.setProperty("--v3", v3);
-        }
-        if (orbRef.current) {
-          orbRef.current.style.setProperty("--v1", v1);
-          orbRef.current.style.setProperty("--v2", v2);
-          orbRef.current.style.setProperty("--v3", v3);
-        }
-      }, 120);
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContextRef.current = new (
-        window.AudioContext || window.webkitAudioContext
-      )();
-      if (audioContextRef.current.state === "suspended") {
-        await audioContextRef.current.resume();
-      }
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceRef.current =
-        audioContextRef.current.createMediaStreamSource(stream);
-
-      sourceRef.current.connect(analyserRef.current);
-      analyserRef.current.fftSize = 64;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      dataArrayRef.current = new Uint8Array(bufferLength);
-
-      const updateVolume = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-
-        // Only react to microphone frequencies when mic is actively listening AND AI is silent
-        const isActive =
-          isListeningRef.current && !activeVoiceMessageIdRef.current;
-
-        const v1 = isActive ? Math.min(dataArrayRef.current[2] / 50, 1.5) : 0;
-        const v2 = isActive ? Math.min(dataArrayRef.current[8] / 50, 1.5) : 0;
-        const v3 = isActive ? Math.min(dataArrayRef.current[15] / 50, 1.5) : 0;
-
-        // DIRECT DOM UPDATE for frequency-specific dynamic height adjustment
-        if (pillRef.current) {
-          pillRef.current.style.setProperty("--v1", v1);
-          pillRef.current.style.setProperty("--v2", v2);
-          pillRef.current.style.setProperty("--v3", v3);
-        }
-        if (orbRef.current) {
-          orbRef.current.style.setProperty("--v1", v1);
-          orbRef.current.style.setProperty("--v2", v2);
-          orbRef.current.style.setProperty("--v3", v3);
-        }
-
-        animationFrameRef.current = requestAnimationFrame(updateVolume);
-      };
-
-      updateVolume();
-    } catch (err) {
-      console.error("Visualizer failed:", err);
-    }
-  };
-
-  const stopVisualizer = () => {
-    if (visualizerIntervalRef.current) {
-      clearInterval(visualizerIntervalRef.current);
-      visualizerIntervalRef.current = null;
-    }
-    if (animationFrameRef.current)
-      cancelAnimationFrame(animationFrameRef.current);
-    if (sourceRef.current) {
-      sourceRef.current.mediaStream
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
-    if (audioContextRef.current?.state !== "closed") {
-      audioContextRef.current?.close();
-    }
-    setMicVolume(0);
-    analyserRef.current = null;
-  };
-
-  // Single cleanup function — stops mic, visualizer, and AI speech completely
-  const stopVoiceMode = () => {
-    if (!isVoiceModeRef.current && !isDictatingRef.current) return;
-    isVoiceModeRef.current = false;
-    isListeningRef.current = false;
-    isDictatingRef.current = false;
-    setIsVoiceMode(false);
-    setIsListening(false);
-    setIsDictating(false);
-    setActiveVoiceMessageId(null);
-    setCurrentSpokenWordIndex(-1);
-    const rec = recognitionRef.current;
-    if (rec)
-      try {
-        rec.stop();
-      } catch (e) {}
-    stopVisualizer();
-    window.speechSynthesis.cancel();
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-  };
-
-  const startVoiceModeConfirm = async () => {
-    // Blur textarea and reset window scroll to collapse virtual keyboard and restore dynamic viewport height on mobile
-    if (textareaRef.current) {
-      textareaRef.current.blur();
-    }
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-
-    setShowVoiceBetaModal(false);
-    localStorage.setItem("hasAcceptedVoiceBeta", "true");
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in your browser.");
-      return;
-    }
-    // Create a FRESH recognition instance inside user gesture — required for Android Chrome
-    const rec = new SpeechRecognition();
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.lang = navigator.language || "en-US";
-    rec.maxAlternatives = 1;
-    recognitionRef.current = rec;
-    bindRecognitionHandlers(rec);
-
-    try {
-      // Start recognition FIRST (within gesture tick) — then init visualizer
-      rec.start();
-      setIsListening(true);
-      isListeningRef.current = true;
-
-      await startVisualizer();
-
-      setIsVoiceMode(true);
-      isVoiceModeRef.current = true;
-
-      const isMobileDevice =
-        window.innerWidth <= 768 ||
-        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobileDevice) {
-        triggerVoiceToast(
-          "Mobile browsers may restrict voice accuracy. Try desktop Chrome for a seamless experience!",
-        );
-      }
-
-      setTimeout(() => scrollToBottom(), 100);
-    } catch (err) {
-      console.error("Voice Mode start failed:", err);
-      try {
-        rec.stop();
-      } catch (e) {}
-      setIsListening(false);
-      isListeningRef.current = false;
-      alert(
-        "Microphone access is required for Voice Mode. Please enable it in your browser settings.",
-      );
-    }
-  };
-
-  const toggleVoiceMode = () => {
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in your browser.");
-      return;
-    }
-
-    if (isVoiceMode) {
-      // Stopping Voice Mode
-      setIsVoiceMode(false);
-      isVoiceModeRef.current = false;
-      stopVisualizer();
-      const rec = recognitionRef.current;
-      if (rec)
-        try {
-          rec.stop();
-        } catch (e) {}
-      setIsListening(false);
-      isListeningRef.current = false;
-
-      // STOP AI SPEECH and RESET ANIMATION
-      window.speechSynthesis.cancel();
-      setActiveVoiceMessageId(null);
-      setCurrentSpokenWordIndex(-1);
-
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    } else {
-      // Blur textarea and reset window scroll on mobile before proceeding
-      if (textareaRef.current) {
-        textareaRef.current.blur();
-      }
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-
-      // Show Beta Modal if not already accepted on this device
-      const hasAccepted =
-        localStorage.getItem("hasAcceptedVoiceBeta") === "true";
-      if (hasAccepted) {
-        startVoiceModeConfirm();
-      } else {
-        setShowVoiceBetaModal(true);
-      }
-    }
-  };
-
-  const stopSpeakMessage = () => {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setActiveVoiceMessageId(null);
-    setCurrentSpokenWordIndex(-1);
-  };
-
-  const speakMessage = (text, messageId) => {
-    if (!("speechSynthesis" in window)) return null;
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // HUMAN VOICE SELECTION
-    const voices = window.speechSynthesis.getVoices();
-    // Prioritize "Neural", "Enhanced", or high-quality specific voices
-    const premiumVoice =
-      voices.find(
-        (v) =>
-          v.name.includes("Neural") ||
-          v.name.includes("Enhanced") ||
-          v.name.includes("Google US English") ||
-          v.name.includes("Samantha") ||
-          v.name.includes("Premium"),
-      ) ||
-      voices.find((v) => v.lang.startsWith("en")) ||
-      voices[0];
-
-    if (premiumVoice) utterance.voice = premiumVoice;
-
-    // Natural conversational settings
-    utterance.rate = 1.0; // Natural human speed
-    utterance.pitch = 0.98; // Slightly warmer/deeper tone
-    utterance.volume = 1.0;
-
-    // Track word boundaries for "Lyrics" animation
-    if (messageId) {
-      setActiveVoiceMessageId(messageId);
-      setCurrentSpokenWordIndex(-1);
-
-      utterance.onboundary = (event) => {
-        if (event.name === "word") {
-          const textUpToBoundary = text.substring(0, event.charIndex);
-          const words = textUpToBoundary.trim().split(/\s+/);
-          const wordIndex = textUpToBoundary.trim() === "" ? 0 : words.length;
-          setCurrentSpokenWordIndex(wordIndex);
-        }
-      };
-
-      utterance.onend = () => {
-        setActiveVoiceMessageId(null);
-        setCurrentSpokenWordIndex(-1);
-      };
-    }
-
-    window.speechSynthesis.speak(utterance);
-    return utterance;
-  };
-
-  const scrollToBottom = () => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleSendMessage = async (e) => {
-    if (e) e.preventDefault();
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-
-    const userText = inputText.trim();
-    if (!userText || isTyping || isStreaming) return;
-
-    const sessionId = sessionData?.sessionId;
-    const wasInVoiceMode = isVoiceMode;
-
-    const newUserMsg = {
-      id: `user-${Date.now()}`,
-      sender: "user",
-      text: userText,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      date: new Date(),
-    };
-
-    setMessages((prev) => [...prev, newUserMsg]);
-    setInputText("");
-    setIsTyping(true);
-    
-    // Auto scroll down to show the new message
-    setTimeout(() => scrollToBottom(), 100);
-
-    // Stop listening while AI is thinking/speaking
-    if (wasInVoiceMode) {
-      const rec = recognitionRef.current;
-      if (rec)
-        try {
-          rec.stop();
-        } catch (e) {}
-      setIsListening(false);
-      isListeningRef.current = false; // Force instantly to avoid onend race conditions
-    }
-
-    // Reset streaming speech state
-    speechQueueRef.current = [];
-    isSpeakingChunkRef.current = false;
-    totalWordsSpokenRef.current = 0;
-    let lastProcessedIndex = 0;
-    let accumulatedResponse = "";
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/interview/chat/${sessionId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ message: userText }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Out of service for message");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let lineBuffer = "";
-
-      setIsTyping(false);
-      setIsStreaming(true);
-
-      // Initialize empty AI message
-      const aiMsgId = `ai-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: aiMsgId,
-          sender: "ai",
-          text: "",
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          date: new Date(),
-        },
-      ]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        lineBuffer += chunk;
-
-        const lines = lineBuffer.split("\n");
-        lineBuffer = lines.pop();
-
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (!trimmedLine || !trimmedLine.startsWith("data: ")) continue;
-
-          const dataStr = trimmedLine.substring(6).trim();
-          if (dataStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(dataStr);
-            if (parsed.content) {
-              accumulatedResponse += parsed.content;
-
-              setMessages((prev) => {
-                const newMessages = [...prev];
-                const lastIndex = newMessages.length - 1;
-                if (newMessages[lastIndex]?.sender === "ai") {
-                  newMessages[lastIndex] = {
-                    ...newMessages[lastIndex],
-                    text: accumulatedResponse,
-                  };
-                }
-                return newMessages;
-              });
-
-              if (wasInVoiceMode) {
-                const sentenceEndRegex = /[.!?](\s+|\n|$)/g;
-                let match;
-                while (
-                  (match = sentenceEndRegex.exec(
-                    accumulatedResponse.slice(lastProcessedIndex),
-                  )) !== null
-                ) {
-                  const endPos =
-                    lastProcessedIndex + match.index + match[0].length;
-                  const sentence = accumulatedResponse
-                    .slice(lastProcessedIndex, endPos)
-                    .trim();
-
-                  if (sentence) {
-                    speechQueueRef.current.push(sentence);
-                    if (!isSpeakingChunkRef.current) {
-                      processSpeechQueue(aiMsgId);
-                    }
-                  }
-                  lastProcessedIndex = endPos;
-                }
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, 15));
-            }
-          } catch (err) {}
-        }
-      }
-
-      setIsStreaming(false);
-      isStreamingRef.current = false; // Sync immediately
-
-      if (wasInVoiceMode) {
-        if (lastProcessedIndex < accumulatedResponse.length) {
-          const remaining = accumulatedResponse
-            .slice(lastProcessedIndex)
-            .trim();
-          if (remaining) {
-            speechQueueRef.current.push(remaining);
-          }
-        }
-
-        // If we have things in the queue but aren't processing, start it!
-        if (speechQueueRef.current.length > 0 && !isSpeakingChunkRef.current) {
-          processSpeechQueue(aiMsgId);
-        } else if (
-          speechQueueRef.current.length === 0 &&
-          !isSpeakingChunkRef.current
-        ) {
-          // Streaming finished, no remaining text, and AI is not speaking.
-          // Wake up the mic directly!
-          setActiveVoiceMessageId(null);
-          startListeningSession();
-        }
-      }
-    } catch (err) {
-      console.error("Streaming error:", err);
-      setIsTyping(false);
-      setIsStreaming(false);
-      isStreamingRef.current = false;
-
-      // Add a red styled error message to the chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai-err-${Date.now()}`,
-          sender: "ai",
-          text: "System is currently out of service. Please try again after a while.",
-          isError: true,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          date: new Date(),
-        },
-      ]);
-
-      // If voice mode was active, turn it off completely on failure
-      if (wasInVoiceMode) {
-        stopVoiceMode();
-      }
-    }
-  };
-
-  const processSpeechQueue = (messageId) => {
-    if (!isVoiceModeRef.current) {
-      speechQueueRef.current = [];
-      isSpeakingChunkRef.current = false;
-      return;
-    }
-
-    if (speechQueueRef.current.length === 0) {
-      isSpeakingChunkRef.current = false;
-      // Only clear ID and start mic if the AI has fully finished generating
-      if (isVoiceModeRef.current && !isStreamingRef.current) {
-        setActiveVoiceMessageId(null);
-        startListeningSession();
-      }
-      return;
-    }
-
-    isSpeakingChunkRef.current = true;
-    const rawSentence = speechQueueRef.current.shift();
-    const sentence = stripMarkdown(rawSentence).trim();
-
-    // Skip empty chunks (e.g. if the chunk was purely markdown formatting that got stripped)
-    if (!sentence) {
-      isSpeakingChunkRef.current = false;
-      processSpeechQueue(messageId);
-      return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(sentence);
-    const voices =
-      typeof window !== "undefined" && window.speechSynthesis
-        ? window.speechSynthesis.getVoices()
-        : [];
-    const premiumVoice =
-      voices.length > 0
-        ? voices.find(
-            (v) =>
-              v.name.includes("Neural") ||
-              v.name.includes("Enhanced") ||
-              v.name.includes("Google US English") ||
-              v.name.includes("Samantha") ||
-              v.name.includes("Premium"),
-          ) ||
-          voices.find((v) => v.lang.startsWith("en")) ||
-          voices[0]
-        : null;
-
-    if (premiumVoice) utterance.voice = premiumVoice;
-    utterance.rate = 1.0;
-    utterance.pitch = 0.98;
-
-    const wordOffset = totalWordsSpokenRef.current;
-    const wordCount = sentence.trim().split(/\s+/).length;
-    setActiveVoiceMessageId(messageId);
-
-    // Watchdog Timer to bypass Safari / Chrome voice freeze states
-    // Expected speech duration calculated at approx 2.5 words per second + 6 seconds safety buffer
-    const maxSpeechDurationMs = (wordCount / 2.5) * 1000 + 6000;
-    let watchdogTimer = setTimeout(() => {
-      console.warn(
-        "SpeechSynthesis watchdog fired: recovering frozen voice synthesis.",
-      );
-      cleanupAndProcessNext();
-    }, maxSpeechDurationMs);
-
-    let onBoundaryFired = false;
-    let fallbackInterval = null;
-
-    const cleanupAndProcessNext = () => {
-      if (watchdogTimer) {
-        clearTimeout(watchdogTimer);
-        watchdogTimer = null;
-      }
-      if (fallbackInterval) {
-        clearInterval(fallbackInterval);
-        fallbackInterval = null;
-      }
-      utterance.onstart = null;
-      utterance.onboundary = null;
-      utterance.onend = null;
-      utterance.onerror = null;
-      totalWordsSpokenRef.current += wordCount;
-      processSpeechQueue(messageId);
-    };
-
-    utterance.onstart = () => {
-      // Start a fallback timer to simulate onboundary if it doesn't fire within 400ms on mobile/Android Chrome
-      setTimeout(() => {
-        if (!onBoundaryFired && isSpeakingChunkRef.current) {
-          const words = sentence.trim().split(/\s+/);
-          let currentWordIdx = 0;
-          // Calculate approx reading rate: 2.7 words per second at rate 1.0
-          const msPerWord = 1000 / 2.7;
-
-          if (fallbackInterval) clearInterval(fallbackInterval);
-          fallbackInterval = setInterval(() => {
-            if (!isSpeakingChunkRef.current) {
-              clearInterval(fallbackInterval);
-              fallbackInterval = null;
-              return;
-            }
-            if (currentWordIdx < words.length) {
-              setCurrentSpokenWordIndex(wordOffset + currentWordIdx);
-              currentWordIdx++;
-            } else {
-              clearInterval(fallbackInterval);
-              fallbackInterval = null;
-            }
-          }, msPerWord);
-        }
-      }, 400);
-    };
-
-    utterance.onboundary = (event) => {
-      onBoundaryFired = true;
-      if (fallbackInterval) {
-        clearInterval(fallbackInterval);
-        fallbackInterval = null;
-      }
-      if (event.name === "word") {
-        const textUpToChar = sentence.substring(0, event.charIndex);
-        const wordsInChunk = textUpToChar.trim()
-          ? textUpToChar.trim().split(/\s+/).length
-          : 0;
-        setCurrentSpokenWordIndex(wordOffset + wordsInChunk);
-      }
-    };
-
-    utterance.onend = () => {
-      cleanupAndProcessNext();
-    };
-
-    utterance.onerror = (e) => {
-      if (e.error !== "interrupted") {
-        console.error("SpeechSynthesis error:", e);
-      }
-      cleanupAndProcessNext();
-    };
-
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.speak(utterance);
-    } else {
-      cleanupAndProcessNext();
-    }
-  };
-
-  // Timer for Hint Nudge (20s inactivity)
-  useEffect(() => {
-    const checkInactivity = () => {
-      if (!hintsAllowed) return;
-
-      const now = Date.now();
-      const diff = now - lastActionTime.current;
-
-      // Dynamic Delay: 20s -> 40s -> 60s
-      let threshold = 20000;
-      if (hintCancelCount === 1) threshold = 40000;
-      else if (hintCancelCount >= 2) threshold = 60000;
-
-      if (
-        diff >= threshold &&
-        !inputText.trim() &&
-        !showHintBox &&
-        !isStreaming &&
-        !showHintNudge &&
-        messages.length > 0
-      ) {
-        setShowHintNudge(true);
-      }
-    };
-
-    const interval = setInterval(checkInactivity, 5000);
-    return () => clearInterval(interval);
-  }, [
-    inputText,
-    showHintBox,
-    isStreaming,
-    showHintNudge,
-    messages.length,
-    hintCancelCount,
-    hintsAllowed,
-  ]);
-
-  const handleKeyDown = (e) => {
-    // Reset timer on any key press
-    lastActionTime.current = Date.now();
-    if (showHintNudge) setShowHintNudge(false);
-
-    const isDesktop =
-      window.innerWidth > 768 &&
-      !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (e.key === "Enter") {
-      if (isDesktop && !e.shiftKey) {
-        // On desktop: Enter sends message, Shift+Enter adds a new line
-        e.preventDefault();
-        handleSendMessage(e);
-      } else if (e.metaKey || e.ctrlKey) {
-        // Cmd/Ctrl+Enter sends message
-        e.preventDefault();
-        handleSendMessage(e);
-      }
-    }
-  };
-
-  const requestHint = async () => {
-    setIsHintLoading(true);
-    setHintText("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const sessionId = sessionData?.sessionId;
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/interview/hint/${sessionId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ messageHistory: [] }),
-        },
-      );
-
-      const data = await response.json();
-      if (data.success) {
-        setHintText(data.hint);
-      } else {
-        setHintText("I'm sorry, I couldn't generate a hint right now.");
-      }
-    } catch (err) {
-      console.error("Hint Fetch Error:", err);
-      setHintText("Failed to connect to the hint service.");
-    } finally {
-      setIsHintLoading(false);
-      setShowHintBox(true);
-      setShowHintNudge(false);
-    }
-  };
 
   return (
     <div className={styles.pageContainer}>
       <Sidebar user={user} activeTab="chat" onNavigate={onNavigate} />
 
       <main className={styles.mainCanvas}>
+        <ErrorNotification 
+          visible={!!voiceToast} 
+          message={voiceToast?.message || voiceToast} 
+          type={voiceToast?.type || 'error'} 
+        />
         <header className={styles.header}>
           {/* Progressive Cloud Blur Layers */}
           <div className={styles.headerBlurContainer}>
@@ -1717,7 +279,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             <div className={styles.blurLayer3}></div>
           </div>
           <button
-            className={styles.backBtn}
+            className={`${styles.backBtn} ${voiceToast ? styles.headerElementHidden : ""}`}
             onClick={() => setShowBackConfirm(true)}
             style={{ WebkitBackdropFilter: 'blur(5.5px)', backdropFilter: 'blur(5.5px)', willChange: 'transform, backdrop-filter' }}
           >
@@ -1730,7 +292,7 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
             </div>
           </button>
           <div></div> {/* Spacer for grid symmetry */}
-          <div className={styles.endPillWrapper}>
+          <div className={`${styles.endPillWrapper} ${voiceToast ? styles.headerElementHidden : ""}`}>
             <div
               className={`${styles.endPill} ${showPillMenu ? styles.menuOpen : ""}`}
               ref={pillMenuRef}
@@ -2242,18 +804,6 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               </div>
             </div>
           </div>
-        </div>
-      )}
-      {voiceToast && (
-        <div className={styles.voiceToast}>
-          <span className="material-symbols-outlined">warning</span>
-          <span className={styles.voiceToastText}>{voiceToast}</span>
-          <button
-            className={styles.voiceToastClose}
-            onClick={() => setVoiceToast(null)}
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
         </div>
       )}
     </div>
