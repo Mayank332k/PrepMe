@@ -1618,8 +1618,8 @@
   }
   
   .endPillWrapper {
-    width: 96px;
-    height: 48px;
+    width: 90px;
+    height: 45px;
     margin-left: 20px;
     margin-right: 4px;
   }
@@ -2678,6 +2678,7 @@
   box-shadow: 0 4px 12px rgba(0, 132, 255, 0.2);
   transform-origin: center center;
   animation: liquidPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  margin-bottom: -4px;
 }
 
 @keyframes liquidPop {

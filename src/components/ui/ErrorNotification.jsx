@@ -49,7 +49,14 @@ export const ErrorNotification = ({
 
   return (
     <div className={styles.wrapper}>
-      <div className={`${styles.notification} ${isVisible ? styles.visible : ''} ${type === 'warning' ? styles.typeWarning : styles.typeError}`}>
+      <div 
+        className={`${styles.notification} ${isVisible ? styles.visible : ''} ${type === 'warning' ? styles.typeWarning : styles.typeError}`}
+        style={{ 
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)', 
+          backdropFilter: 'blur(20px) saturate(180%)',
+          willChange: 'transform, backdrop-filter'
+        }}
+      >
         <div className={styles.iconContainer}>
           {icon || <IconComponent size={24} variant="stroke" />}
         </div>
