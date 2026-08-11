@@ -53,6 +53,7 @@ export const useVoiceMode = ({
   const isSpeakingChunkRef = useRef(false);
   const totalWordsSpokenRef = useRef(0);
   const activeVoiceMessageIdRef = useRef(null);
+  const fallbackHighlightTimerRef = useRef(null);
 
   // Visualizer Refs (Mic waves dikhane ke liye)
   const audioContextRef = useRef(null);
@@ -174,9 +175,10 @@ export const useVoiceMode = ({
           rec.stop();
         } catch (e) {}
       setIsDictating(false);
+      isDictatingRef.current = false;
     } else {
       if (!SpeechRecognition) {
-        alert("Speech recognition is not supported in your browser.");
+        if (triggerVoiceToast) triggerVoiceToast({ message: "Speech recognition is not supported in your browser.", type: "error" });
         return;
       }
       const newRec = new SpeechRecognition();
@@ -189,8 +191,12 @@ export const useVoiceMode = ({
       try {
         newRec.start();
         setIsDictating(true);
+        isDictatingRef.current = true;
       } catch (e) {
-        setIsDictating(true);
+        console.error("Dictation start error:", e);
+        if (triggerVoiceToast) triggerVoiceToast({ message: "Microphone error. Please check permissions.", type: "error" });
+        setIsDictating(false);
+        isDictatingRef.current = false;
       }
     }
   };
@@ -328,7 +334,7 @@ export const useVoiceMode = ({
     localStorage.setItem("hasAcceptedVoiceBeta", "true");
     
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in your browser.");
+      if (triggerVoiceToast) triggerVoiceToast({ message: "Speech recognition is not supported in your browser.", type: "error" });
       return;
     }
 
@@ -361,13 +367,19 @@ export const useVoiceMode = ({
       try { rec.stop(); } catch (e) {}
       setIsListening(false);
       isListeningRef.current = false;
-      alert("Microphone access is required for Voice Mode. Please enable it in your browser settings.");
+      if (triggerVoiceToast) {
+        if (err.name === "NotAllowedError" || err.name === "SecurityError") {
+          triggerVoiceToast({ message: "Microphone access denied. Please allow permissions in your browser.", type: "warning" });
+        } else {
+          triggerVoiceToast({ message: "Microphone error. Please check hardware.", type: "error" });
+        }
+      }
     }
   };
 
   const toggleVoiceMode = () => {
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in your browser.");
+      if (triggerVoiceToast) triggerVoiceToast({ message: "Speech recognition is not supported in your browser.", type: "error" });
       return;
     }
     if (isVoiceMode) {
@@ -386,6 +398,7 @@ export const useVoiceMode = ({
   };
 
   const stopSpeakMessage = () => {
+    if (fallbackHighlightTimerRef.current) clearInterval(fallbackHighlightTimerRef.current);
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     updateActiveVoiceMessageId(null);
     setCurrentSpokenWordIndex(-1);
@@ -412,16 +425,43 @@ export const useVoiceMode = ({
       updateActiveVoiceMessageId(messageId);
       setCurrentSpokenWordIndex(-1);
 
+      let boundaryFired = false;
+      const wordsCount = text.trim().split(/\s+/).length;
+
+      utterance.onstart = () => {
+        let simulatedIndex = 0;
+        if (fallbackHighlightTimerRef.current) clearInterval(fallbackHighlightTimerRef.current);
+        
+        fallbackHighlightTimerRef.current = setInterval(() => {
+          if (boundaryFired) {
+            clearInterval(fallbackHighlightTimerRef.current);
+            return;
+          }
+          if (simulatedIndex < wordsCount) {
+            setCurrentSpokenWordIndex(simulatedIndex);
+            simulatedIndex++;
+          }
+        }, 330); // ~180 words per minute fallback speed
+      };
+
       utterance.onboundary = (event) => {
-        if (event.name === "word") {
-          const textUpToBoundary = text.substring(0, event.charIndex);
-          const words = textUpToBoundary.trim().split(/\s+/);
-          const wordIndex = textUpToBoundary.trim() === "" ? 0 : words.length;
-          setCurrentSpokenWordIndex(wordIndex);
-        }
+        boundaryFired = true;
+        if (fallbackHighlightTimerRef.current) clearInterval(fallbackHighlightTimerRef.current);
+        
+        const textUpToBoundary = text.substring(0, event.charIndex);
+        const words = textUpToBoundary.trim().split(/\s+/);
+        const wordIndex = textUpToBoundary.trim() === "" ? 0 : words.length;
+        setCurrentSpokenWordIndex(wordIndex);
       };
 
       utterance.onend = () => {
+        if (fallbackHighlightTimerRef.current) clearInterval(fallbackHighlightTimerRef.current);
+        updateActiveVoiceMessageId(null);
+        setCurrentSpokenWordIndex(-1);
+      };
+
+      utterance.onerror = () => {
+        if (fallbackHighlightTimerRef.current) clearInterval(fallbackHighlightTimerRef.current);
         updateActiveVoiceMessageId(null);
         setCurrentSpokenWordIndex(-1);
       };

@@ -577,7 +577,11 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
               <textarea
                 ref={textareaRef}
                 placeholder={
-                  isVoiceMode ? "Listening..." : "Reply to Prep AI..."
+                  activeVoiceMessageId
+                    ? "Speaking..."
+                    : isVoiceMode
+                    ? "Listening..."
+                    : "Reply to Prep AI..."
                 }
                 className={styles.textarea}
                 value={inputText}
@@ -621,6 +625,20 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                       <div className={styles.dot} />
                     </div>
                     <span className={styles.endText}>End</span>
+                  </button>
+                ) : activeVoiceMessageId ? (
+                  <button
+                    type="button"
+                    className={styles.sendIcon}
+                    onClick={stopSpeakMessage}
+                    title="Stop Speaking"
+                    style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", color: "#ffffff" }}
+                  >
+                    <div className={styles.sendIconContent}>
+                      <span className="material-symbols-outlined" style={{ color: "#ffffff" }}>
+                        pause
+                      </span>
+                    </div>
                   </button>
                 ) : inputText.trim() ? (
                   <button type="submit" className={styles.sendIcon}>

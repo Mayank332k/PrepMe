@@ -304,31 +304,20 @@ const ChatMessage = React.memo(
 
             {msg.sender === "ai" && (
               <div className={styles.messageMetadata}>
-                {isSpeaking ? (
                   <button
-                    className={`${styles.menuTrigger} ${styles.speakActive}`}
+                    className={`${styles.menuTrigger} ${isSpeaking ? styles.speakActive : ""}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (onStopSpeak) onStopSpeak();
+                      if (isSpeaking) {
+                        if (onStopSpeak) onStopSpeak();
+                      } else {
+                        if (onSpeak) onSpeak(msg.text, msg.id);
+                      }
                     }}
-                    title="Stop speaking"
-                  >
-                    <span className="material-symbols-outlined" style={{ color: 'var(--accent-color)' }}>
-                      stop_circle
-                    </span>
-                  </button>
-                ) : (
-                  <button
-                    className={styles.menuTrigger}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSpeak) onSpeak(msg.text, msg.id);
-                    }}
-                    title="Speak message"
+                    title={isSpeaking ? "Stop speaking" : "Speak message"}
                   >
                     <i className="fi fi-br-volume"></i>
                   </button>
-                )}
                 
                 <button
                   className={styles.menuTrigger}
