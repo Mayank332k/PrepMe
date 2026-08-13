@@ -9,12 +9,8 @@ const api = axios.create({
 const cache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Request interceptor: Attach Token and Check Cache
+// Request interceptor: Check Cache
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
 
   // Only cache GET requests
   if (config.method === 'get' && !config.params?.refresh) {

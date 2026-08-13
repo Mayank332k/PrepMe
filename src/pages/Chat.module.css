@@ -107,6 +107,12 @@
   overflow: hidden;
 }
 
+@media (min-width: 769px) {
+  .headerBlurContainer {
+    display: none;
+  }
+}
+
 .blurLayer1 {
   position: absolute;
   inset: 0;
@@ -786,7 +792,8 @@
 .menuTrigger {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-primary);
+  font-size: 18px;
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
@@ -1224,16 +1231,19 @@
 }
 
 /* Tables (| and -) */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface, rgba(255, 255, 255, 0.02));
+}
+
 .markdownContent table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.25rem 0;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background-color: var(--bg-surface, rgba(255, 255, 255, 0.02));
-  display: block;
-  overflow-x: auto;
+  margin: 0;
 }
 
 .markdownContent th,
@@ -1406,6 +1416,15 @@
   transition: padding 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@media (min-width: 769px) {
+  .footer {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 12px, transparent 12px);
+  }
+  :global([data-theme='light']) .footer {
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.85) 12px, transparent 12px);
+  }
+}
+
 /* Progressive Cloud Blur Layers for Footer */
 .footerBlurContainer {
   position: absolute;
@@ -1416,6 +1435,12 @@
   pointer-events: none;
   z-index: -1;
   overflow: hidden;
+}
+
+@media (min-width: 769px) {
+  .footerBlurContainer {
+    display: none;
+  }
 }
 
 .footerBlurLayer1 {
@@ -1571,6 +1596,32 @@
 .sendIcon:disabled {
   opacity: 0.38;
   cursor: not-allowed;
+}
+
+.loadingBtn {
+  position: relative;
+  overflow: hidden;
+  opacity: 1 !important; /* Override disabled opacity */
+}
+
+.shimmerSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: relative;
+  z-index: 2;
+}
+
+:global([data-theme='light']) .shimmerSpinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .sendIconContent {

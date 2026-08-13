@@ -97,11 +97,6 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
 
       const { user, accessToken } = response.data;
       
-      // Store token for Bearer auth fallback
-      if (accessToken) {
-        localStorage.setItem('token', accessToken);
-      }
-      
       
       // Update global user state in App.jsx (this now handles navigation too)
       if (onAuthSuccess) onAuthSuccess(user);
@@ -132,9 +127,6 @@ export const Login = ({ onNavigate, onAuthSuccess }) => {
       const response = await api.post(endpoint, payload);
       const { user, accessToken } = response.data;
       
-      if (accessToken) {
-        localStorage.setItem('token', accessToken);
-      }
       
       if (onAuthSuccess) onAuthSuccess(user);
     } catch (error) {

@@ -36,11 +36,13 @@ export const useChatLogic = ({
       try {
         const { data } = await api.get(`/interview/session/${sessionId}`);
 
-        // Handle completed session by redirecting back
-        if (data.success && data.message === "Interview completed successfully!") {
-          localStorage.removeItem("activeSessionId");
-          onNavigate("upload");
-          return;
+        // Handle completed or abandoned session by redirecting back
+        if (data.success) {
+          if (data.message === "Interview completed successfully!" || (data.session && data.session.status !== "ongoing")) {
+            localStorage.removeItem("activeSessionId");
+            onNavigate("upload", true);
+            return;
+          }
         }
 
         if (data.success && data.session.transcript.length > 0) {
@@ -129,15 +131,14 @@ export const useChatLogic = ({
     let accumulatedResponse = "";
 
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/interview/chat/${sessionId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
+          credentials: "include",
           body: JSON.stringify({ message: userText }),
         },
       );
@@ -270,14 +271,13 @@ export const useChatLogic = ({
     setHintText("");
 
     try {
-      const token = localStorage.getItem("token");
       const sessionId = sessionData?.sessionId;
       const response = await fetch(`${import.meta.env.VITE_API_URL}/interview/hint/${sessionId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: "include",
         body: JSON.stringify({ messageHistory: [] }),
       });
 

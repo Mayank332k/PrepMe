@@ -23,8 +23,8 @@ const CodeBlock = ({ language, value }) => {
     <div className={styles.codeBlockContainer}>
       <div className={styles.codeHeader}>
         <div className={styles.codeLang}>
-          <span style={{ opacity: 0.6 }}>{"{/}"}</span>
-          <span>{language || "code"}</span>
+          <span style={{ opacity: 0.8, fontSize: '18px', color: 'var(--text-primary)', fontWeight: '500' }}>{"{/}"}</span>
+          <span style={{ opacity: 0.8, fontSize: '15px', color: 'var(--text-primary)', fontWeight: '500' }}>{language || "code"}</span>
         </div>
         <button
           className={styles.copyBtn}
@@ -45,7 +45,7 @@ const CodeBlock = ({ language, value }) => {
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           ) : (
-            <i className="fi fi-rr-clone" style={{ fontSize: "16px" }}></i>
+            <i className="fi fi-rr-clone" style={{ fontSize: "18px", color: "var(--text-primary)" }}></i>
           )}
         </button>
       </div>
@@ -53,15 +53,17 @@ const CodeBlock = ({ language, value }) => {
         <SyntaxHighlighter
           language={language || "text"}
           style={oneDark}
-          useInlineStyles={false}
+          useInlineStyles={true}
           PreTag="div"
           codeTagProps={{ style: { backgroundColor: "transparent" } }}
           customStyle={{
             margin: 0,
             padding: "16px 20px",
             backgroundColor: "transparent",
-            fontSize: "14.5px",
+            fontSize: "15px",
             lineHeight: "1.6",
+            fontWeight: "500",
+            filter: "brightness(1.15) saturate(1.15)",
           }}
         >
           {value}

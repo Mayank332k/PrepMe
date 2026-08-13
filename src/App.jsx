@@ -27,14 +27,6 @@ function App() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      // 0. Instant fast-path for unauthenticated / first-time visitors
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setCurrentScreen('login');
-        setIsInitializing(false);
-        return;
-      }
-
       // 1. Authenticate existing user session
       try {
         const response = await api.get('/auth/me');
@@ -52,7 +44,6 @@ function App() {
         }
       } catch (err) {
         console.warn("User not authenticated");
-        localStorage.removeItem('token');
         setCurrentScreen('login');
       } finally {
         setIsInitializing(false);
@@ -65,7 +56,6 @@ function App() {
   const navigateTo = (screen, force = false) => {
     if (screen === 'logout') {
       api.get('/auth/logout').catch(() => {});
-      localStorage.removeItem('token');
       localStorage.removeItem('activeSessionId');
       setUser(null);
       setResumeFile(null);
@@ -89,8 +79,17 @@ function App() {
     setPendingNavTarget(null);
   };
 
-  const handleSessionWarningLeave = () => {
+  const handleSessionWarningLeave = async () => {
     setShowSessionWarning(false);
+    
+    if (sessionData?.sessionId) {
+      try {
+        await api.patch(`/interview/session/${sessionData.sessionId}`, { status: 'abandoned' });
+      } catch (err) {
+        console.error("Failed to abandon session:", err);
+      }
+    }
+    
     // Clear the session data since user chose to leave
     localStorage.removeItem('activeSessionId');
     setSessionData(null);

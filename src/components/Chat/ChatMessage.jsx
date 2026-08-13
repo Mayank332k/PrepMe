@@ -124,6 +124,11 @@ const MarkdownComponents = {
   h3: (props) => renderHeadingOrQuestion("h3", styles.heading3, props),
   h4: (props) => renderHeadingOrQuestion("h4", styles.heading4, props),
   blockquote: (props) => renderHeadingOrQuestion("blockquote", "", props),
+  table: (props) => (
+    <div className={styles.tableWrapper}>
+      <table {...props} />
+    </div>
+  ),
   p: (props) => {
     const rawText = extractText(props.children).trim();
     // Check if paragraph begins with an accent keyword label (e.g. "Feedback:" or "**Context:**")

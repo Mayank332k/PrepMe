@@ -21,7 +21,12 @@ import { useVoiceMode } from "../hooks/useVoiceMode";
 import { useChatLogic } from "../hooks/useChatLogic";
 
 export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState(() => {
+    if (sessionData?.sessionId) {
+      return localStorage.getItem(`chat_draft_${sessionData.sessionId}`) || "";
+    }
+    return "";
+  });
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [showPillMenu, setShowPillMenu] = useState(false);
   
@@ -45,6 +50,16 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
 
   const { hintsEnabled, setHintsEnabled, hintsForVoice, hintsForChat } = useSettings();
   const { theme, setThemePreference } = useTheme();
+
+  useEffect(() => {
+    if (sessionData?.sessionId) {
+      if (inputText.trim()) {
+        localStorage.setItem(`chat_draft_${sessionData.sessionId}`, inputText);
+      } else {
+        localStorage.removeItem(`chat_draft_${sessionData.sessionId}`);
+      }
+    }
+  }, [inputText, sessionData?.sessionId]);
 
   useEffect(() => {
     inputTextRef.current = inputText;
@@ -384,13 +399,12 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                     const sessionId = sessionData?.sessionId;
                     if (sessionId) {
                       try {
-                        const token = localStorage.getItem("token");
                         await fetch(`${import.meta.env.VITE_API_URL}/interview/session/${sessionId}`, {
                           method: 'PATCH',
                           headers: {
                             'Content-Type': 'application/json',
-                            ...(token ? { Authorization: `Bearer ${token}` } : {})
                           },
+                          credentials: "include",
                           body: JSON.stringify({ status: 'abandoned' })
                         });
                       } catch (error) {
@@ -635,10 +649,14 @@ export const Chat = ({ user, sessionData, onEndSession, onNavigate }) => {
                     style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", color: "#ffffff" }}
                   >
                     <div className={styles.sendIconContent}>
-                      <span className="material-symbols-outlined" style={{ color: "#ffffff" }}>
-                        pause
-                      </span>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <rect x="5" y="5" width="14" height="14" rx="3" />
+                      </svg>
                     </div>
+                  </button>
+                ) : (isTyping || isStreaming) ? (
+                  <button type="button" className={`${styles.sendIcon} ${styles.loadingBtn}`} disabled title="Generating answer...">
+                    <div className={styles.shimmerSpinner}></div>
                   </button>
                 ) : inputText.trim() ? (
                   <button type="submit" className={styles.sendIcon}>
